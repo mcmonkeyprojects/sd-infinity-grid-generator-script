@@ -24,6 +24,8 @@ Needs some better web design before it's quite ready for primetime.
 
 Needs a better sample output. I plan to make a very thorough one, but will get that done later.
 
+Also needs thorough bugtesting. I haven't done that yet. Oops.
+
 --------------
 
 ### Table of Contents
@@ -118,7 +120,12 @@ axes:
 
 #### 3: Using The Output
 
-TODO
+- Find the `index.html` file
+    - It's normally in `(your grid output directory)/(filename)/index.html`
+        - The example file might output to `outputs/grids/short_example/index.html`
+- Open the HTML file in a browser. Enjoy.
+- If you want to share the content, just copy/paste the whole freakin folder into a webserver somewhere.
+    - Or upload to github and make GitHub.io pages host it for you.
 
 #### Expanding Later
 

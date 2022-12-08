@@ -33,10 +33,10 @@ def getNameList():
 def fixDict(d):
     if d is None:
         return None
-    return {k.lower(): v for k, v in d.items()}
+    return {str(k).lower(): v for k, v in d.items()}
 
 def cleanName(name):
-    return name.lower().replace(' ', '')
+    return str(name).lower().replace(' ', '')
 
 def getBestInList(name, list):
     backup = None
@@ -88,66 +88,122 @@ validModes = {
     "etanoiseseeddelta": { "type": "integer" }
 }
 
+def validateParams(params):
+    for p,v in params.items():
+        validateSingleParam(p, v)
+
+def validateSingleParam(p, v):
+        p = cleanName(p)
+        mode = validModes.get(p)
+        if mode is None:
+            raise RuntimeError(f"Invalid grid default parameter '{p}': unknown mode")
+        modeType = mode["type"]
+        if modeType == "integer":
+            vInt = int(v)
+            if vInt is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
+            min = mode.get("min")
+            max = mode.get("max")
+            if min is not None and vInt < min:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
+            if max is not None and vInt > max:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+        if modeType == "decimal":
+            vFloat = float(v)
+            if vFloat is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
+            min = mode.get("min")
+            max = mode.get("max")
+            if min is not None and vFloat < min:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
+            if max is not None and vFloat > max:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+        if p == "model":
+            if getModelFor(v) is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized")
+        if p == "hypernetwork":
+            hnName = cleanName(v)
+            if hnName != "none" and getHypernetworkFor(hnName) is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized")
+        if p == "vae":
+            vaeName = cleanName(v)
+            if vaeName != "none" and vaeName != "auto" and getVaeFor(hnName) is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized")
+        if p == "sampler":
+            if getSamplerFor(cleanName(v)) is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized")
+
+class AxisValue:
+    def __init__(self):
+        self.title = None
+        self.description = None
+        self.params = list()
+
+    def parseObj(self, key, val):
+        if isinstance(val, str):
+            halves = val.split('=', maxsplit=2)
+            if len(halves) != 2:
+                raise RuntimeError(f"Invalid value '{key}': '{val}': not expected format")
+            validateSingleParam(halves[0], halves[1])
+            self.title = halves[1]
+            self.params = { cleanName(halves[0]): halves[1] }
+        else:
+            self.title = val.get("title")
+            self.description = val.get("description")
+            self.params = fixDict(val.get("params"))
+            if self.title is None or self.params is None:
+                raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
+            validateParams(self.params)
+        return self
+
+class Axis:
+    def __init__(self):
+        self.title = None
+        self.description = None
+        self.values = list()
+
+    def parseObj(self, id, obj):
+        self.title = obj.get("title")
+        if self.title is None:
+            raise RuntimeError(f"Invalid axis '{id}': missing title")
+        self.description = obj.get("description")
+        valuesObj = obj.get("values")
+        if valuesObj is None:
+            raise RuntimeError(f"Invalid axis '{id}': missing values")
+        for key, val in valuesObj.items():
+            self.values.append(AxisValue().parseObj(key, val))
+        return self
+
 class GridFileHelper:
+    def __init__(self):
+        self.title = None
+        self.description = None
+        self.axes = list()
 
-    gridTitle = None
-    gridDescription = None
-
-    def validateParams(params):
-        for p,v in params.items():
-            p = cleanName(p)
-            mode = validModes.get(p)
-            if mode is None:
-                raise RuntimeError(f"Invalid grid default parameter '{p}': unknown mode")
-            modeType = mode["type"]
-            if modeType == "integer":
-                vInt = int(v)
-                if vInt is None:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
-                min = mode.get("min")
-                max = mode.get("max")
-                if min is not None and vInt < min:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
-                if max is not None and vInt > max:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-            if modeType == "decimal":
-                vFloat = float(v)
-                if vFloat is None:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
-                min = mode.get("min")
-                max = mode.get("max")
-                if min is not None and vFloat < min:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
-                if max is not None and vFloat > max:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-            if p == "model":
-                if getModelFor(v) is None:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized")
-            if p == "hypernetwork":
-                hnName = cleanName(v)
-                if hnName != "none" and getHypernetworkFor(hnName) is None:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized")
-            if p == "vae":
-                vaeName = cleanName(v)
-                if vaeName != "none" and vaeName != "auto" and getVaeFor(hnName) is None:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized")
-            if p == "sampler":
-                if getSamplerFor(cleanName(v)) is None:
-                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized")
     def parseYaml(self, yamlContent, grid_file):
         yamlContent = fixDict(yamlContent)
         gridObj = fixDict(yamlContent.get("grid"))
         if gridObj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'grid' root key")
-        gridTitle = gridObj.get("title")
-        gridDescription = gridObj.get("description")
-        if gridTitle is None or gridDescription is None:
+        self.title = gridObj.get("title")
+        self.description = gridObj.get("description")
+        if self.title is None or self.description is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title or description in grid obj {gridObj}")
         gridParams = fixDict(gridObj.get("params"))
         if gridParams is not None:
-            GridFileHelper.validateParams(gridParams)
-        cleanDesc = gridDescription.replace('\n', ' ')
-        print(f"Loaded grid file, title '{gridTitle}', description '{cleanDesc}'")
+            validateParams(gridParams)
+        axesObj = fixDict(yamlContent.get("axes"))
+        if axesObj is None:
+            raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")
+        for id, axisObj in axesObj.items():
+            self.axes.append(Axis().parseObj(id, fixDict(axisObj)))
+        totalCount = 1
+        for axis in self.axes:
+            totalCount *= len(axis.values)
+        if totalCount <= 0:
+            raise RuntimeError(f"Invalid file {grid_file}: something went wrong ... is an axis empty? total count is {totalCount} for {len(self.axes)} axes")
+        cleanDesc = self.description.replace('\n', ' ')
+        print(f"Loaded grid file, title '{self.title}', description '{cleanDesc}', with {len(self.axes)} axes... combines to {totalCount} total images")
         return self
 
 class Script(scripts.Script):

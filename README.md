@@ -2,6 +2,20 @@
 
 Extension for the [AUTOMATIC1111 Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that generates infinite-dimensional grids.
 
+An "infinite axis grid" is like an X/Y plot grid, but with, well, more axes on it. Of course, monitors are 2D, so this is implemented in practice by generating a webpage that lets you select which two primary axes to display, and then choose the current value for each of the other axes.
+
+This design was partially inspired by the "XYZ Plot" script by "xrypgame".
+
+Part of the goal of this system is to develop educational charts, to provide a universal answer to the classic question of "what does (X) setting do? But what about with (Y)?".
+
+There is a built in ability to add description text to fields, for the specific purpose of enhancing educational page output.
+
+The advantage of this design is it allows you to rapidly compare the results of different combinations of settings, without having to wait to generation times.
+
+The disadvantage is that time to generate a grid is exponential - if you have 5 samplers, 5 seeds, 5 step counts, 5 CFG scales... that's 5^4, or 625 images. Add another variable and now it's 3125 images. You can see how this quickly jumps from a two minute render to a two hour render.
+
+### Table of Contents
+
 - [#Examples](Examples)
 - [#Installation](Installation)
 - [#Usage](Usage)
@@ -31,14 +45,15 @@ Usage comes in three main steps:
 
 - Grid information is defined by YAML files, in the extension folder under `assets`. Find the `assets/short_example.yml` file to see an example of the full format.
 - You can create new files in the assets directory (as long as the `.yml` extension stays), or copy/paste an example file and edit it. I recommend you do not edit the actual example file directly to avoid git issues.
+- I recommend editing with a good text editor, such as *VS Code* or *Notepad++*. Don't use *MS Word* or *Windows Notepad* as those might cause trouble.
 - All text inputs allow for raw HTML, so, be careful. You can use `&lt;` for `<`, and `&gt;` for `>`, and `&amp;` for `&`.
 - The file must have key `grid`, with subkey `title` and `description` to define the file data.
     - It can optionally also have `params` to specify any default parameters.
 - The file must have key `axes` to define the list of axes. This is a map-list key - meaning, add subkeys to create a list of each axis.
-    - Each axis must have a `name`, and `values`. It can optionally have a `description`.
+    - Each axis must have a `title`, and `values`. It can optionally have a `description`.
         - There are two ways to do a value in the value list:
-            - Option 1: just do like `steps=10` ... this will set name to `10`, and param `steps` to value `10`, with no description.
-            - Option 2: Add a submapping with key `name`, and optional `description`, and then `params` as a sub map of parameters like `steps: 10`
+            - Option 1: just do like `steps=10` ... this will set title to `10`, and param `steps` to value `10`, with no description.
+            - Option 2: Add a submapping with key `title`, and optional `description`, and then `params` as a sub map of parameters like `steps: 10`
 
 Micro example:
 ```yml
@@ -47,7 +62,7 @@ grid:
     description: This is just to show core format rules. View the example `.yml` files in assets for better examples.
 axes:
     1:
-        name: Sampler
+        title: Sampler
         values:
             1: sampler=Euler
 ```

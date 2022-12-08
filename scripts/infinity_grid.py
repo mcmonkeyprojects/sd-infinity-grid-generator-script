@@ -386,7 +386,7 @@ class WebDataBuilder():
             html = referenceHtml.read()
         xSelect = ""
         ySelect = ""
-        content = '<div style="margin: auto; width: fit-content;"><table>\n'
+        content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
         primary = True
         for axis in grid.axes:
             axisDescrip = axis.description or ''
@@ -454,7 +454,6 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        # TODO
         return [help_info, use_jpg, do_overwrite, grid_file, refresh_button]
 
     def run(self, p, help_info, use_jpg, do_overwrite, grid_file, refresh_button):
@@ -485,4 +484,6 @@ class Script(scripts.Script):
         with SettingsFixer():
             result = runner.run()
         WebDataBuilder.EmitWebData(folder, grid, runner)
+        if result is None:
+            return Processed(p, list())
         return result

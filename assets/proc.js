@@ -1,3 +1,6 @@
+/**
+ * This file is part of Stable Diffusion Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
+ */
 
 function loadData() {
     // rawData.ext/title/description
@@ -12,6 +15,8 @@ function loadData() {
         console.log(document.getElementById('x_' + axis.id))
     }
     console.log("Loaded data for '" + rawData.title + "'");
+    document.getElementById('x_' + rawData.axes[0].id).click();
+    fillTable();
 }
 
 function fillTable() {
@@ -59,6 +64,9 @@ function fillTable() {
             newContent += "<td><img src=\"" + url.replace("{X}", xVal.key).substring(1) + "." + rawData.ext + "\" /></td>";
         }
         newContent += "</tr>";
+        if (x == y) {
+            break;
+        }
     }
     table.innerHTML = newContent;
 }

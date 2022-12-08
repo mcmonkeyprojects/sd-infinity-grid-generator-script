@@ -20,14 +20,14 @@ Initial version is technically functional. Needs some fix-ups and some better we
 
 ### Table of Contents
 
-- [#Examples](Examples)
-- [#Installation](Installation)
-- [#Usage](Usage)
-    - [#1-grid-definition-file](1: Grid Definition File)
-    - [#2-grid-content-generation-via-webui](2: Grid Content Generation via WebUI)
-    - [#3-using-the-output](3: Using The Output)
-    - [#expanding-later](Expanding Later)
-- [#License](License)
+- [Examples](#Examples)
+- [Installation](#Installation)
+- [Usage](#Usage)
+    - [1: Grid Definition File](#1-grid-definition-file)
+    - [2: Grid Content Generation via WebUI](#2-grid-content-generation-via-webui)
+    - [3: Using The Output](#3-using-the-output)
+    - [Expanding Later](#expanding-later)
+- [License](#License)
 
 ### Examples
 

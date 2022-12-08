@@ -9,6 +9,11 @@ grid:
                  This is to demonstrate the concept of how the infinite-axis grid system works.
                  This description here demonstrates multi-line YAML strings.
                  <br>It also shows that you can write <b>HTML</b> if you want to.
+    # Optionally specify base parameters. If not set, it will use whatever parameters you have in the WebUI.
+    # These can be overridden by an axis.
+    params:
+        steps: 20
+        Sampler: Euler
 
 # "axes" is the root key of the list of axes
 axes:

@@ -10,14 +10,14 @@
 #
 ##################
 
-import modules.scripts as scripts
 import gradio as gr
 import os
 import glob
 import yaml
 
-from modules import images, shared, sd_models, sd_vae, sd_samplers
-from modules.hypernetworks import hypernetwork
+from copy import copy
+
+from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts
 from modules.processing import process_images, Processed
 from modules.shared import opts, cmd_opts, state
 
@@ -108,7 +108,7 @@ def validateSingleParam(p, v):
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
             if max is not None and vInt > max:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-        if modeType == "decimal":
+        elif modeType == "decimal":
             vFloat = float(v)
             if vFloat is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
@@ -118,28 +118,26 @@ def validateSingleParam(p, v):
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
             if max is not None and vFloat > max:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-        if p == "model":
+        elif p == "model":
             if getModelFor(v) is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized")
-        if p == "hypernetwork":
+        elif p == "hypernetwork":
             hnName = cleanName(v)
             if hnName != "none" and getHypernetworkFor(hnName) is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized")
-        if p == "vae":
+        elif p == "vae":
             vaeName = cleanName(v)
             if vaeName != "none" and vaeName != "auto" and getVaeFor(hnName) is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized")
-        if p == "sampler":
+        elif p == "sampler":
             if getSamplerFor(cleanName(v)) is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized")
 
 class AxisValue:
-    def __init__(self):
-        self.title = None
-        self.description = None
+    def parseObj(self, axis, key, val):
+        self.axis = axis
+        self.key = key
         self.params = list()
-
-    def parseObj(self, key, val):
         if isinstance(val, str):
             halves = val.split('=', maxsplit=2)
             if len(halves) != 2:
@@ -147,6 +145,7 @@ class AxisValue:
             validateSingleParam(halves[0], halves[1])
             self.title = halves[1]
             self.params = { cleanName(halves[0]): halves[1] }
+            self.description = None
         else:
             self.title = val.get("title")
             self.description = val.get("description")
@@ -155,14 +154,16 @@ class AxisValue:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             validateParams(self.params)
         return self
+    
+    def __str__(self):
+        return f"(title={self.title}, description={self.description}, params={self.params})"
+    def __unicode__(self):
+        return self.__str__()
 
 class Axis:
-    def __init__(self):
-        self.title = None
-        self.description = None
-        self.values = list()
-
     def parseObj(self, id, obj):
+        self.values = list()
+        self.id = id
         self.title = obj.get("title")
         if self.title is None:
             raise RuntimeError(f"Invalid axis '{id}': missing title")
@@ -171,16 +172,12 @@ class Axis:
         if valuesObj is None:
             raise RuntimeError(f"Invalid axis '{id}': missing values")
         for key, val in valuesObj.items():
-            self.values.append(AxisValue().parseObj(key, val))
+            self.values.append(AxisValue().parseObj(self, key, val))
         return self
 
 class GridFileHelper:
-    def __init__(self):
-        self.title = None
-        self.description = None
-        self.axes = list()
-
     def parseYaml(self, yamlContent, grid_file):
+        self.axes = list()
         yamlContent = fixDict(yamlContent)
         gridObj = fixDict(yamlContent.get("grid"))
         if gridObj is None:
@@ -189,9 +186,9 @@ class GridFileHelper:
         self.description = gridObj.get("description")
         if self.title is None or self.description is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title or description in grid obj {gridObj}")
-        gridParams = fixDict(gridObj.get("params"))
-        if gridParams is not None:
-            validateParams(gridParams)
+        self.params = fixDict(gridObj.get("params"))
+        if self.params is not None:
+            validateParams(self.params)
         axesObj = fixDict(yamlContent.get("axes"))
         if axesObj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")
@@ -206,8 +203,70 @@ class GridFileHelper:
         print(f"Loaded grid file, title '{self.title}', description '{cleanDesc}', with {len(self.axes)} axes... combines to {totalCount} total images")
         return self
 
-class Script(scripts.Script):
+class SingleGridCall:
+    def __init__(self, values):
+        self.values = values
+    
+    def flattenParams(self, grid):
+        self.params = grid.params.copy() if grid.params is not None else dict()
+        for val in self.values:
+            for p, v in val.params.items():
+                self.params[p] = v
 
+class GridRunner:
+    def __init__(self, grid, useJpg, doOverwrite, basePath, p):
+        self.grid = grid
+        self.totalRun = 0
+        self.totalSkip = 0
+        self.totalSteps = 0
+        self.useJpg = useJpg
+        self.doOverwrite = doOverwrite
+        self.basePath = basePath
+        self.p = p
+        self.ext = ".jpg" if self.useJpg else ".png"
+    
+    def buildValueSetList(axisList):
+        result = list()
+        if len(axisList) == 0:
+            return result
+        curAxis = axisList[0]
+        if len(axisList) == 1:
+            for val in curAxis.values:
+                newList = list()
+                newList.append(val)
+                result.append(SingleGridCall(newList))
+            return result
+        nextAxisList = axisList[1::]
+        for obj in GridRunner.buildValueSetList(nextAxisList):
+            for val in curAxis.values:
+                newList = obj.values.copy()
+                newList.append(val)
+                result.append(SingleGridCall(newList))
+        return result
+    
+    def preprocess(self):
+        self.valueSets = GridRunner.buildValueSetList(list(reversed(self.grid.axes)))
+        print(f'Have {len(self.valueSets)} unique value sets, will go into {self.basePath}')
+        for set in self.valueSets:
+            set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))) + self.ext)
+            if not self.doOverwrite and os.path.exists(set.filepath):
+                self.totalSkip += 1
+            else:
+                set.flattenParams(self.grid)
+                self.totalRun += 1
+                stepCount = set.params.get("steps")
+                self.totalSteps += int(stepCount) if stepCount is not None else self.p.steps
+            string = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
+            print(f'Set: {string}, file {set.filepath}')
+        print(f"Skipped {self.totalSkip} files, will run {self.totalRun} files, for {self.totalSteps} total steps")
+    
+    def run(self):
+        shared.total_tqdm.updateTotal(self.totalSteps)
+        for set in self.valueSets:
+            p = copy(self.p)
+            # processed = process_images(pc)
+
+class Script(scripts.Script):
     BASEDIR = scripts.basedir()
 
     def title(self):
@@ -234,6 +293,9 @@ class Script(scripts.Script):
         return [help_info, use_jpg, do_overwrite, grid_file, refresh_button]
 
     def run(self, p, help_info, use_jpg, do_overwrite, grid_file, refresh_button):
+        # Clean up iffy default params
+        p.n_iter = 1
+        p.batch_size = 1
         # Validate to avoid abuse
         if '..' in grid_file or grid_file == "":
             raise RuntimeError(f"Unacceptable filename '{grid_file}'")
@@ -248,7 +310,10 @@ class Script(scripts.Script):
                 raise RuntimeError(f"Invalid YAML in file '{grid_file}': {exc}")
         helper = GridFileHelper()
         helper.parseYaml(yamlContent, grid_file)
-        print("Starting...")
-        # TODO
+        # Now start using it
+        runner = GridRunner(helper, use_jpg, do_overwrite, os.path.join(p.outpath_grids, grid_file.replace(".yml", "")), p)
+        runner.preprocess()
+        runner.run()
+        # ...
         proc = process_images(p)
         return proc

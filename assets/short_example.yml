@@ -17,17 +17,17 @@ grid:
 
 # "axes" is the root key of the list of axes
 axes:
-    # Simply number these keys.
-    # The key names are ignored and just used to organize the file, so feel free to put random values here instead if you want to I guess.
-    1:
+    # Key names are used to organize the file, both here in YAML and in the output format.
+    # So, use either very simple names, or numbers.
+    sampler:
         # Title your axis.
         title: Sampler
         # Add any description text you want.
         description: Different samplers can produce slightly different output.
         # "values" is where the options go
         values:
-            # Again, number the keys.
-            1:
+            # Same rule as axis key labeling: keep it simple.
+            euler_a:
                 # As usual, title and optional description.
                 title: Euler A
                 description: Euler Ancestral is like Euler, but with <b>ancestral</b> stuff.
@@ -35,37 +35,37 @@ axes:
                 params:
                     # View the readme for accepted parameter types and formats.
                     Sampler: Euler A
-            2:
+            euler:
                 title: Euler
                 description: Good ol k_euler.
                 params:
                     Sampler: Euler
-            3:
+            ddim:
                 title: DDIM
                 description: The original.
                 params:
                     Sampler: DDIM
-    2:
+    steps:
         title: Steps
         description: How many times to run the sampler.
         values:
-            1:
+            10:
                 title: 10
                 description: Ten times.
                 params:
                     Steps: 10
             # You can be lazy too. This will set param 'steps' to '15' and set title to '15'.
-            2: steps=15
-            3: steps=20
-    3:
+            15: steps=15
+            20: steps=20
+    cfgscale:
         title: CFG Scale
         values:
-            1: CFG scale=3
-            2: CFG scale=5
-            3: CFG scale=7
-            4: CFG scale=9
-            5: CFG scale=11
-    4:
+            3: CFG scale=3
+            5: CFG scale=5
+            7: CFG scale=7
+            9: CFG scale=9
+            11: CFG scale=11
+    seed:
         title: Seed
         values:
             1: seed=1

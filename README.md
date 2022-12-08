@@ -4,7 +4,7 @@ Extension for the [AUTOMATIC1111 Stable Diffusion WebUI](https://github.com/AUTO
 
 An "infinite axis grid" is like an X/Y plot grid, but with, well, more axes on it. Of course, monitors are 2D, so this is implemented in practice by generating a webpage that lets you select which two primary axes to display, and then choose the current value for each of the other axes.
 
-This design was partially inspired by the "XYZ Plot" script by "xrypgame".
+This design was partially inspired by the "XYZ Plot" script by "xrypgame". Sections of code are referenced from the WebUI itself, and its default "X/Y Plot" script.
 
 Part of the goal of this system is to develop educational charts, to provide a universal answer to the classic question of "what does (X) setting do? But what about with (Y)?".
 
@@ -19,6 +19,10 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 - [#Examples](Examples)
 - [#Installation](Installation)
 - [#Usage](Usage)
+    - [#1-grid-definition-file](1: Grid Definition File)
+    - [#2-grid-content-generation-via-webui](2: Grid Content Generation via WebUI)
+    - [#3-using-the-output](3: Using The Output)
+    - [#expanding-later](Expanding Later)
 - [#License](License)
 
 ### Examples
@@ -69,10 +73,16 @@ axes:
 
 - Names and descriptions can always be whatever you want, as HTML text.
 - Settings supported for parameters:
-    - `sampler`, `seed`, `steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaNoise`, `ETANoiseSeedDelta`
+    - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaNoise`, `ETANoiseSeedDelta`
     - All names are case insensitive and spacing insensitive. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.
+- Note that it will be processed from bottom to top - so if you have `samplers`, then `steps`, then `seeds`, it will:
+    - choose one sampler and step count, and iterate all seeds.
+    - then it will do the next sample and step count, and iterate all seeds.
+    - once all seeds are done for that pair, it will retain the same sampler, and choose the next step count, then iterate all seeds.
+    - etc. on repeat until all steps are done, then it will finally choose the last sample.
+- So, things that take time to load, like `Model`, should be put near the top.
 
 #### 2: Grid Content Generation via WebUI
 
@@ -84,10 +94,23 @@ axes:
     - If it's not there, you might just need to hit the Refresh button on the right side.
     - If it's still not, there double check that your file is in the `assets/` folder of the extension, and that it has a proper `.yml` extension.
 - Hit your `Generate` button, and wait.
+- The output folder will be named based on your `.yml` file's name.
 
 #### 3: Using The Output
 
 TODO
+
+#### Expanding Later
+
+If you want to add more content to a grid you already made, you can do that:
+
+- Use the same `yml` file.
+- You can add new values to an axis freely.
+- If you remove values, they will be excluded from the output but pre-existing generated images won't be removed.
+- You can add axes, but you'll have to regenerate all images if so.
+    - Probably save as a new filename in that case.
+- If you're just adding a new value, make sure to leave `overwriting existing images` off.
+- Make sure your `Save Grid Images as JPEG` setting is the same as it was originally.
 
 ----------------------
 

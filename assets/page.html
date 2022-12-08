@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="bootstrap.min.css" media="screen">
+    <title>{TITLE}</title>
+    <meta name="description" content="{DESCRIPTION}" />
+    <style>
+    table tr td
+    {
+        border: 1px solid black;
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+    .secondary
+    {
+        background-color: #202020;
+    }
+    .primary
+    {
+        background-color: #303030;
+    }
+    </style>
+    <script src="jquery.min.js"></script>
+</head>
+<body>
+    <center>
+        <h1>{TITLE}</h1>
+        <h4>{DESCRIPTION}</h4>
+        <noscript>This page requires JavaScript to work. Don't worry, it's all local to the current page, and open source on GitHub.</noscript>
+        <hr>
+    </center>
+    <br>
+    {CONTENT}
+    <footer>
+        <center>
+            <hr>
+            {AUTHOR}
+            <br>The technology that powers this page is <a href="https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script">Infinity Grid Generator for Stable Diffusion</a>, published under the MIT license by Alex 'mcmonkey' Goodwin.
+            <br>This software allows users to generate pages with any content they desire. Therefore, content on this page (images, text, etc.) is the property of whoever generated this specific page.
+            <br>Made using the <a href="https://bootswatch.com/darkly/">Darkly Bootstrap Theme</a> by Thomas Park, which was released under the <a href="https://github.com/thomaspark/bootswatch/blob/95df99d76147797cbcb1014b639805add2327f65/LICENSE">MIT License</a>.
+        </center>
+    </footer>
+    <script src="data.js"></script>
+    <script src="proc.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+</body>

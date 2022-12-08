@@ -6,6 +6,9 @@
 grid:
     # Give a page title
     title: My Short Example Grid
+    # Label the authorship, eg 'Created by mcmonkey for public educational usage'
+    # This will be displayed on the bottom of the page.
+    author: Created by YOUR NAME HERE for SOME REASON HERE
     # Give a page description
     description: >
                  This is to demonstrate the concept of how the infinite-axis grid system works.

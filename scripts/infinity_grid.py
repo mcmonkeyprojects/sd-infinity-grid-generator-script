@@ -14,17 +14,19 @@ import gradio as gr
 import os
 import glob
 import yaml
-
+import json
+import shutil
 from copy import copy
-
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts
 from modules.processing import process_images, Processed
 from modules.shared import opts, cmd_opts, state
 from modules.hypernetworks import hypernetwork
 
+######################### Constants #########################
 refresh_symbol = '\U0001f504'  # 🔄
 INF_GRID_README = "https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script"
 
+######################### Utilities #########################
 def getNameList():
     relPath = os.path.join(Script.BASEDIR, "assets")
     fileList = glob.glob(relPath + "/*.yml")
@@ -65,6 +67,7 @@ def getVaeFor(name):
 def getSamplerFor(name):
     return getBestInList(name, sd_samplers.all_samplers_map.keys())
 
+######################### Value Modes #########################
 def applySampler(p, v):
     p.sampler_name = getSamplerFor(v)
 def applySeed(p, v):
@@ -141,6 +144,7 @@ validModes = {
     "sigmanoise": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise }
 }
 
+######################### Validation #########################
 def validateParams(params):
     for p,v in params.items():
         validateSingleParam(p, v)
@@ -186,6 +190,7 @@ def validateSingleParam(p, v):
             if getSamplerFor(cleanName(v)) is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized")
 
+######################### YAML Parsing and Processing #########################
 class AxisValue:
     def parseObj(self, axis, key, val):
         self.axis = axis
@@ -237,8 +242,9 @@ class GridFileHelper:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'grid' root key")
         self.title = gridObj.get("title")
         self.description = gridObj.get("description")
-        if self.title is None or self.description is None:
-            raise RuntimeError(f"Invalid file {grid_file}: missing grid title or description in grid obj {gridObj}")
+        self.author = gridObj.get("author")
+        if self.title is None or self.description is None or self.author is None:
+            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, or description in grid obj {gridObj}")
         self.params = fixDict(gridObj.get("params"))
         if self.params is not None:
             validateParams(self.params)
@@ -256,6 +262,7 @@ class GridFileHelper:
         print(f"Loaded grid file, title '{self.title}', description '{cleanDesc}', with {len(self.axes)} axes... combines to {totalCount} total images")
         return self
 
+######################### Actual Execution Logic #########################
 class SingleGridCall:
     def __init__(self, values):
         self.values = values
@@ -307,10 +314,11 @@ class GridRunner:
         for set in self.valueSets:
             set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
-            if not self.doOverwrite and os.path.exists(set.filepath + "." + self.ext):
+            set.flattenParams(self.grid)
+            set.doSkip = not self.doOverwrite and os.path.exists(set.filepath + "." + self.ext)
+            if set.doSkip:
                 self.totalSkip += 1
             else:
-                set.flattenParams(self.grid)
                 self.totalRun += 1
                 stepCount = set.params.get("steps")
                 self.totalSteps += int(stepCount) if stepCount is not None else self.p.steps
@@ -321,8 +329,10 @@ class GridRunner:
         iteration = 0
         last = None
         for set in self.valueSets:
-            print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
+            if set.doSkip:
+                continue
             iteration += 1
+            print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
             p = copy(self.p)
             set.applyTo(p)
             processed = process_images(p)
@@ -345,6 +355,82 @@ class SettingsFixer():
         hypernetwork.apply_strength()
         opts.data["CLIP_stop_at_last_layers"] = self.CLIP_stop_at_last_layers
 
+######################### Web Data Builders #########################
+class WebDataBuilder():
+    def buildJson(grid, runner):
+        result = {}
+        result['title'] = grid.title
+        result['description'] = grid.description
+        result['ext'] = runner.ext
+        axes = list()
+        for axis in grid.axes:
+            jAxis = {}
+            jAxis['id'] = axis.id
+            jAxis['title'] = axis.title
+            jAxis['description'] = axis.description or ""
+            values = list()
+            for val in axis.values:
+                jVal = {}
+                jVal['key'] = val.key
+                jVal['title'] = val.title
+                jVal['description'] = val.description or ""
+                values.append(jVal)
+            jAxis['values'] = values
+            axes.append(jAxis)
+        result['axes'] = axes
+        return json.dumps(result)
+    
+    def buildHtml(grid):
+        assetDir = os.path.join(Script.BASEDIR, "assets")
+        with open(os.path.join(assetDir, "page.html"), 'r') as referenceHtml:
+            html = referenceHtml.read()
+        xSelect = ""
+        ySelect = ""
+        content = '<div style="margin: auto; width: fit-content;"><table>\n'
+        primary = True
+        for axis in grid.axes:
+            axisDescrip = axis.description or ''
+            trClass = "primary" if primary else "secondary"
+            content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n{axisDescrip}</td>\n<td><ul class="nav nav-tabs" role="tablist">\n'
+            primary = not primary
+            isFirst = True
+            for val in axis.values:
+                selected = "true" if isFirst else "false"
+                active = " active" if isFirst else ""
+                isFirst = False
+                descrip = val.description or ''
+                content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{val.title}: {descrip}">{val.title}</a></li>\n'
+            content += '</ul>\n<div class="tab-content">\n'
+            isFirst = True
+            for val in axis.values:
+                active = " active show" if isFirst else ""
+                isFirst = False
+                descrip = val.description or ''
+                content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel">{descrip}</div>\n'
+            content += '</div></td></tr>\n'
+            xSelect += f'<input type="radio" class="btn-check" name="x_axis_selector" id="x_{axis.id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="x_{axis.id}" title="{axisDescrip}">{axis.title}</label>\n'
+            ySelect += f'<input type="radio" class="btn-check" name="y_axis_selector" id="y_{axis.id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="y_{axis.id}" title="{axisDescrip}">{axis.title}</label>\n'
+        content += '</table>\n'
+        content += f'<center><br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">X Axis:&nbsp;\n{xSelect}</div>\n'
+        content += f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">Y Axis:&nbsp;\n{ySelect}</div></center></div>\n'
+        content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
+        html = html.replace("{TITLE}", grid.title).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
+        return html
+
+    def EmitWebData(path, grid, runner):
+        print("Building final web data...")
+        json = WebDataBuilder.buildJson(grid, runner)
+        with open(os.path.join(path, "data.js"), 'w') as f:
+            f.write("rawData = " + json)
+        assetDir = os.path.join(Script.BASEDIR, "assets")
+        for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"]:
+            shutil.copyfile(os.path.join(assetDir, f), os.path.join(path, f))
+        html = WebDataBuilder.buildHtml(grid)
+        with open(os.path.join(path, "index.html"), 'w') as f:
+            f.write(html)
+        print(f"Web file is now at {path}/index.html")
+
+######################### Script class entrypoint #########################
 class Script(scripts.Script):
     BASEDIR = scripts.basedir()
 
@@ -390,11 +476,13 @@ class Script(scripts.Script):
                 yamlContent = yaml.safe_load(yamlContentText)
             except yaml.YAMLError as exc:
                 raise RuntimeError(f"Invalid YAML in file '{grid_file}': {exc}")
-        helper = GridFileHelper()
-        helper.parseYaml(yamlContent, grid_file)
+        grid = GridFileHelper()
+        grid.parseYaml(yamlContent, grid_file)
         # Now start using it
-        runner = GridRunner(helper, use_jpg, do_overwrite, os.path.join(p.outpath_grids, grid_file.replace(".yml", "")), p)
+        folder = os.path.join(p.outpath_grids, grid_file.replace(".yml", ""))
+        runner = GridRunner(grid, use_jpg, do_overwrite, folder, p)
         runner.preprocess()
         with SettingsFixer():
             result = runner.run()
+        WebDataBuilder.EmitWebData(folder, grid, runner)
         return result

@@ -18,7 +18,11 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 ### Status
 
-Initial version is technically functional. Needs some fix-ups and some better web design before it's quite ready for primetime.
+Initial version is technically functional.
+
+Needs some better web design before it's quite ready for primetime.
+
+Needs a better sample output. I plan to make a very thorough one, but will get that done later.
 
 --------------
 
@@ -37,7 +41,7 @@ Initial version is technically functional. Needs some fix-ups and some better we
 
 ### Examples
 
-**TODO: Actual weblink to a demo**
+Here's a web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example/index.html
 
 ![img](github/img_1.png)
 

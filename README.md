@@ -14,9 +14,13 @@ The advantage of this design is it allows you to rapidly compare the results of 
 
 The disadvantage is that time to generate a grid is exponential - if you have 5 samplers, 5 seeds, 5 step counts, 5 CFG scales... that's 5^4, or 625 images. Add another variable and now it's 3125 images. You can see how this quickly jumps from a two minute render to a two hour render.
 
+--------------
+
 ### Status
 
 Initial version is technically functional. Needs some fix-ups and some better web design before it's quite ready for primetime.
+
+--------------
 
 ### Table of Contents
 
@@ -29,11 +33,15 @@ Initial version is technically functional. Needs some fix-ups and some better we
     - [Expanding Later](#expanding-later)
 - [License](#License)
 
+--------------
+
 ### Examples
 
 **TODO: Actual weblink to a demo**
 
 ![img](github/img_1.png)
+
+--------------
 
 ### Installation
 
@@ -43,6 +51,8 @@ Initial version is technically functional. Needs some fix-ups and some better we
 - Copy/paste this project's URL into the `URL for extension's git repository` textbox: `https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script`
 - Click `Install`
 - Restart or reload the WebUI
+
+--------------
 
 ### Usage
 

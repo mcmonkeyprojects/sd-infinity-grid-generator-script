@@ -31,7 +31,9 @@ Initial version is technically functional. Needs some fix-ups and some better we
 
 ### Examples
 
-TODO
+**TODO: Actual weblink to a demo**
+
+![img](github/img_1.png)
 
 ### Installation
 

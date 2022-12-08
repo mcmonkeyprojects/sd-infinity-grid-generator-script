@@ -1,0 +1,69 @@
+# This is a YAML file, so all content must be configured per YAML specification.
+
+# This key is required configuration of the grid itself.
+grid:
+    # Give a page title
+    title: My Short Example Grid
+    # Give a page description
+    description: >
+                 This is to demonstrate the concept of how the infinite-axis grid system works.
+                 This description here demonstrates multi-line YAML strings.
+                 <br>It also shows that you can write <b>HTML</b> if you want to.
+
+# "axes" is the root key of the list of axes
+axes:
+    # Simply number these keys.
+    # The key names are ignored and just used to organize the file, so feel free to put random values here instead if you want to I guess.
+    1:
+        # Name your axis.
+        name: Sampler
+        # Add any description text you want.
+        description: Different samplers can produce slightly different output.
+        # "values" is where the options go
+        values:
+            # Again, number the keys.
+            1:
+                # As usual, name and optional description.
+                name: Euler A
+                description: Euler Ancestral is like Euler, but with <b>ancestral</b> stuff.
+                # You can configure multiple parameter settings arbitrarily here.
+                params:
+                    # View the readme for accepted parameter types and formats.
+                    Sampler: Euler A
+            2:
+                name: Euler
+                description: Good ol k_euler.
+                params:
+                    Sampler: Euler
+            3:
+                name: DDIM
+                description: The original.
+                params:
+                    Sampler: DDIM
+    2:
+        name: Steps
+        description: How many times to run the sampler.
+        values:
+            1:
+                name: 10
+                description: Ten times.
+                params:
+                    Steps: 10
+            # You can be lazy too. This will set param 'steps' to '15' and set name to '15'.
+            2: steps=15
+            3: steps=20
+    3:
+        name: CFG Scale
+        values:
+            1: CFG scale=3
+            2: CFG scale=5
+            3: CFG scale=7
+            4: CFG scale=9
+            5: CFG scale=11
+    4:
+        name: Seed
+        values:
+            1: seed=1
+            2: seed=2
+            3: seed=3
+

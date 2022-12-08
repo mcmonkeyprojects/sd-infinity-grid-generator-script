@@ -1,0 +1,9 @@
+/**
+ * This file is part of Stable Diffusion Infinity Grid Generator, view the README.md for more information.
+ */
+
+#infinity_grid_refresh_button {
+    max-width: 2.5em;
+    min-width: 2.5em;
+    height: 2.4em;
+}

@@ -36,7 +36,7 @@ TODO
 - Open the WebUI
 - Go to the `txt2img` or `img2img` tab
 - At the bottom of the page, find the `Script` selection box, and select `Generate Infinite-Axis Grid`
-- Select options at will. You can hover over each option for extra usage information.
+- Select options at will. You can hover your mouse over each option for extra usage information.
 - Select your grid definition file from earlier.
 - Hit your `Generate` button, and wait.
 

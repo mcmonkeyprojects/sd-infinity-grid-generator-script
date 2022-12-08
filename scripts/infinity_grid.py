@@ -20,6 +20,7 @@ from copy import copy
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts
 from modules.processing import process_images, Processed
 from modules.shared import opts, cmd_opts, state
+from modules.hypernetworks import hypernetwork
 
 refresh_symbol = '\U0001f504'  # 🔄
 INF_GRID_README = "https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script"
@@ -62,30 +63,82 @@ def getVaeFor(name):
     return getBestInList(name, sd_vae.vae_dict.keys())
 
 def getSamplerFor(name):
-    return getBestInList(name, sd_samplers.samplers_map.keys())
+    return getBestInList(name, sd_samplers.all_samplers_map.keys())
+
+def applySampler(p, v):
+    p.sampler_name = getSamplerFor(v)
+def applySeed(p, v):
+    p.seed = int(v)
+def applySteps(p, v):
+    p.steps = int(v)
+def applyCfgScale(p, v):
+    p.cfg_scale = float(v)
+def applyModel(p, v):
+    sd_models.reload_model_weights(shared.sd_model, getModelFor(v))
+    p.sd_model = shared.sd_model
+def applyVae(p, v):
+    vaeName = cleanName(v)
+    if vaeName not in ["auto", "none"]:
+        vaeName = getVaeFor(vaeName)
+    sd_vae.reload_vae_weights(None, vaeName)
+def applyWidth(p, v):
+    p.width = int(v)
+def applyHeight(p, v):
+    p.height = int(v)
+def applyHypernetwork(p, v):
+    hnName = cleanName(v)
+    if hnName == "none":
+        hnName = None
+    else:
+        hnName = getHypernetworkFor(hnName)
+    hypernetwork.load_hypernetwork(hnName)
+def applyHypernetworkStrength(p, v):
+    hypernetwork.apply_strength = float(v)
+def applyPrompt(p, v):
+    p.prompt = v
+def applyNegativePrompt(p, v):
+    p.negative_prompt = v
+def applyVarSeed(p, v):
+    p.subseed = int(v)
+def applyVarSeedStrength(p, v):
+    p.subseed_strength = int(v)
+def applyClipSkip(p, v):
+    opts.data["CLIP_stop_at_last_layers"] = int(v)
+def applyDenoising(p, v):
+    p.denoising_strength = float(v)
+def applyEta(p, v):
+    p.eta = float(v)
+def applySigmaChurn(p, v):
+    p.s_churn = float(v)
+def applySigmaTmin(p, v):
+    p.s_tmin = float(v)
+def applySigmaTmax(p, v):
+    p.s_tmax = float(v)
+def applySigmaNoise(p, v):
+    p.s_noise = float(v)
 
 validModes = {
-    "sampler": { "type": "text" },
-    "seed": { "type": "integer" },
-    "steps": { "type": "integer", "min": 0, "max": 200 },
-    "cfgscale": { "type": "decimal", "min": 0, "max": 50 },
-    "model": { "type": "text" },
-    "vae": { "type": "text" },
-    "width": { "type": "integer" },
-    "height": { "type": "integer" },
-    "hypernetwork": { "type": "text" },
-    "hypernetworkstrength": { "type": "decimal", "min": 0, "max": 1 },
-    "prompt": { "type": "text" },
-    "negativeprompt": { "type": "text" },
-    "varseed": { "type": "integer" },
-    "varstrength": { "type": "decimal", "min": 0, "max": 1 },
-    "clipskip": { "type": "integer", "min": 1, "max": 12 },
-    "denoising": { "type": "decimal", "min": 0, "max": 1 },
-    "eta": { "type": "decimal", "min": 0, "max": 1 },
-    "sigmachurn": { "type": "decimal", "min": 0, "max": 1 },
-    "sigmatmin": { "type": "decimal", "min": 0, "max": 1 },
-    "sigmanoise": { "type": "decimal", "min": 0, "max": 1 },
-    "etanoiseseeddelta": { "type": "integer" }
+    "sampler": { "type": "text", "apply": applySampler },
+    "seed": { "type": "integer", "apply": applySeed },
+    "steps": { "type": "integer", "min": 0, "max": 200, "apply": applySteps },
+    "cfgscale": { "type": "decimal", "min": 0, "max": 50, "apply": applyCfgScale },
+    "model": { "type": "text", "apply": applyModel },
+    "vae": { "type": "text", "apply": applyVae },
+    "width": { "type": "integer", "apply": applyWidth },
+    "height": { "type": "integer", "apply": applyHeight },
+    "hypernetwork": { "type": "text", "apply": applyHypernetwork },
+    "hypernetworkstrength": { "type": "decimal", "min": 0, "max": 1, "apply": applyHypernetworkStrength },
+    "prompt": { "type": "text", "apply": applyPrompt },
+    "negativeprompt": { "type": "text", "apply": applyNegativePrompt },
+    "varseed": { "type": "integer", "apply": applyVarSeed },
+    "varstrength": { "type": "decimal", "min": 0, "max": 1, "apply": applyVarSeedStrength },
+    "clipskip": { "type": "integer", "min": 1, "max": 12, "apply": applyClipSkip },
+    "denoising": { "type": "decimal", "min": 0, "max": 1, "apply": applyDenoising },
+    "eta": { "type": "decimal", "min": 0, "max": 1, "apply": applyEta },
+    "sigmachurn": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaChurn },
+    "sigmatmin": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmin },
+    "sigmatmax": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmax },
+    "sigmanoise": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise }
 }
 
 def validateParams(params):
@@ -212,6 +265,10 @@ class SingleGridCall:
         for val in self.values:
             for p, v in val.params.items():
                 self.params[p] = v
+    
+    def applyTo(self, p):
+        for name, val in self.params.items():
+            validModes[name]["apply"](p, val)
 
 class GridRunner:
     def __init__(self, grid, useJpg, doOverwrite, basePath, p):
@@ -223,7 +280,7 @@ class GridRunner:
         self.doOverwrite = doOverwrite
         self.basePath = basePath
         self.p = p
-        self.ext = ".jpg" if self.useJpg else ".png"
+        self.ext = "jpg" if self.useJpg else "png"
     
     def buildValueSetList(axisList):
         result = list()
@@ -248,23 +305,45 @@ class GridRunner:
         self.valueSets = GridRunner.buildValueSetList(list(reversed(self.grid.axes)))
         print(f'Have {len(self.valueSets)} unique value sets, will go into {self.basePath}')
         for set in self.valueSets:
-            set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))) + self.ext)
-            if not self.doOverwrite and os.path.exists(set.filepath):
+            set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
+            set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
+            if not self.doOverwrite and os.path.exists(set.filepath + "." + self.ext):
                 self.totalSkip += 1
             else:
                 set.flattenParams(self.grid)
                 self.totalRun += 1
                 stepCount = set.params.get("steps")
                 self.totalSteps += int(stepCount) if stepCount is not None else self.p.steps
-            string = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
-            print(f'Set: {string}, file {set.filepath}')
         print(f"Skipped {self.totalSkip} files, will run {self.totalRun} files, for {self.totalSteps} total steps")
     
     def run(self):
         shared.total_tqdm.updateTotal(self.totalSteps)
+        iteration = 0
+        last = None
         for set in self.valueSets:
+            print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
+            iteration += 1
             p = copy(self.p)
-            # processed = process_images(pc)
+            set.applyTo(p)
+            processed = process_images(p)
+            if len(processed.images) != 1:
+                raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
+            os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
+            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.ext, p=p, prompt=p.prompt, seed=processed.seed)
+            last = processed
+        return last
+
+class SettingsFixer():
+    def __enter__(self):
+        self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
+        self.hypernetwork = opts.sd_hypernetwork
+        self.model = shared.sd_model
+  
+    def __exit__(self, exc_type, exc_value, tb):
+        sd_models.reload_model_weights(self.model)
+        hypernetwork.load_hypernetwork(self.hypernetwork)
+        hypernetwork.apply_strength()
+        opts.data["CLIP_stop_at_last_layers"] = self.CLIP_stop_at_last_layers
 
 class Script(scripts.Script):
     BASEDIR = scripts.basedir()
@@ -293,9 +372,12 @@ class Script(scripts.Script):
         return [help_info, use_jpg, do_overwrite, grid_file, refresh_button]
 
     def run(self, p, help_info, use_jpg, do_overwrite, grid_file, refresh_button):
-        # Clean up iffy default params
+        # Clean up default params
+        p = copy(p)
         p.n_iter = 1
         p.batch_size = 1
+        p.do_not_save_samples = True
+        p.do_not_save_grid = True
         # Validate to avoid abuse
         if '..' in grid_file or grid_file == "":
             raise RuntimeError(f"Unacceptable filename '{grid_file}'")
@@ -313,7 +395,6 @@ class Script(scripts.Script):
         # Now start using it
         runner = GridRunner(helper, use_jpg, do_overwrite, os.path.join(p.outpath_grids, grid_file.replace(".yml", "")), p)
         runner.preprocess()
-        runner.run()
-        # ...
-        proc = process_images(p)
-        return proc
+        with SettingsFixer():
+            result = runner.run()
+        return result

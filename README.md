@@ -73,7 +73,7 @@ axes:
 
 - Names and descriptions can always be whatever you want, as HTML text.
 - Settings supported for parameters:
-    - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaNoise`, `ETANoiseSeedDelta`
+    - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`
     - All names are case insensitive and spacing insensitive. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.

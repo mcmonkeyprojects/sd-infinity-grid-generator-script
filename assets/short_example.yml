@@ -1,5 +1,7 @@
 # This is a YAML file, so all content must be configured per YAML specification.
 
+# This short_example.yml file will generate 270 images in total. On a decent graphics card with SD 1.5, expect 5-10 minutes to run.
+
 # This key is required configuration of the grid itself.
 grid:
     # Give a page title
@@ -71,3 +73,14 @@ axes:
             1: seed=1
             2: seed=2
             3: seed=3
+    prompt:
+        title: Prompt
+        values:
+            cat:
+                title: Cat
+                params:
+                    prompt: A professional portrait of a cat
+            dog:
+                title: Dog
+                params:
+                    prompt: A photograph of a dog running in a field

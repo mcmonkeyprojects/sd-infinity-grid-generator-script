@@ -20,11 +20,13 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 Initial version is technically functional.
 
-Needs some better web design before it's quite ready for primetime.
-
-Needs a better sample output. I plan to make a very thorough one, but will get that done later.
-
-Also needs thorough bugtesting. I haven't done that yet. Oops.
+TODO:
+- Better web design (might need external help)
+- Better sample output. I have a plan for a very detailed/thorough one.
+- Careful bugtesting. Make sure every mode works.
+- Add mode: "Prompt replace" (needs to be stackable, and pre-validated)
+- Move the jpg vs png option to the yml file instead of the UI
+- Add an optional for different output res. So for large runs you can shrink to `256x256` or something to reduce filespace. (ie render at 512 because the AI needs that, but shrink to 256 for the actual file)
 
 --------------
 

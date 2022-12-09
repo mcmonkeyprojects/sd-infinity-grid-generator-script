@@ -76,6 +76,7 @@ Usage comes in three main steps:
 - I recommend editing with a good text editor, such as *VS Code* or *Notepad++*. Don't use *MS Word* or *Windows Notepad* as those might cause trouble.
 - All text inputs allow for raw HTML, so, be careful. You can use `&lt;` for `<`, and `&gt;` for `>`, and `&amp;` for `&`.
 - The file must have key `grid`, with subkey `title` and `description` to define the file data.
+    - It must also have `format` as `jpg` or `png`
     - It can optionally also have `params` to specify any default parameters.
 - The file must have key `axes` to define the list of axes. This is a map-list key - meaning, add subkeys to create a list of each axis.
     - Each axis must have a `title`, and `values`. It can optionally have a `description`.
@@ -139,7 +140,6 @@ If you want to add more content to a grid you already made, you can do that:
 - You can add axes, but you'll have to regenerate all images if so.
     - Probably save as a new filename in that case.
 - If you're just adding a new value, make sure to leave `overwriting existing images` off.
-- Make sure your `Save Grid Images as JPEG` setting is the same as it was originally.
 
 ----------------------
 

@@ -19,6 +19,10 @@ grid:
     params:
         steps: 20
         Sampler: Euler
+    # Can specify the format as either 'jpg' or 'png'
+    # jpg makes smaller files, with slightly lower quality, and no metadata
+    # png makes bigger files, at better quality, with metadata
+    format: jpg
 
 # "axes" is the root key of the list of axes
 axes:

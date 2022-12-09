@@ -278,16 +278,14 @@ class SingleGridCall:
             validModes[name]["apply"](p, val)
 
 class GridRunner:
-    def __init__(self, grid, useJpg, doOverwrite, basePath, p):
+    def __init__(self, grid, doOverwrite, basePath, p):
         self.grid = grid
         self.totalRun = 0
         self.totalSkip = 0
         self.totalSteps = 0
-        self.useJpg = useJpg
         self.doOverwrite = doOverwrite
         self.basePath = basePath
         self.p = p
-        self.ext = "jpg" if self.useJpg else "png"
     
     def buildValueSetList(axisList):
         result = list()
@@ -315,7 +313,7 @@ class GridRunner:
             set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flattenParams(self.grid)
-            set.doSkip = not self.doOverwrite and os.path.exists(set.filepath + "." + self.ext)
+            set.doSkip = not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.ext)
             if set.doSkip:
                 self.totalSkip += 1
             else:
@@ -357,11 +355,11 @@ class SettingsFixer():
 
 ######################### Web Data Builders #########################
 class WebDataBuilder():
-    def buildJson(grid, runner):
+    def buildJson(grid):
         result = {}
         result['title'] = grid.title
         result['description'] = grid.description
-        result['ext'] = runner.ext
+        result['ext'] = grid.ext
         axes = list()
         for axis in grid.axes:
             jAxis = {}
@@ -417,9 +415,9 @@ class WebDataBuilder():
         html = html.replace("{TITLE}", grid.title).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
         return html
 
-    def EmitWebData(path, grid, runner):
+    def EmitWebData(path, grid):
         print("Building final web data...")
-        json = WebDataBuilder.buildJson(grid, runner)
+        json = WebDataBuilder.buildJson(grid)
         with open(os.path.join(path, "data.js"), 'w') as f:
             f.write("rawData = " + json)
         assetDir = os.path.join(Script.BASEDIR, "assets")
@@ -442,7 +440,6 @@ class Script(scripts.Script):
 
     def ui(self, is_img2img):
         help_info = gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
-        use_jpg = gr.Checkbox(value=True, label="Save Grid Images As JPEG")
         do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
         # Maintain our own refreshable list of yaml files, to avoid all the oddities of other scripts demanding you drag files and whatever
         # Refresh code based roughly on how the base WebUI does refreshing of model files and all
@@ -454,9 +451,9 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, use_jpg, do_overwrite, grid_file, refresh_button]
+        return [help_info, do_overwrite, grid_file, refresh_button]
 
-    def run(self, p, help_info, use_jpg, do_overwrite, grid_file, refresh_button):
+    def run(self, p, help_info, do_overwrite, grid_file, refresh_button):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
@@ -479,11 +476,11 @@ class Script(scripts.Script):
         grid.parseYaml(yamlContent, grid_file)
         # Now start using it
         folder = os.path.join(p.outpath_grids, grid_file.replace(".yml", ""))
-        runner = GridRunner(grid, use_jpg, do_overwrite, folder, p)
+        runner = GridRunner(grid, do_overwrite, folder, p)
         runner.preprocess()
         with SettingsFixer():
             result = runner.run()
-        WebDataBuilder.EmitWebData(folder, grid, runner)
+        WebDataBuilder.EmitWebData(folder, grid)
         if result is None:
             return Processed(p, list())
         return result

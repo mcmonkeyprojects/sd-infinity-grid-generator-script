@@ -15,7 +15,6 @@
 ex_titles = titles;
 
 new_titles = {
-    "Save Grid Images As JPEG": "If checked, images in the infinity grid will be simple JPEG files. These use less space, but will be missing metadata. If unchecked, images will be PNG files, which have metadata or other custom settings, at the cost of using much more filespace.",
     "Select grid definition file": "Select the grid definition yaml file, in your '(extension)/assets' folder. Refer to the README for info.",
     "Overwrite existing images (for updating grids)": "If checked, any existing image files will be overwritten - this is useful if you want to redo the grid with completely different base settings. If unchecked, if an image already exists, it will be skipped - this is useful for adding new options to an existing grid."
 }

@@ -24,8 +24,7 @@ TODO:
 - Better web design (might need external help)
 - Better sample output. I have a plan for a very detailed/thorough one.
 - Careful bugtesting. Make sure every mode works.
-- Option to disable prompt replace validation in the WebUI
-- Add a checkbox on the webpage for whether to dynamically scale images. When enabled, the grid will be scaled such that width matches viewport width. With disabled, images will be full size for their resolution.
+- Add a checkbox on the webpage for whether to dynamically scale images. When enabled, the grid will be scaled such that width matches viewport width. When disabled, images will be full size for their resolution.
 
 --------------
 

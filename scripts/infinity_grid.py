@@ -129,7 +129,7 @@ def applyPromptReplace(p, v):
         raise RuntimeError(f"Invalid prompt replace, missing '=' symbol, for '{v}'")
     match = val[0].strip()
     replace = val[1].strip()
-    if match not in p.prompt and match not in p.negative_prompt:
+    if Script.VALIDATE_REPLACE and match not in p.prompt and match not in p.negative_prompt:
         raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
     p.prompt = p.prompt.replace(match, replace)
     p.negative_prompt = p.negative_prompt.replace(match, replace)
@@ -457,6 +457,7 @@ class WebDataBuilder():
 ######################### Script class entrypoint #########################
 class Script(scripts.Script):
     BASEDIR = scripts.basedir()
+    VALIDATE_REPLACE = True
 
     def title(self):
         return "Generate Infinite-Axis Grid"
@@ -468,6 +469,7 @@ class Script(scripts.Script):
         help_info = gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
         do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
         dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
+        validate_replace = gr.Checkbox(value=True, label="Validate PromptReplace input")
         # Maintain our own refreshable list of yaml files, to avoid all the oddities of other scripts demanding you drag files and whatever
         # Refresh code based roughly on how the base WebUI does refreshing of model files and all
         with gr.Row():
@@ -478,9 +480,9 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, do_overwrite, dry_run, grid_file, refresh_button]
+        return [help_info, do_overwrite, dry_run, validate_replace, grid_file, refresh_button]
 
-    def run(self, p, help_info, do_overwrite, dry_run, grid_file, refresh_button):
+    def run(self, p, help_info, do_overwrite, dry_run, validate_replace, grid_file, refresh_button):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
@@ -504,6 +506,7 @@ class Script(scripts.Script):
         # Now start using it
         folder = os.path.join(p.outpath_grids, grid_file.replace(".yml", ""))
         runner = GridRunner(grid, do_overwrite, folder, p)
+        Script.VALIDATE_REPLACE = validate_replace
         runner.preprocess()
         if dry_run:
             print("Infinite Grid dry run succeeded without error")

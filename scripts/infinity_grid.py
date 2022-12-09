@@ -285,7 +285,7 @@ class SingleGridCall:
     def __init__(self, values):
         self.values = values
         self.replacements = list()
-    
+
     def flattenParams(self, grid):
         self.params = grid.params.copy() if grid.params is not None else dict()
         for val in self.values:
@@ -294,10 +294,10 @@ class SingleGridCall:
                     self.replacements.append(v)
                 else:
                     self.params[p] = v
-    
+
     def applyTo(self, p, dry):
         for name, val in self.params.items():
-            mode = validModes[name]
+            mode = validModes[cleanName(name)]
             if not dry or mode["dry"]:
                 mode["apply"](p, val)
         for replace in self.replacements:
@@ -312,7 +312,7 @@ class GridRunner:
         self.doOverwrite = doOverwrite
         self.basePath = basePath
         self.p = p
-    
+
     def buildValueSetList(axisList):
         result = list()
         if len(axisList) == 0:
@@ -331,7 +331,7 @@ class GridRunner:
                 newList.append(val)
                 result.append(SingleGridCall(newList))
         return result
-    
+
     def preprocess(self):
         self.valueSets = GridRunner.buildValueSetList(list(reversed(self.grid.axes)))
         print(f'Have {len(self.valueSets)} unique value sets, will go into {self.basePath}')
@@ -347,7 +347,7 @@ class GridRunner:
                 stepCount = set.params.get("steps")
                 self.totalSteps += int(stepCount) if stepCount is not None else self.p.steps
         print(f"Skipped {self.totalSkip} files, will run {self.totalRun} files, for {self.totalSteps} total steps")
-    
+
     def run(self, dry):
         shared.total_tqdm.updateTotal(self.totalSteps)
         iteration = 0
@@ -377,7 +377,7 @@ class SettingsFixer():
         self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
         self.hypernetwork = opts.sd_hypernetwork
         self.model = shared.sd_model
-  
+
     def __exit__(self, exc_type, exc_value, tb):
         sd_models.reload_model_weights(self.model)
         hypernetwork.load_hypernetwork(self.hypernetwork)

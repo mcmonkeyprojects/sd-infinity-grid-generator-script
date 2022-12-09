@@ -18,10 +18,10 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 ### Status
 
-Initial version is technically functional.
+Initial version is functional and does what it's meant to do. Needs thorough testing and some QOL improvements.
 
 TODO:
-- Better web design (might need external help)
+- Better web design (might need to find somebody with experience in this to help, I'm a programmer not a designer)
 - Better sample output. I have a plan for a very detailed/thorough one.
 - Careful bugtesting. Make sure every mode works.
 - Add a checkbox on the webpage for whether to dynamically scale images. When enabled, the grid will be scaled such that width matches viewport width. When disabled, images will be full size for their resolution.
@@ -65,7 +65,7 @@ Here's a web demo you can try to test how the output looks and works: https://mc
 Usage comes in three main steps:
 - 1: Build a grid definition
 - 2: Generate its contents
-- 3: Make use of the generated output viewer
+- 3: View/use the generated output page
 
 #### 1: Grid Definition File
 
@@ -87,6 +87,7 @@ Micro example:
 grid:
     title: Tiny example
     description: This is just to show core format rules. View the example `.yml` files in assets for better examples.
+    format: jpg
 axes:
     1:
         title: Sampler
@@ -103,6 +104,7 @@ axes:
     - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
     - `PromptReplace` can be used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
         - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
+        - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
 - Note that it will be processed from bottom to top - so if you have `samplers`, then `steps`, then `seeds`, it will:
     - choose one sampler and step count, and iterate all seeds.
     - then it will do the next sample and step count, and iterate all seeds.

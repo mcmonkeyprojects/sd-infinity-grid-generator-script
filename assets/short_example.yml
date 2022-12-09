@@ -1,6 +1,6 @@
 # This is a YAML file, so all content must be configured per YAML specification.
 
-# This short_example.yml file will generate 270 images in total. On a decent graphics card with SD 1.5, expect 5-10 minutes to run.
+# This short_example.yml file will generate 540 images in total. On a decent graphics card with SD 1.5, expect 10-20 minutes to run.
 
 # This key is required configuration of the grid itself.
 grid:
@@ -21,8 +21,8 @@ grid:
         Sampler: Euler
         # You can specify custom width/height to rescale images to as parameters.
         # If you set eg 256x256, it will save significant file space.
-        OutWidth: 512
-        OutHeight: 512
+        OutWidth: 256
+        OutHeight: 256
     # Can specify the format as either 'jpg' or 'png'
     # jpg makes smaller files, with slightly lower quality, and no metadata
     # png makes bigger files, at better quality, with metadata

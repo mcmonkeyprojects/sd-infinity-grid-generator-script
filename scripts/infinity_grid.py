@@ -124,7 +124,7 @@ def applyOutWidth(p, v):
 def applyOutHeight(p, v):
     p.inf_grid_out_height = int(v)
 def applyPromptReplace(p, v):
-    val = v.split('=', maxsplit=2)
+    val = v.split('=', maxsplit=1)
     if len(val) != 2:
         raise RuntimeError(f"Invalid prompt replace, missing '=' symbol, for '{v}'")
     match = val[0].strip()
@@ -214,7 +214,7 @@ class AxisValue:
         self.key = key
         self.params = list()
         if isinstance(val, str):
-            halves = val.split('=', maxsplit=2)
+            halves = val.split('=', maxsplit=1)
             if len(halves) != 2:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': not expected format")
             validateSingleParam(halves[0], halves[1])
@@ -337,7 +337,7 @@ class GridRunner:
             set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flattenParams(self.grid)
-            set.doSkip = not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.ext)
+            set.doSkip = not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.format)
             if set.doSkip:
                 self.totalSkip += 1
             else:
@@ -363,7 +363,7 @@ class GridRunner:
             os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
             if p.inf_grid_out_width is not None and p.inf_grid_out_height is not None:
                 processed.images[0] = processed.images[0].resize(p.inf_grid_out_width, p.inf_grid_out_height, images.LANCZOS)
-            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.grid.ext, p=p, prompt=p.prompt, seed=processed.seed)
+            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
         return last
 
@@ -385,7 +385,7 @@ class WebDataBuilder():
         result = {}
         result['title'] = grid.title
         result['description'] = grid.description
-        result['ext'] = grid.ext
+        result['ext'] = grid.format
         axes = list()
         for axis in grid.axes:
             jAxis = {}
@@ -403,7 +403,7 @@ class WebDataBuilder():
             axes.append(jAxis)
         result['axes'] = axes
         return json.dumps(result)
-    
+
     def buildHtml(grid):
         assetDir = os.path.join(Script.BASEDIR, "assets")
         with open(os.path.join(assetDir, "page.html"), 'r') as referenceHtml:
@@ -467,6 +467,7 @@ class Script(scripts.Script):
     def ui(self, is_img2img):
         help_info = gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
         do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
+        dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
         # Maintain our own refreshable list of yaml files, to avoid all the oddities of other scripts demanding you drag files and whatever
         # Refresh code based roughly on how the base WebUI does refreshing of model files and all
         with gr.Row():
@@ -477,9 +478,9 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, do_overwrite, grid_file, refresh_button]
+        return [help_info, do_overwrite, dry_run, grid_file, refresh_button]
 
-    def run(self, p, help_info, do_overwrite, grid_file, refresh_button):
+    def run(self, p, help_info, do_overwrite, dry_run, grid_file, refresh_button):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
@@ -504,6 +505,9 @@ class Script(scripts.Script):
         folder = os.path.join(p.outpath_grids, grid_file.replace(".yml", ""))
         runner = GridRunner(grid, do_overwrite, folder, p)
         runner.preprocess()
+        if dry_run:
+            print("Infinite Grid dry run succeeded without error")
+            return Processed(p, list())
         with SettingsFixer():
             result = runner.run()
         WebDataBuilder.EmitWebData(folder, grid)

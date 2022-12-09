@@ -43,11 +43,11 @@ function fillTable() {
         newContent += "<tr><td title=\"" + val.description + "\">" + val.title + "</td>";
         var url = "";
         for (var subAxis of rawData.axes) {
-            if (subAxis.id == y) {
-                url += "/" + val.key;
-            }
-            else if (subAxis.id == x) {
+            if (subAxis.id == x) {
                 url += "/{X}"
+            }
+            else if (subAxis.id == y) {
+                url += "/" + val.key;
             }
             else {
                 var valSelectedKey;

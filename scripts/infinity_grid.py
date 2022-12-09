@@ -77,13 +77,14 @@ def applySteps(p, v):
 def applyCfgScale(p, v):
     p.cfg_scale = float(v)
 def applyModel(p, v):
-    sd_models.reload_model_weights(shared.sd_model, getModelFor(v))
+    info = sd_models.get_closet_checkpoint_match(getModelFor(v))
+    sd_models.reload_model_weights(shared.sd_model, info)
     p.sd_model = shared.sd_model
 def applyVae(p, v):
     vaeName = cleanName(v)
     if vaeName not in ["auto", "none"]:
         vaeName = getVaeFor(vaeName)
-    sd_vae.reload_vae_weights(None, vaeName)
+    sd_vae.reload_vae_weights(None, sd_vae.vae_dict[vaeName])
 def applyWidth(p, v):
     p.width = int(v)
 def applyHeight(p, v):
@@ -194,18 +195,18 @@ def validateSingleParam(p, v):
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
         elif p == "model":
             if getModelFor(v) is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized")
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized - valid {list(map(lambda m: m.title, sd_models.checkpoints_list.values()))}")
         elif p == "hypernetwork":
             hnName = cleanName(v)
             if hnName != "none" and getHypernetworkFor(hnName) is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized")
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized - valid: {list(shared.hypernetworks.keys())}")
         elif p == "vae":
             vaeName = cleanName(v)
-            if vaeName != "none" and vaeName != "auto" and getVaeFor(hnName) is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized")
+            if vaeName != "none" and vaeName != "auto" and getVaeFor(vaeName) is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized - valid: {list(sd_vae.vae_dict.keys())}")
         elif p == "sampler":
             if getSamplerFor(cleanName(v)) is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized")
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
 
 ######################### YAML Parsing and Processing #########################
 class AxisValue:

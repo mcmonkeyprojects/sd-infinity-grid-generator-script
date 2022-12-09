@@ -135,30 +135,30 @@ def applyPromptReplace(p, v):
     p.negative_prompt = p.negative_prompt.replace(match, replace)
 
 validModes = {
-    "sampler": { "type": "text", "apply": applySampler },
-    "seed": { "type": "integer", "apply": applySeed },
-    "steps": { "type": "integer", "min": 0, "max": 200, "apply": applySteps },
-    "cfgscale": { "type": "decimal", "min": 0, "max": 50, "apply": applyCfgScale },
-    "model": { "type": "text", "apply": applyModel },
-    "vae": { "type": "text", "apply": applyVae },
-    "width": { "type": "integer", "apply": applyWidth },
-    "height": { "type": "integer", "apply": applyHeight },
-    "hypernetwork": { "type": "text", "apply": applyHypernetwork },
-    "hypernetworkstrength": { "type": "decimal", "min": 0, "max": 1, "apply": applyHypernetworkStrength },
-    "prompt": { "type": "text", "apply": applyPrompt },
-    "negativeprompt": { "type": "text", "apply": applyNegativePrompt },
-    "varseed": { "type": "integer", "apply": applyVarSeed },
-    "varstrength": { "type": "decimal", "min": 0, "max": 1, "apply": applyVarSeedStrength },
-    "clipskip": { "type": "integer", "min": 1, "max": 12, "apply": applyClipSkip },
-    "denoising": { "type": "decimal", "min": 0, "max": 1, "apply": applyDenoising },
-    "eta": { "type": "decimal", "min": 0, "max": 1, "apply": applyEta },
-    "sigmachurn": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaChurn },
-    "sigmatmin": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmin },
-    "sigmatmax": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmax },
-    "sigmanoise": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
-    "outwidth": { "type": "integer", "min": 0, "apply": applyOutWidth },
-    "outheight": { "type": "integer", "min": 0, "apply": applyOutHeight },
-    "promptreplace": { "type": "text", "apply": applyPromptReplace }
+    "sampler": { "dry": True, "type": "text", "apply": applySampler },
+    "seed": { "dry": True, "type": "integer", "apply": applySeed },
+    "steps": { "dry": True, "type": "integer", "min": 0, "max": 200, "apply": applySteps },
+    "cfgscale": { "dry": True, "type": "decimal", "min": 0, "max": 50, "apply": applyCfgScale },
+    "model": { "dry": False, "type": "text", "apply": applyModel },
+    "vae": { "dry": False, "type": "text", "apply": applyVae },
+    "width": { "dry": True, "type": "integer", "apply": applyWidth },
+    "height": { "dry": True, "type": "integer", "apply": applyHeight },
+    "hypernetwork": { "dry": False, "type": "text", "apply": applyHypernetwork },
+    "hypernetworkstrength": { "dry": False, "type": "decimal", "min": 0, "max": 1, "apply": applyHypernetworkStrength },
+    "prompt": { "dry": True, "type": "text", "apply": applyPrompt },
+    "negativeprompt": { "dry": True, "type": "text", "apply": applyNegativePrompt },
+    "varseed": { "dry": True, "type": "integer", "apply": applyVarSeed },
+    "varstrength": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyVarSeedStrength },
+    "clipskip": { "dry": False, "type": "integer", "min": 1, "max": 12, "apply": applyClipSkip },
+    "denoising": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyDenoising },
+    "eta": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyEta },
+    "sigmachurn": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaChurn },
+    "sigmatmin": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmin },
+    "sigmatmax": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmax },
+    "sigmanoise": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
+    "outwidth": { "dry": True, "type": "integer", "min": 0, "apply": applyOutWidth },
+    "outheight": { "dry": True, "type": "integer", "min": 0, "apply": applyOutHeight },
+    "promptreplace": { "dry": True, "type": "text", "apply": applyPromptReplace }
 }
 
 ######################### Validation #########################
@@ -295,9 +295,11 @@ class SingleGridCall:
                 else:
                     self.params[p] = v
     
-    def applyTo(self, p):
+    def applyTo(self, p, dry):
         for name, val in self.params.items():
-            validModes[name]["apply"](p, val)
+            mode = validModes[name]
+            if not dry or mode["dry"]:
+                mode["apply"](p, val)
         for replace in self.replacements:
             applyPromptReplace(p, replace)
 
@@ -346,7 +348,7 @@ class GridRunner:
                 self.totalSteps += int(stepCount) if stepCount is not None else self.p.steps
         print(f"Skipped {self.totalSkip} files, will run {self.totalRun} files, for {self.totalSteps} total steps")
     
-    def run(self):
+    def run(self, dry):
         shared.total_tqdm.updateTotal(self.totalSteps)
         iteration = 0
         last = None
@@ -354,9 +356,12 @@ class GridRunner:
             if set.doSkip:
                 continue
             iteration += 1
-            print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
+            if not dry:
+                print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
             p = copy(self.p)
-            set.applyTo(p)
+            set.applyTo(p, dry)
+            if dry:
+                continue
             processed = process_images(p)
             if len(processed.images) != 1:
                 raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
@@ -508,11 +513,11 @@ class Script(scripts.Script):
         runner = GridRunner(grid, do_overwrite, folder, p)
         Script.VALIDATE_REPLACE = validate_replace
         runner.preprocess()
+        with SettingsFixer():
+            result = runner.run(dry_run)
         if dry_run:
             print("Infinite Grid dry run succeeded without error")
             return Processed(p, list())
-        with SettingsFixer():
-            result = runner.run()
         WebDataBuilder.EmitWebData(folder, grid)
         if result is None:
             return Processed(p, list())

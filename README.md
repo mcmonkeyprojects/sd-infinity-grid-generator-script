@@ -86,6 +86,7 @@ Micro example:
 ```yml
 grid:
     title: Tiny example
+    author: someone
     description: This is just to show core format rules. View the example `.yml` files in assets for better examples.
     format: jpg
 axes:

@@ -366,8 +366,8 @@ class GridRunner:
             if len(processed.images) != 1:
                 raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
             os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
-            if p.inf_grid_out_width is not None and p.inf_grid_out_height is not None:
-                processed.images[0] = processed.images[0].resize(p.inf_grid_out_width, p.inf_grid_out_height, images.LANCZOS)
+            if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
+                processed.images[0] = processed.images[0].resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
             images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
         return last

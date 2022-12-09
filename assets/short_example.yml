@@ -19,6 +19,10 @@ grid:
     params:
         steps: 20
         Sampler: Euler
+        # You can specify custom width/height to rescale images to as parameters.
+        # If you set eg 256x256, it will save significant file space.
+        OutWidth: 512
+        OutHeight: 512
     # Can specify the format as either 'jpg' or 'png'
     # jpg makes smaller files, with slightly lower quality, and no metadata
     # png makes bigger files, at better quality, with metadata

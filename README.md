@@ -24,9 +24,9 @@ TODO:
 - Better web design (might need external help)
 - Better sample output. I have a plan for a very detailed/thorough one.
 - Careful bugtesting. Make sure every mode works.
-- Add mode: "Prompt replace" (needs to be stackable, and pre-validated)
-- Move the jpg vs png option to the yml file instead of the UI
-- Add an optional for different output res. So for large runs you can shrink to `256x256` or something to reduce filespace. (ie render at 512 because the AI needs that, but shrink to 256 for the actual file)
+- Add mode: "Prompt replace" (needs to be stackable, and pre-validated (also an option to disable the validation in the UI))
+- Add a checkbox on the webpage for whether to dynamically scale images. When enabled, the grid will be scaled such that width matches viewport width. With disabled, images will be full size for their resolution.
+- add `dryrun` option
 
 --------------
 
@@ -45,7 +45,7 @@ TODO:
 
 ### Examples
 
-Here's a web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example/index.html
+Here's a web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example
 
 ![img](github/img_1.png)
 
@@ -98,10 +98,11 @@ axes:
 
 - Names and descriptions can always be whatever you want, as HTML text.
 - Settings supported for parameters:
-    - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`
+    - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`, `OutWidth`, `OutHeight`, `PromptReplace`
     - All names are case insensitive and spacing insensitive. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.
+    - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
 - Note that it will be processed from bottom to top - so if you have `samplers`, then `steps`, then `seeds`, it will:
     - choose one sampler and step count, and iterate all seeds.
     - then it will do the next sample and step count, and iterate all seeds.

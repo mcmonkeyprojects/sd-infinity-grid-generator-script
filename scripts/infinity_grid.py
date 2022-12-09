@@ -119,6 +119,10 @@ def applySigmaTmax(p, v):
     p.s_tmax = float(v)
 def applySigmaNoise(p, v):
     p.s_noise = float(v)
+def applyOutWidth(p, v):
+    p.inf_grid_out_width = int(v)
+def applyOutHeight(p, v):
+    p.inf_grid_out_height = int(v)
 
 validModes = {
     "sampler": { "type": "text", "apply": applySampler },
@@ -141,7 +145,9 @@ validModes = {
     "sigmachurn": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaChurn },
     "sigmatmin": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmin },
     "sigmatmax": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmax },
-    "sigmanoise": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise }
+    "sigmanoise": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
+    "outwidth": { "type": "integer", "min": 0, "apply": applyOutWidth },
+    "outheight": { "type": "integer", "min": 0, "apply": applyOutHeight },
 }
 
 ######################### Validation #########################
@@ -243,8 +249,9 @@ class GridFileHelper:
         self.title = gridObj.get("title")
         self.description = gridObj.get("description")
         self.author = gridObj.get("author")
-        if self.title is None or self.description is None or self.author is None:
-            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, or description in grid obj {gridObj}")
+        self.format = gridObj.get("format")
+        if self.title is None or self.description is None or self.author is None or self.format is None:
+            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {gridObj}")
         self.params = fixDict(gridObj.get("params"))
         if self.params is not None:
             validateParams(self.params)
@@ -337,7 +344,9 @@ class GridRunner:
             if len(processed.images) != 1:
                 raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
             os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
-            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.ext, p=p, prompt=p.prompt, seed=processed.seed)
+            if p.inf_grid_out_width is not None and p.inf_grid_out_height is not None:
+                processed.images[0] = processed.images[0].resize(p.inf_grid_out_width, p.inf_grid_out_height, images.LANCZOS)
+            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.grid.ext, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
         return last
 

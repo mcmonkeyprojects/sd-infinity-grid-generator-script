@@ -90,8 +90,13 @@ axes:
             cat:
                 title: Cat
                 params:
-                    prompt: A professional portrait of a cat
+                    prompt: A professional portrait of a cat in a location
             dog:
                 title: Dog
                 params:
-                    prompt: A photograph of a dog running in a field
+                    prompt: A photograph of a dog running in a location
+    promptreplaceexample:
+        title: Prompt Replacements
+        values:
+            field: PromptReplace= location = field
+            OuterSpace: PromptReplace= location = distant planet deep in outer space

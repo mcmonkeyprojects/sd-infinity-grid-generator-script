@@ -39,7 +39,7 @@ def fixDict(d):
     return {str(k).lower(): v for k, v in d.items()}
 
 def cleanName(name):
-    return str(name).lower().replace(' ', '')
+    return str(name).lower().replace(' ', '').strip()
 
 def getBestInList(name, list):
     backup = None
@@ -123,6 +123,16 @@ def applyOutWidth(p, v):
     p.inf_grid_out_width = int(v)
 def applyOutHeight(p, v):
     p.inf_grid_out_height = int(v)
+def applyPromptReplace(p, v):
+    val = v.split('=', maxsplit=2)
+    if len(val) != 2:
+        raise RuntimeError(f"Invalid prompt replace, missing '=' symbol, for '{v}'")
+    match = val[0].strip()
+    replace = val[1].strip()
+    if match not in p.prompt and match not in p.negative_prompt:
+        raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
+    p.prompt = p.prompt.replace(match, replace)
+    p.negative_prompt = p.negative_prompt.replace(match, replace)
 
 validModes = {
     "sampler": { "type": "text", "apply": applySampler },
@@ -148,6 +158,7 @@ validModes = {
     "sigmanoise": { "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
     "outwidth": { "type": "integer", "min": 0, "apply": applyOutWidth },
     "outheight": { "type": "integer", "min": 0, "apply": applyOutHeight },
+    "promptreplace": { "type": "text", "apply": applyPromptReplace }
 }
 
 ######################### Validation #########################
@@ -273,16 +284,22 @@ class GridFileHelper:
 class SingleGridCall:
     def __init__(self, values):
         self.values = values
+        self.replacements = list()
     
     def flattenParams(self, grid):
         self.params = grid.params.copy() if grid.params is not None else dict()
         for val in self.values:
             for p, v in val.params.items():
-                self.params[p] = v
+                if cleanName(p) == "promptreplace":
+                    self.replacements.append(v)
+                else:
+                    self.params[p] = v
     
     def applyTo(self, p):
         for name, val in self.params.items():
             validModes[name]["apply"](p, val)
+        for replace in self.replacements:
+            applyPromptReplace(p, replace)
 
 class GridRunner:
     def __init__(self, grid, doOverwrite, basePath, p):

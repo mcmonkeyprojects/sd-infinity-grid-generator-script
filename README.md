@@ -103,6 +103,8 @@ axes:
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.
     - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
+    - `PromptReplace` can be used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
+        - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
 - Note that it will be processed from bottom to top - so if you have `samplers`, then `steps`, then `seeds`, it will:
     - choose one sampler and step count, and iterate all seeds.
     - then it will do the next sample and step count, and iterate all seeds.

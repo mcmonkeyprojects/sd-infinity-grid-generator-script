@@ -443,6 +443,7 @@ class WebDataBuilder():
         content += '</table>\n'
         content += f'<center><br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">X Axis:&nbsp;\n{xSelect}</div>\n'
         content += f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">Y Axis:&nbsp;\n{ySelect}</div></center></div>\n'
+        content += '<div><center><input class="form-check-input" type="checkbox" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
         content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
         html = html.replace("{TITLE}", grid.title).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
         return html

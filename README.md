@@ -18,13 +18,9 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 ### Status
 
-Initial version is functional and does what it's meant to do. Needs thorough testing and some QOL improvements.
+Works as intended for the most part. Has only been tested by me, needs community testing. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
 
-TODO:
-- Better web design (might need to find somebody with experience in this to help, I'm a programmer not a designer)
-- Better sample output. I have a plan for a very detailed/thorough one.
-- Careful bugtesting. Make sure every mode works.
-- Add a checkbox on the webpage for whether to dynamically scale images. When enabled, the grid will be scaled such that width matches viewport width. When disabled, images will be full size for their resolution.
+Also, I have a plan for better sample output that I will be publishing Soon(TM).
 
 --------------
 

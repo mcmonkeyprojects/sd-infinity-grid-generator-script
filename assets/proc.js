@@ -16,13 +16,13 @@ function loadData() {
     }
     console.log("Loaded data for '" + rawData.title + "'");
     document.getElementById('x_' + rawData.axes[0].id).click();
+    document.getElementById('autoScaleImages').onchange = updateScaling;
     fillTable();
 }
 
 function fillTable() {
     var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
     var y = document.querySelector('input[name="y_axis_selector"]:checked').id.substring(2);
-    console.log("Fill " + x + ", " + y);
     var table = document.getElementById("image_table");
     var newContent = "<th>";
     var xAxis = null;
@@ -52,7 +52,6 @@ function fillTable() {
             else {
                 var valSelectedKey;
                 for (var subVal of subAxis.values) {
-                    console.log("Axis " + subAxis.id + " at " + subVal.key + " is " + window.getComputedStyle(document.getElementById('tab_' + subAxis.id + '__' + subVal.key)).display);
                     if (window.getComputedStyle(document.getElementById('tab_' + subAxis.id + '__' + subVal.key)).display != "none") {
                         valSelectedKey = subVal.key;
                     }
@@ -61,7 +60,7 @@ function fillTable() {
             }
         }
         for (var xVal of xAxis.values) {
-            newContent += "<td><img src=\"" + url.replace("{X}", xVal.key).substring(1) + "." + rawData.ext + "\" /></td>";
+            newContent += "<td><img class=\"table_img\" src=\"" + url.replace("{X}", xVal.key).substring(1) + "." + rawData.ext + "\" /></td>";
         }
         newContent += "</tr>";
         if (x == y) {
@@ -69,6 +68,26 @@ function fillTable() {
         }
     }
     table.innerHTML = newContent;
+    updateScaling();
+}
+
+function updateScaling() {
+    var percent;
+    if (document.getElementById('autoScaleImages').checked) {
+        var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
+        for (var axis of rawData.axes) {
+            if (axis.id == x) {
+                xAxis = axis;
+            }
+        }
+        percent = (90 / xAxis.values.length) + "vw";
+    }
+    else {
+        percent = "";
+    }
+    for (var image of document.getElementById("image_table").getElementsByClassName("table_img")) {
+        image.style.width = percent;
+    }
 }
 
 loadData();

@@ -1,0 +1,365 @@
+
+grid:
+    title: Educational MegaGrid
+    author: mcmonkey, for educational usage
+    # TODO
+    description: >
+                 TODO: Description that explains the basics of SD.
+    params:
+        OutWidth: 256
+        OutHeight: 256
+    format: jpg
+
+# Unused axes: `HypernetworkStrength`, `VarSeed`, `VarStrength`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`
+axes:
+    model: 
+        title: Model
+        description: >
+                     The model, sometimes referred to as a 'checkpoint' (due to the historical tendency of releasing models using 'ckpt' python pickle checkpoint files), is the big primary file used by Stable Diffusion.
+                     It contains all the data the AI needs to run, other than the processing code.
+                     <br>StabilityAI spent millions of dollars training a brand new model from scratch with SD 1.x. Other releases, especially those from other organizations, started from Stability's model and added more training data into it.
+                     <br>Training takes the form of <i>native training</i> (creating new models or adding into them), <i>finetuning</i> (similar to native training, but with an emphasis on just improving the details or adding some new concepts in), and <i>DreamBooth</i> (adding a single concept or small number of concepts in way that runs very quickly but can damage parts of the model other than the basis).
+                     <br>Model files contain several gigabytes of data (2 GiB for fp16 fines, 4 GiB for fp32 files, and 7 GiB for the original releases that contained extra data).
+                     <br>The primary component of a model is the <a href="https://en.wikipedia.org/wiki/U-Net">UNet</a> - the part of the AI that handles the diffusion steps.
+                     <br>It also contains data for the text encoder, and a VAE (refer to the VAE selector for details on VAE).
+                     <br>
+                     <br>Models available for download online include native-trained options (SD1.x, SD2.x, NAI, WD, ...), finetuned models, custom DreamBooth models (a variety exist that teach the AI various styles or specific concepts, some popular examples include "EldenRingDiffusion" that teaches the AI the styles of the game 'Elden Ring', "HassanBlend" which teaches the AI NSFW concepts, ...), merged models (a merged model contains data from multiple different other models, for example one might have 50% WD and 50% SD for a mix of the anime and realistic stylings).
+                     <br>
+                     <br>Checkpoint files are "pickles", meaning they contain python executable code. This can theoretically be used for malicious purposes. Be careful downloading ".ckpt" or ".pt" files from unknown sources.
+                     <br>Modern model file distribution is recommended to be done with ".safetensors" files. These files contain only the model data, with no room for code injection.
+                     <br>If you want to use a model from a questionable source, but only a "ckpt" is available, ask the author to post a "safetensors" version.
+        values:
+            sd_15:
+                title: Stable Diffusion 1.5
+                description: >
+                             SD1.5, The primary original Stable Diffusion model, released October 20th, 2022, as further training over top of SD1.4 (released August 25th, 2022).
+                             <br>StabilityAI (AI startup founded by Emad Mostaque), RunwayML (company that creates AI-assisted content-creation software), and Compvis (Computer Vision and Learning research group at Ludwig Maximilian University of Munich) worked together to create the original versions of Stable Diffusion. First privately as SD 1.1, 1.2, 1.3. After 1.3 was leaked, they went public with SD 1.4. Soon after, they developed SD 1.5. Each version of the 1.x series was based on the same system, just trained further each time. StabilityAI was unwilling to release SD 1.5 to the public due to pressure from government entities concerned with the potential danger of AI image generation. RunwayML took it into their own hands to release the model anyway, as they had equal rights to do so.
+                             <br>As an interesting bit of history trivia: because SD1.3 was leaked, SD1.4 was released by CompVis, and SD1.5 was released by RunwayML, StabilityAI never actually released any stable diffusion model until the later release of SD2.0.
+                             <br>This model is trained to work with OpenAI's CLIP to encode text. While the software for this is open source, CLIP's model was created using private/secret training data and methods, leading to some to consider it counterproductive to open source AI to rely on it. It's known to heavily weight images from modern online content creators moreso than anything else, which fueled controversy about potential artist copyright abuse.
+                             <br>This model is trained for <b>512x512</b> images primarily, and struggles with any resolution more than a small range away from this.
+                params:
+                    model: sd-v1-5-pruned-emaonly
+                    width: 512
+                    height: 512
+            sd_21:
+                title: Stable Diffusion 2.1
+                description: >
+                             SD2.1, released by StabilityAI December 6th, 2022, as further training over top of SD2.0 (released November 23rd, 2022).
+                             <br>The model used for this grid page is specifically <b>768-v-ema</b>.
+                             <br>This model is trained based on a large image set named LAION-5B, with NSFW content filtered out.
+                             <br>This model is trained for <b>768x768</b> images primarily, but is able to work with a much wider range of other resolutions than SD1.x could.
+                params:
+                    model: sd-v2-1_768-ema-pruned
+                    width: 768
+                    height: 768
+            wd_13:
+                title: Waifu Diffusion 1.3
+                description: >
+                             Waifu Diffusion 1.3, or just "WD", is trained on anime images from sites like danbooru, as a project led by respected community member "haru", intended to be explicitly free and open, for the benefit of the community rather than the author.
+                             <br>The training data used danbooru tags as the text prompt, and so the best usages of WD will use danbooru tags separated by commas.
+                             <br>The model is continued from SD 1.x, and so has the same limitations and features of SD 1.x.
+                params:
+                    model: wd-v1-3-float32
+                    width: 512
+                    height: 512
+            nai:
+                title: NovelAI
+                description: >
+                             NovelAI is a for-profit company that developed their own SD model and features for a web interface they charge for access to.
+                             <br>When their "NovelAI Anime-Final" SD model was leaked, they were upset and tried to put a stop to its spread.
+                             Soon after, however, they claimed that they intended to release their work to the public anyway, and they were only upset that somebody stole their ability to have an awesome public launch, not that the content itself was available freely to users.
+                             <br>There are a lot of back and forth claims and arguments from NovelAI and in response to them. It is not the job of this grid website to tell you what to think about that or who's wrong or right.
+                             However, the NovelAI model is easily available to the public and popular in many communities, therefore I decided it is worthwhile to include in this grid.
+                             <br>This model is varyingly referred to as "NAI", "NovelAI", "The leaked anime model", ...
+                             <br>This model is continued from SD 1.x, with some resolution-handling improvements, and is optimal for generations ranging between <b>512x512</b> to <b>768x768</b> but can also go a little outside of that range.
+                             <br>The training data used danbooru tags as the text prompt, and so the best usages of NAI will use danbooru tags separated by commas.
+                params:
+                    model: nai-anime-final-pruned
+                    ClipSkip: 2
+                    width: 512
+                    height: 512
+    vae:
+        title: VAE
+        description: >
+                     The "VAE", short for "Variational AutoEncoder", is the part of the SD model that converts between real images and latent-space. For SD 1.x, the VAE scales by a factor of 8 - meaning a 512x512 image gets encoded down to only a 64x64 grid of latent space values.
+                     <br>This means that for each single latent data point, the VAE must produce 8x8 (64 total) pixels.
+                     <br>In early days of SD, the importance of the VAE was underestimated - it was later discovered that a VAE could be separately trained and extended and the results are dramatically better quality of output than training the base model on its own.
+                     <br>As such, StabilityAI and other organizations began releasing separated VAE models, which can now be loaded in and swapped around freely in modern SD UIs.
+        values:
+            none:
+                title: None
+                description: When 'none' is selected, whatever VAE came with the original model file is used. This is often a lower quality VAE.
+                params:
+                    vae: none
+            sd_15:
+                title: SD 1.5 VAE Ft. MSE
+                description: This was the first big VAE release - SD 1.5's VAE, further trained independently of the base model. Its release saw immediately improvements to output quality, including for frequent trouble spots like faces and hands. The specific file is named "<b>sd-1-5-vae-ft-mse-840000-ema-pruned</b>".
+                params:
+                    vae: sd-1-5-vae-ft-mse-840000-ema-pruned
+            wd_kl_f8_anime2:
+                title: WD 1.4 kl-f8-anime2
+                description: This VAE was released by the creators of Waifu Diffusion, based on WD1.3's VAE, improved in a similar way as SD1.5's release, but focused on anime.
+                params:
+                    vae: kl-f8-anime2
+            nai:
+                title: NovelAI
+                description: This is NovelAI's official VAE. Not using it can lead to grayed out images for NovelAI based models.
+                params:
+                    vae: nai-anime-final-pruned
+    hypernetwork:
+        title: Hypernetwork
+        description: >
+                     Hypernetworks are the answer to the question "what if we take the AI image generator, and shove another AI onto it".
+                     <br>Hypernetworks sit in the middle point of AI custom training, capable of more than Textual Inversion is, but not as powerful as DreamBooth.
+                     <br>A hypernetwork is a (relatively) small file that can have a large impact on the final output of SD, by influencing how the AI generates its results.
+                     <br>The original authorship of the Hypernetwork concept is disputed, with NovelAI claiming to have invented it, while others claim the concept predates NovelAI's work.
+        values:
+            none:
+                title: None
+                description: No hypernetwork loaded.
+                params:
+                    hypernetwork: none
+            # Not currently included: nai_aini, furry, scalie, pony, and 1/2/3 variants, ...
+            nai_anime_3:
+                title: NovelAI Anime_3
+                description: An example hypernetwork to showcase the effects a hypernetwork can have, this is the leaked "anime3" model from NovelAI.
+                params:
+                    hypernetwork: nai_anime_3
+    sampler:
+        title: Sampler
+        description: #TODO
+        values:
+            # Not currently included: 'LMS', 'Heun', 'DPM2 a', 'DPM++ 2S a', 'DPM++ SDE', 'DPM fast', 'DPM adaptive', 'LMS Karras', 'DPM2 Karras', 'DPM2 a Karras', 'DPM++ 2S a Karras'
+            ddim:
+                title: DDIM
+                description: #TODO
+                params:
+                    sampler: DDIM
+            plms:
+                title: PLMS
+                description: #TODO
+                params:
+                    sampler: PLMS
+            euler:
+                title: Euler
+                description: #TODO
+                params:
+                    sampler: Euler
+            euler_a:
+                title: Euler a
+                description: #TODO
+                params:
+                    sampler: Euler a
+            dpm2:
+                title: DPM2
+                description: #TODO
+                params:
+                    sampler: DPM2
+            dpm_2m:
+                title: DPM++ 2M
+                description: #TODO
+                params:
+                    sampler: DPM++ 2M
+            dpm_2m_karras:
+                title: DPM++ 2M Karras
+                description: #TODO
+                params:
+                    sampler: DPM++ 2M Karras
+            dpm_sde_karras:
+                title: DPM++ SDE Karras
+                description: #TODO
+                params:
+                    sampler: DPM++ SDE Karras
+    cfg_scale:
+        title: CFG Scale
+        description: >
+                     CFG Scale, short for "Classifier Free Guidance" scale, is a multiplier on how much your input prompt text affects the image each step.
+                     <br>To understand why this system is used, look no further than the output of the '1' option - without multiplying, the image barely resembles the text at all.
+                     <br>For whatever reason, the AI just doesn't prioritize the text enough - rather than finding a native solution to this, the developers of Stable Diffusion chose instead to just multiply the effects of text.
+                     <br>At an internal level, this works by running every diffusion step twice - once with text, once without. Then, the 'without' is subtracted from the 'with', to get a value that represents just the effects of the text input - then, this value can be multiplied by CFG Scale, and added back ontop of the 'without'.
+                     <br>Or, in mathematical form: finalGen = emptyGen + ((textGen - emptyGen) * cfgScale)
+                     <br>While low values ignore text, high values overbake text - view the '20' scale example to see how that goes. An overbaked image tends to look very highly saturated, with very sharp lines between black and white.
+                     <br>An image that's slightly overbaked is essentially the Text Encoder's quintessential image for that text, with no room left for the image-generator's creativity on details.
+                     <br>An image that's extremely overbaked is nothing of value - a simple mathematical error. Consider for example a single pixel, where it has an emptyGen of 0.4 and textGen of 0.45 - for cfgScale of 1, the equation is "f = 0.4 + ((0.45 - 0.4) * 1) = 0.4 + (0.05 * 1) = 0.45". For cfgScale 7, "f = 0.4 + (0.05 * 7) = 0.75" ... for cfgScale of 20, "f = 0.4 + (0.05 * 20) = 0.4 + (1.0) = 1.4" ... this is a problem because "1.4" is higher than the maximum "1", therefore it gets clipped off. When a difference of "0.05" or "0.03" or "0.07" all end up with a pixel value of "1" due to clipping at the top, it's inevitable that the image simply becomes a flat empty image. All the detail is in the value over "1", and so all the detail is removed.
+                     <br>Note also how changing the step count affects the results of the CFG Scale.
+        values:
+            7:
+                title: 7
+                description: 7 is a good default value for CFG Scale. It solidly encourages your text as the image guidance, but leaves room for AI creativity.
+                params:
+                    cfg scale: 7
+            1:
+                title: 1
+                description: 1 is here to demonstrate what happens when you don't apply CFG Scale.
+                params:
+                    cfg scale: 1
+            3:
+                title: 3
+                description: 3 is a pretty low scale value, that encourages AI creativity rather than prompt following.
+                params:
+                    cfg scale: 3
+            5:
+                title: 5
+                description: If your prompt is too strongly affecting your image and you want more creativity, dropping it down a little might help.
+                params:
+                    cfg scale: 5
+            9:
+                title: 9
+                description: If your prompt is getting ignored, bumping it up to 9 might help.
+                params:
+                    cfg scale: 9
+            11:
+                title: 11
+                description: If your prompt is getting ignored, bumping it up to 11 might help. This is on the edge of potential overbaking range.
+                params:
+                    cfg scale: 11
+            20:
+                title: 20
+                description: This example of 20 is just here to demonstrate overbaking when CFG Scale is too high. In certain cases it might still work, but those cases are rare.
+                params:
+                    cfg scale: 20
+    steps:
+        title: Steps
+        description: >
+                     The step count is, in short, how many times to run the Diffusion model on the image before producing an output.
+                     <br>More steps means it runs more times, and also asks for less denoising between each step.
+                     <br>Broadly speaking, more steps means better quality output, up to a point.
+                     <br>More steps also naturally means longer to run.
+                     <br>Many users like to run at lower step counts (for speed) until they get what they want, then re-run with a very high step count (for quality) to create their final output image.
+                     <br>Step counts strongly relate to samplers - different samplers treat step counts differently. 'DPM Adaptive' for example ignores the step count value entirely, to calculate it on its own. Other samplers might secretly run two steps per 'step' for various forms of internal benefit. Refer to the sampler selection for specifics.
+        values:
+            50:
+                title: 50
+                description: 50 steps is the original default for the early versions of Stable Diffusion, intended to work with with the original sample, DDIM. For modern samplers, 50 is enough to create a very high quality output.
+                params:
+                    steps: 50
+            20:
+                title: 20
+                description: 20 steps is the default in WebUI's, because it is a good balance between speed and quality. On an RTX 30xx card, 20 steps with 'Euler' sampler can run in only 2-3 seconds, but still gets very close quality to 50 steps (which would take more than twice as long).
+                params:
+                    steps: 20
+            15:
+                title: 15
+                description: 15 steps is getting a bit low for most samplers. It should still clearly show what the image is going to turn out to be, more or less.
+                params:
+                    steps: 15
+            10:
+                title: 10
+                description: 10 steps is very low for most samplers. It will show the broad strokes of the final output, but will often look blurry.
+                params:
+                    steps: 10
+            5:
+                title: 5
+                description: 5 steps is extremely low for most samplers. Depending on sampler, it might end up only creating amorphous blobs. For some samplers, it will suffice to get a lowres blurry image.
+                params:
+                    steps: 5
+            2:
+                title: 2
+                description: 2 steps is included on this grid mostly just to show what the AI is limited to when it can't run many steps, to demonstrate why the repeated-step system is used. This is too low for any current sampler to create anything usable from.
+                params:
+                    steps: 2
+    prompt:
+        title: Prompt
+        description: >
+                     Prompts are the most important setting in Stable Diffusion: it's your description of what you want the AI to generate.
+                     <br>Anything from a cat to a landscape to, well, whatever you want, prompts are the wide open free choice you have available to express your creativity through.
+                     <br>Prompt text gets fed into a Text Encoder model (in SD 1.x, this is OpenAI CLIP, in SD 2.x, this is a custom LAION-trained Text Encoder), which produces a latent representation of the text in an image-ready format.
+                     <br>The latent text representation then gets fed into the generation parameters of the image, and the different this creates gets multiplied by the <b>CFG Scale</b>.
+                     <br>Generally, prompt-writing is an artform all its own. There isn't really a proper science to it, you just gotta experiment, see what works and what you like. As with any art, there are at least some guidelines to get you started doing well.
+                     <br>View the example prompts to see different prompt styles and to learn how these different styles affect things.
+        values:
+            cat:
+                title: Cat (Realistic)
+                description: >
+                             A very simple prompt, just <b>a photo of a cat</b>
+                             <br>Short and simple prompts can tend towards more variety between seeds.
+                             <br>This prompt will tend to produce relatively realistic pictures of cats in base SD.
+                params:
+                    prompt: a photo of a cat
+            landscape:
+                title: Landscape (Art)
+                description: >
+                             A longer prompt, trying to get specific details:
+                             <b>a beautiful green grassy landscape, a castle in the distance atop a mountain, blue sky with light clouds,  peaceful river, masterpiece, canvas painting, watercolor, highly detailed, trending on artstation, cinematic, sharp focus</b>.
+                             <br>This type of longer prompt will keep more consistency between seeds.
+                             <br>This prompt was crafted to create a very particular artistic style.
+                params:
+                    prompt: a beautiful green grassy landscape, a castle in the distance atop a mountain, blue sky with light clouds,  peaceful river, masterpiece, canvas painting, watercolor, highly detailed, trending on artstation, cinematic, sharp focus
+            woman_sd:
+                title: Beautiful Woman (SD Format)
+                description: >
+                             This prompt attempts to create a beautiful woman, in the standard SD prompting format - roughly a sentence - just as might appear on the caption of a real image in the wild, with some tag-words on the end - just as might appear on real pictures out in the wild. Most images you find online have a title and some keyword tags, and so standard SD is trained to work best with this style.
+                             <br>Prompting for these models work best by simply trying to write a description of the image you're expecting, and then tacking tags onto the end to tweak as-needed. Look up public examples of other AI users' prompts to try to learn phrasings and keywords that work best. Experiment!
+                             <br>This prompt is: <b>a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot</b>
+                params:
+                    prompt: a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot
+            woman_anime:
+                title: Beautiful Woman (Anime Format)
+                description: >
+                             Unlike base SD, several other trained models (such as Waifu Diffusion and NovelAI) are trained on <i>anime booru tags</i>. These are the tags found on sites such as <i>danbooru</i>. These are simply lists of relevant tag names, separated by commas.
+                             <br>Prompting for these models works best by looking through images posted on these booru sites to learn tag names and how they look in the original training images.
+                             <br>Because these models still use SD as the base, sentence-style phrasings and words that aren't officially tags on these sites still work, they're just less optimal.
+                params:
+                    prompt: 1girl, beautiful, long hair, smile, sweater
+            bad_superman:
+                title: Bad Superman Prompt
+                description:
+                    description: >
+                                 This prompt, <b>superman flying through the sky with his hand outstretched</b> is an example of a rather unfortunate prompt.
+                                 <br>It asks for a specific person, with a specific but unusual pose, and a visible hand. This is a really bad case for stable diffusion, as each of these three parts can be difficult for the base model to do well.
+                                 <br>This prompt is useful to let you play with options such as the negative prompt or VAE, to see which options help 'cure' the badness of this prompt.
+                params:
+                    prompt: superman flying through the sky with his hand outstretched
+            fancy:
+                title: Fancy Theme Park
+                description: >
+                             This prompt was suggested on reddit as an approximation of midjourney's styling. It's not quite there, but it creates some beautiful output. In this case it is being used with no further prompting than the suggested style:
+                             <b>light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art</b>
+                params:
+                    prompt: light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art
+    negative_prompt:
+        title: Negative Prompt
+        description: >
+                     Negative prompts are just like regular prompts, but backwards - it tells the AI to *not* generate the specified content.
+                     <br>This can be useful in a variety of contexts - for example, if you're seeing images with 'Shutterstock' style watermarks or similar, often just adding a negative of '<b>watermark</b>' is sufficient to put a stop to that.
+        values:
+            none:
+                title: None
+                description: This is just <b>nsfw, explicit</b> to be safe and nothing else.
+                params:
+                    negative prompt: nsfw, explicit
+            nai_standard:
+                title: NovelAI Standard
+                description: >
+                             This is reported to be the official standard negative prompt from NovelAI:
+                             <b>lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry</b>
+                             <br>With <b>nsfw, explicit</b> added to be safe.
+                             <br>The theory of prompts like this is that by specifying a standard list of unusual attributes that almost nobody wants, output images are more likely to look nice. Nobody wants fake watermarks or signatures to be generated, so <i>just toss 'em in</i>. Some users dispute the benefit of particularly unusual negatives like 'extra digit', arguing that such a prompt won't really <i>mean much</i> to the AI.
+                params:
+                    negative prompt: nsfw, explicit, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry
+            #TODO: other standard negatives?
+    seed:
+        title: Seed
+        description: >
+                     A 'seed' is the primary input value to the random-noise generator used for SD.
+                     <br>A seed of '-1' indicates a random seed will be used. Any other value is a manual seed.
+                     <br>If all other parameters are the same, changing the seed can still change a lot - it will change more on simpler prompts than it will on complex ones.
+                     <br>For many simple prompts, you might notice more similarities between seeds than you might expect, particular at the level of basic structure and image composition - for example, the line separating sky from ground in a landscape image might be the exact same line that separates a person's neck from their shirt.
+                     <br>When playing with prompts, it is important to try many different seeds - at the easiest, just have a large batch count (4 or more) or use a random seed. This helps separate whether your prompt is missing something, or if a seed just has 'bad luck' of not seeding the details you need.
+                     <br>The name 'seed' is a metaphor - the same way a large and complicated plant grows from a small physical seed, a large complex digital-random-noise image is grown from a simple integer number seed.
+        values:
+            1:
+                title: 1
+                description: Seed manually specified as '1'.
+                params:
+                    seed: 1
+            2:
+                title: 2
+                description: Seed manually specified as '2'.
+                params:
+                    seed: 2
+            2:
+                title: 3
+                description: Seed manually specified as '3'.
+                params:
+                    seed: 3

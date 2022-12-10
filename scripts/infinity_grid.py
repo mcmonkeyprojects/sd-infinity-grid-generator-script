@@ -238,7 +238,7 @@ class AxisValue:
         return self.__str__()
 
 class Axis:
-    def parseObj(self, id, obj):
+    def __init__(self, id, obj):
         self.values = list()
         self.id = id
         self.title = obj.get("title")
@@ -249,8 +249,10 @@ class Axis:
         if valuesObj is None:
             raise RuntimeError(f"Invalid axis '{id}': missing values")
         for key, val in valuesObj.items():
-            self.values.append(AxisValue(self, key, val))
-        return self
+            try:
+                self.values.append(AxisValue(self, key, val))
+            except Exception as e:
+                raise RuntimeError(f"Invalid axis '{id}': value '{key}' errored: {e}")
 
 class GridFileHelper:
     def parseYaml(self, yamlContent, grid_file):
@@ -272,7 +274,10 @@ class GridFileHelper:
         if axesObj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")
         for id, axisObj in axesObj.items():
-            self.axes.append(Axis().parseObj(id, fixDict(axisObj)))
+            try:
+                self.axes.append(Axis(id, fixDict(axisObj)))
+            except Exception as e:
+                raise RuntimeError(f"Invalid axis '{id}': errored: {e}")
         totalCount = 1
         for axis in self.axes:
             totalCount *= len(axis.values)

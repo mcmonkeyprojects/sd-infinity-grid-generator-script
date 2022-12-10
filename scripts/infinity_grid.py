@@ -210,7 +210,7 @@ def validateSingleParam(p, v):
 
 ######################### YAML Parsing and Processing #########################
 class AxisValue:
-    def parseObj(self, axis, key, val):
+    def __init__(self, axis, key, val):
         self.axis = axis
         self.key = key
         self.params = list()
@@ -222,14 +222,15 @@ class AxisValue:
             self.title = halves[1]
             self.params = { cleanName(halves[0]): halves[1] }
             self.description = None
+            self.skip = False
         else:
             self.title = val.get("title")
             self.description = val.get("description")
+            self.skip = (str(val.get("skip") or "")).lower() == "true"
             self.params = fixDict(val.get("params"))
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             validateParams(self.params)
-        return self
     
     def __str__(self):
         return f"(title={self.title}, description={self.description}, params={self.params})"
@@ -248,7 +249,7 @@ class Axis:
         if valuesObj is None:
             raise RuntimeError(f"Invalid axis '{id}': missing values")
         for key, val in valuesObj.items():
-            self.values.append(AxisValue().parseObj(self, key, val))
+            self.values.append(AxisValue(self, key, val))
         return self
 
 class GridFileHelper:
@@ -286,6 +287,10 @@ class SingleGridCall:
     def __init__(self, values):
         self.values = values
         self.replacements = list()
+        self.skip = False
+        for val in values:
+            if val.skip:
+                self.skip = True
 
     def flattenParams(self, grid):
         self.params = grid.params.copy() if grid.params is not None else dict()
@@ -340,7 +345,7 @@ class GridRunner:
             set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flattenParams(self.grid)
-            set.doSkip = not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.format)
+            set.doSkip = set.skip or (not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.format))
             if set.doSkip:
                 self.totalSkip += 1
             else:

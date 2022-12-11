@@ -41,7 +41,7 @@ Works as intended for the most part. Has only been tested by me, needs community
 
 Here's a big MegaGrid using almost every mode option in one, with detailed educational descriptions on every part: https://sd.mcmonkey.org/megagrid/
 
-Here's a very small web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example
+Here's a very small web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example and you can view the generated asset files for that demo [here](https://github.com/mcmonkeyprojects/mcmonkeyprojects.github.io/tree/master/short_example).
 
 ![img](github/img_1.png)
 

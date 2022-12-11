@@ -26,7 +26,7 @@
         max-height: 8em;
         overflow: scroll;
     }
-    .tab-pane
+    .tabval_subdiv
     {
         max-width: calc(95vw - 40em);
         max-height: 8em;
@@ -41,6 +41,7 @@
         <h4>{DESCRIPTION}</h4>
         <noscript>This page requires JavaScript to work. Don't worry, it's all local to the current page, and open source on GitHub.</noscript>
         <hr>
+        <br><input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
     </center>
     <br>
     {CONTENT}

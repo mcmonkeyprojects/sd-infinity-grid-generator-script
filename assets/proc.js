@@ -90,4 +90,13 @@ function updateScaling() {
     }
 }
 
+function toggleDescriptions() {
+    var show = document.getElementById('showDescriptions').checked;
+    for (var cName of ["tabval_subdiv", "axis_table_cell"]) {
+        for (var elem of document.getElementsByClassName(cName)) {
+            elem.style.display = show ? "block" : "none";
+        }
+    }
+}
+
 loadData();

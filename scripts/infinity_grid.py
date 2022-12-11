@@ -456,7 +456,7 @@ class WebDataBuilder():
                     active = " active show" if isFirst else ""
                     isFirst = False
                     descrip = cleanForWeb(val.description or '')
-                    content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel">{descrip}</div>\n'
+                    content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel"><div class="tabval_subdiv">{descrip}</div></div>\n'
             except Exception as e:
                 raise RuntimeError(f"Failed to build HTML for axis '{axis.id}': {e}")
             content += '</div></td></tr>\n'

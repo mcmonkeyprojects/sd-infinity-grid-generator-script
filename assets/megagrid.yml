@@ -4,24 +4,33 @@ grid:
     author: mcmonkey, for educational usage
     # TODO
     description: >
-                 </h4><h5>Just want the grid? <a href="#image_table">it's at the bottom, click here to jump</a>.</h5>
-                 <br><br>This page is a Mega-Grid of Stable Diffusion settings, intended to help educate about what each of these options is, and what the results of changing the options are.
-                 <br>If you're brand new to SD, you're on the wrong page, this page will be too overwhelming. Find a beginner's guide to SD, and install the <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111 WebUI</a>. Consider joining the <a href="https://discord.gg/xU8y74HG4d">WebUI's discord as well</a>.
-                 <br>
-                 <br>If you've tried the basics of SD and are looking to understand the features like Samplers, Step counts, CFG Scale, etc. this is the perfect page for you.
-                 <br>For example, to see how Samplers and Step Counts compare, scroll to the grid at the bottom, and select the <code>Steps</code> for the X-Axis and <code>Samplers</code> for the Y-Axis and you'll get a 2D grid showing how they compare.
-                 <br>You can also view the Samplers selector to view descriptions of each Sampler, and a description of the concept of a Sampler on the left side. Note that these descriptions are scrollable.
-                 <br>Every axis is selectable - for example, you can have X=Steps, Y=Samplers, and then click between different Prompts or different Models.
-                 <br>
-                 <hr>
-                 <br>Stable Diffusion is a <i>Latent Diffusion Text-To-Image</i> Artificial Intelligence model.
-                 <br>The meaning "text to image AI model" part is simple enough: it's a magic blackbox that you put text into, and get images out.
-                 <br>The "diffusion" word indicates that it works not by having the AI just pump out an image from nothing, but instead it generates random noise and has the AI "denoise" the image: it tries to guess what the image was before it was compressed to random noise. This is a magic trick to make the AI produce much higher quality outputs than it otherwise could. <a href="https://www.youtube.com/watch?v=1CIpzeNxIhU">Here's a video from Dr. Mike Pound at Computerphile on how this works.</a>
-                 <br>The word "latent" means that it's not working on the raw pixels for denoising, instead it's working on seemingly-meaningless data inside the AI's core that <i>represents</i> sections of pixels. The important thing about this is that it's a magic trick to speed up the AI by letting it get the same results while working with much less data, not to mention letting it generate optimized forms of the image data.
-                 <br>
-                 <hr>
-                 <br>This page was generated using <a href="https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script">Infinite-Axis Grid Generation For SD</a>, you can use it to make your own.
-                 <br>
+                 </h4><br><br><h5>Just want the grid? <a href="#image_table">it's at the bottom, click here to jump</a>.</h5>
+                 <br><br>
+                 <div class="card border-primary mb-3" style="max-width: 50rem;">
+                    <div class="card-header">About The Mega Grid</div>
+                    <div class="card-body">
+                        <p class="card-text" style="text-align: left;">
+                            This page is a Mega-Grid of Stable Diffusion settings, intended to help educate about what each of these options is, and what the results of changing the options are.
+                            <br>If you're brand new to SD, you're on the wrong page, this page will be too overwhelming. Find a beginner's guide to SD, and install the <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111 WebUI</a>. Consider joining the <a href="https://discord.gg/xU8y74HG4d">WebUI discord as well</a>.
+                            <br>If you've tried the basics of SD and are looking to understand the features like Samplers, Step counts, CFG Scale, etc. this is the perfect page for you.
+                            <br><br>For example, to see how Samplers and Step Counts compare, scroll to the grid at the bottom, and select the <code>Steps</code> for the X-Axis and <code>Samplers</code> for the Y-Axis and you'll get a 2D grid showing how they compare.
+                            <br><br>You can also view the Samplers selector to view descriptions of each Sampler, and a description of the concept of a Sampler on the left side. Note that these descriptions are scrollable.
+                            <br><br>Every axis is selectable - for example, you can have X=Steps, Y=Samplers, and then click between different Prompts or different Models.
+                            <br><br>This grid page was generated using <a href="https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script">Infinite-Axis Grid Generation For SD</a>, you can use it to make your own.
+                        </p>
+                    </div>
+                 </div>
+                 <div class="card border-primary mb-3" style="max-width: 50rem;">
+                    <div class="card-header">About Stable Diffusion</div>
+                    <div class="card-body">
+                        <p class="card-text" style="text-align: left;">
+                            Stable Diffusion is a <i>Latent Diffusion Text-To-Image Artificial Intelligence model</i>.
+                            <br><br>&bullet; The meaning of the "<code>text to image AI model</code>" part is simple enough: it's a magic blackbox that you put text into, and get images out.
+                            <br><br>&bullet; The "<code>diffusion</code>" word indicates that it works not by having the AI just pump out an image from nothing, but instead it generates random noise and has the AI "denoise" the image: it tries to guess what the image was before it was compressed to random noise. This is a magic trick to make the AI produce much higher quality outputs than it otherwise could. <a href="https://www.youtube.com/watch?v=1CIpzeNxIhU">Here's a video from Dr. Mike Pound at Computerphile on how this works.</a>
+                            <br><br>&bullet; The word "<code>latent</code>" means that it's not working on the raw pixels for denoising, instead it's working on seemingly-meaningless data inside the AI's core that <i>represents</i> sections of pixels. The important thing about this is that it's a magic trick to speed up the AI by letting it get the same results while working with much less data, not to mention letting it generate optimized forms of the image data.
+                        </p>
+                    </div>
+                 </div>
                  <br><small><i>Appreciate the work I put into this and my other projects? <a href="https://github.com/sponsors/mcmonkey4eva">You can support my work through GitHub Sponsors</a>.</i></small>
                  <h4>
     params:

@@ -460,6 +460,7 @@ class WebDataBuilder():
 
     def EmitWebData(path, grid):
         print("Building final web data...")
+        os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.buildJson(grid)
         with open(os.path.join(path, "data.js"), 'w') as f:
             f.write("rawData = " + json)
@@ -485,6 +486,7 @@ class Script(scripts.Script):
     def ui(self, is_img2img):
         help_info = gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
         do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
+        generate_page = gr.Checkbox(value=True, label="Generate infinite-grid webviewer page")
         dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
         validate_replace = gr.Checkbox(value=True, label="Validate PromptReplace input")
         # Maintain our own refreshable list of yaml files, to avoid all the oddities of other scripts demanding you drag files and whatever
@@ -497,9 +499,9 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, do_overwrite, dry_run, validate_replace, grid_file, refresh_button]
+        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, grid_file, refresh_button]
 
-    def run(self, p, help_info, do_overwrite, dry_run, validate_replace, grid_file, refresh_button):
+    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, grid_file, refresh_button):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
@@ -527,10 +529,10 @@ class Script(scripts.Script):
         runner.preprocess()
         with SettingsFixer():
             result = runner.run(dry_run)
+        if generate_page:
+            WebDataBuilder.EmitWebData(folder, grid)
         if dry_run:
             print("Infinite Grid dry run succeeded without error")
-            return Processed(p, list())
-        WebDataBuilder.EmitWebData(folder, grid)
         if result is None:
             return Processed(p, list())
         return result

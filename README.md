@@ -68,7 +68,7 @@ Usage comes in three main steps:
 - Grid information is defined by YAML files, in the extension folder under `assets`. Find the `assets/short_example.yml` file to see an example of the full format.
 - You can create new files in the assets directory (as long as the `.yml` extension stays), or copy/paste an example file and edit it. I recommend you do not edit the actual example file directly to avoid git issues.
 - I recommend editing with a good text editor, such as *VS Code* or *Notepad++*. Don't use *MS Word* or *Windows Notepad* as those might cause trouble.
-- All text inputs allow for raw HTML, so, be careful. You can use `&lt;` for `<`, and `&gt;` for `>`, and `&amp;` for `&`.
+- All text inputs allow for raw HTML, so, be careful. You can use `&lt;` for `<`, and `&gt;` for `>`, `&#58;` for `:`, and `&amp;` for `&`.
 - The file must have key `grid`, with subkey `title` and `description` to define the file data.
     - It must also have `format` as `jpg` or `png`
     - It can optionally also have `params` to specify any default parameters.

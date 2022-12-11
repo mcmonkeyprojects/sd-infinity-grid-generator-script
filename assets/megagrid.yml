@@ -163,12 +163,12 @@ axes:
                     sampler: Euler a
             dpm2:
                 title: DPM2
-                description: DPM2 or "k_dpm_2". DPM stands for "Diffusion probabilistic models", and DPM2 comes from a paper titled "DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps". As the paper title says, it does - it converges in about 10 steps. The downside of this sampler is that every 'step' is actually two steps - ie it takes as much time to run 10 DPM2 steps as it does 20 Euler steps, making the improved convergence rate fairly redundant.
+                description: DPM2 or "k_dpm_2". DPM stands for "Diffusion probabilistic models", and DPM2 comes from a paper titled "DPM-Solver&#58; A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps". As the paper title says, it does - it converges in about 10 steps. The downside of this sampler is that every 'step' is actually two steps - ie it takes as much time to run 10 DPM2 steps as it does 20 Euler steps, making the improved convergence rate fairly redundant.
                 params:
                     sampler: DPM2
             dpm_2m:
                 title: DPM++ 2M
-                description: DPM++ 2M is related to DPM2, and comes from a paper named "DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models" from the same authors as the DPM2 paper. In practice, it converges almost as fast as DPM2, but without needing double-steps - so it actually achieves the speed boost originally promised by DPM2.
+                description: DPM++ 2M is related to DPM2, and comes from a paper named "DPM-Solver++&#58; Fast Solver for Guided Sampling of Diffusion Probabilistic Models" from the same authors as the DPM2 paper. In practice, it converges almost as fast as DPM2, but without needing double-steps - so it actually achieves the speed boost originally promised by DPM2.
                 params:
                     sampler: DPM++ 2M
             dpm_2m_karras:

@@ -1,8 +1,9 @@
+# This is the file that is used to generate https://sd.mcmonkey.org/megagrid/
+
 
 grid:
     title: Educational MegaGrid
     author: mcmonkey, for educational usage
-    # TODO
     description: >
                  </h4><br><br><h5>Just want the grid? <a href="#image_table">it's at the bottom, click here to jump</a>.</h5>
                  <br><br>
@@ -121,10 +122,10 @@ axes:
                      <br>A VAE can be thought as a very specialized type of AI image upscaler, that only works with the main AI model's latent data - and, thanks to this data, works much better than a normal image upscaler.
         values:
             none:
-                title: None
-                description: When 'none' is selected, whatever VAE came with the original model file is used. This is often a lower quality VAE.
+                title: Auto
+                description: When 'auto' is selected, whatever VAE came with the original model file is used. This is often a lower quality VAE.
                 params:
-                    vae: none
+                    vae: auto
             sd_15:
                 title: SD 1.5 VAE Ft. MSE
                 description: This was the first big VAE release - SD 1.5's VAE, further trained independently of the base model. Its release saw immediately improvements to output quality, including for frequent trouble spots like faces and hands. The specific file is named "<b>sd-1-5-vae-ft-mse-840000-ema-pruned</b>".

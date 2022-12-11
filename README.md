@@ -20,8 +20,6 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 Works as intended for the most part. Has only been tested by me, needs community testing. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
 
-Also, I have a plan for better sample output that I will be publishing Soon(TM).
-
 --------------
 
 ### Table of Contents
@@ -39,7 +37,9 @@ Also, I have a plan for better sample output that I will be publishing Soon(TM).
 
 ### Examples
 
-Here's a web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example
+Here's a big MegaGrid using almost every mode option in one, with detailed educational descriptions on every part: https://sd.mcmonkey.org/megagrid/
+
+Here's a very small web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example
 
 ![img](github/img_1.png)
 

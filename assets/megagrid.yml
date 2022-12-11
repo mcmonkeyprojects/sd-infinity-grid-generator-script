@@ -15,19 +15,19 @@ axes:
     model: 
         title: Model
         description: >
-                     The model, sometimes referred to as a 'checkpoint' (due to the historical tendency of releasing models using 'ckpt' python pickle checkpoint files), is the big primary file used by Stable Diffusion.
+                     The model, sometimes referred to as a 'checkpoint' (due to the historical tendency of releasing models using '<code>ckpt</code>' python pickle checkpoint files), is the big primary file used by Stable Diffusion.
                      It contains all the data the AI needs to run, other than the processing code.
                      <br>StabilityAI spent millions of dollars training a brand new model from scratch with SD 1.x. Other releases, especially those from other organizations, started from Stability's model and added more training data into it.
                      <br>Training takes the form of <i>native training</i> (creating new models or adding into them), <i>finetuning</i> (similar to native training, but with an emphasis on just improving the details or adding some new concepts in), and <i>DreamBooth</i> (adding a single concept or small number of concepts in way that runs very quickly but can damage parts of the model other than the basis).
-                     <br>Model files contain several gigabytes of data (2 GiB for fp16 fines, 4 GiB for fp32 files, and 7 GiB for the original releases that contained extra data).
+                     <br>Model files contain several gigabytes of data (about 2 GiB for fp16 fines, 4 GiB for fp32 files, and 7 GiB for the original releases that contained extra data).
                      <br>The primary component of a model is the <a href="https://en.wikipedia.org/wiki/U-Net">UNet</a> - the part of the AI that handles the diffusion steps.
                      <br>It also contains data for the text encoder, and a VAE (refer to the VAE selector for details on VAE).
                      <br>
                      <br>Models available for download online include native-trained options (SD1.x, SD2.x, NAI, WD, ...), finetuned models, custom DreamBooth models (a variety exist that teach the AI various styles or specific concepts, some popular examples include "EldenRingDiffusion" that teaches the AI the styles of the game 'Elden Ring', "HassanBlend" which teaches the AI NSFW concepts, ...), merged models (a merged model contains data from multiple different other models, for example one might have 50% WD and 50% SD for a mix of the anime and realistic stylings).
                      <br>
-                     <br>Checkpoint files are "pickles", meaning they contain python executable code. This can theoretically be used for malicious purposes. Be careful downloading ".ckpt" or ".pt" files from unknown sources.
-                     <br>Modern model file distribution is recommended to be done with ".safetensors" files. These files contain only the model data, with no room for code injection.
-                     <br>If you want to use a model from a questionable source, but only a "ckpt" is available, ask the author to post a "safetensors" version.
+                     <br>Checkpoint files are "pickles", meaning they contain python executable code. This can theoretically be used for malicious purposes. Be careful downloading "<code>.ckpt</code>" or "<code>.pt</code>" files from unknown sources.
+                     <br>Modern model file distribution is recommended to be done with "<code>.safetensors</code>" files. These files contain only the model data, with no room for code injection.
+                     <br>If you want to use a model from a questionable source, but only a "<code>ckpt</code>" is available, ask the author to post a "<code>safetensors</code>" version.
         values:
             sd_15:
                 title: Stable Diffusion 1.5
@@ -73,6 +73,8 @@ axes:
                              <br>This model is varyingly referred to as "NAI", "NovelAI", "The leaked anime model", ...
                              <br>This model is continued from SD 1.x, with some resolution-handling improvements, and is optimal for generations ranging between <b>512x512</b> to <b>768x768</b> but can also go a little outside of that range.
                              <br>The training data used danbooru tags as the text prompt, and so the best usages of NAI will use danbooru tags separated by commas.
+                             <br>
+                             <br>NovelAI based models work best with the NovelAI VAE loaded.
                 params:
                     model: nai-anime-final-pruned
                     ClipSkip: 2
@@ -127,49 +129,53 @@ axes:
                     hypernetwork: nai_anime_3
     sampler:
         title: Sampler
-        description: #TODO
+        description: >
+                     The sampler is the algorithm used to process each step of the AI diffusion model.
+                     <br>The details are a deeply technical topic, and the descriptions provided here are just loose summaries provided by a non-expert.
+                     <br>There's a long list of samplers, each with different details. For the purposes of this generated grid, only a few representative samplers from each <i>category</i> of related samplers are provided.
+                     <br>A key term to know here is "convergence": a sampler "converges" when it reaches the number of steps where increasing the step count wouldn't change the output noticeably.
+                     <br>The categories can be roughly separated into:
+                     <br> - the main converging set (DDIM, PLMS, Euler, DPM2, ...) - these all get the same results as eachother using different methods.
+                     <br> - The Karras converging set (DPM++ 2M Karras, LMS Karras, ...) - these all also get the same results as eachother, but slightly different from the main set.
+                     <br> - Ancestral samplers - these produce wildly variant outputs based on the addition of extra random noise between steps. They don't necessarily converge at all - adding more steps adds more random noise, and so produces different outcomes.
+                     <br> Some samplers measure step counts different - for example, DPM2 actually does 2 steps for every 'step', and 'DPM Adaptive' ignores your step count input and automatically determines how many steps are needed for convergence.
         values:
             # Not currently included: 'LMS', 'Heun', 'DPM2 a', 'DPM++ 2S a', 'DPM++ SDE', 'DPM fast', 'DPM adaptive', 'LMS Karras', 'DPM2 Karras', 'DPM2 a Karras', 'DPM++ 2S a Karras'
             ddim:
                 title: DDIM
-                description: #TODO
+                description: DDIM, "Denoising Diffusion Implicit Models", is an old sampler that predates Stable Diffusion (published by Standard researchers in 2020, modified from DDPM, published in 2020 by a Berkeley research group), and was included in the original CompVis version of SD. DDIM converges to a good image within 50 fast iterations.
                 params:
                     sampler: DDIM
             plms:
                 title: PLMS
-                description: #TODO
+                description: PLMS predates Stable Diffusion (developed in 2022 based on a paper named "Pseudo Numerical Methods for Diffusion Models on Manifolds" from September 2021). It runs at the same speed as DDIM. It starts off worse than DDIM at low step counts, but then converges faster.
                 params:
                     sampler: PLMS
             euler:
                 title: Euler
-                description: #TODO
+                description: Euler, or "k_euler", was developed by Katherine Crowson as an implementation of one of several algorithms described by the paper "Elucidating the Design Space of Diffusion-Based Generative Models" by Karras et al. in 2022. It converges much faster than DDIM while running at the same speed. It is hypothetically one of the simplest algorithms, but in practice turned out to work very well.
                 params:
                     sampler: Euler
             euler_a:
                 title: Euler a
-                description: #TODO
+                description: Euler a, for "Euler Ancestral", aka "k_euler_ancestral", is similar to the "Euler" sampler, but uses "ancestral" sampling - meaning essentially it adds extra random noise as it goes, which in practices leads to a much larger variety of output images, with the downside that it does not converge with other samplers. Many samplers have ancestral variants available.
                 params:
                     sampler: Euler a
             dpm2:
                 title: DPM2
-                description: #TODO
+                description: DPM2 or "k_dpm_2". DPM stands for "Diffusion probabilistic models", and DPM2 comes from a paper titled "DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps". As the paper title says, it does - it converges in about 10 steps. The downside of this sampler is that every 'step' is actually two steps - ie it takes as much time to run 10 DPM2 steps as it does 20 Euler steps, making the improved convergence rate fairly redundant.
                 params:
                     sampler: DPM2
             dpm_2m:
                 title: DPM++ 2M
-                description: #TODO
+                description: DPM++ 2M is related to DPM2, and comes from a paper named "DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models" from the same authors as the DPM2 paper. In practice, it converges almost as fast as DPM2, but without needing double-steps - so it actually achieves the speed boost originally promised by DPM2.
                 params:
                     sampler: DPM++ 2M
             dpm_2m_karras:
                 title: DPM++ 2M Karras
-                description: #TODO
+                description: DPM++ 2M Karras is a variant of DPM++ 2M, merged with a noise scheduler from Karras. Samplers with the Karras noise scheduler converge to slightly a different final output than non-Karras variants. This particular sampler does so extremely quickly - it's basically done within 10 steps. Many samplers have Karras variants available.
                 params:
                     sampler: DPM++ 2M Karras
-            dpm_sde_karras:
-                title: DPM++ SDE Karras
-                description: #TODO
-                params:
-                    sampler: DPM++ SDE Karras
     cfg_scale:
         title: CFG Scale
         description: >
@@ -177,10 +183,10 @@ axes:
                      <br>To understand why this system is used, look no further than the output of the '1' option - without multiplying, the image barely resembles the text at all.
                      <br>For whatever reason, the AI just doesn't prioritize the text enough - rather than finding a native solution to this, the developers of Stable Diffusion chose instead to just multiply the effects of text.
                      <br>At an internal level, this works by running every diffusion step twice - once with text, once without. Then, the 'without' is subtracted from the 'with', to get a value that represents just the effects of the text input - then, this value can be multiplied by CFG Scale, and added back ontop of the 'without'.
-                     <br>Or, in mathematical form: finalGen = emptyGen + ((textGen - emptyGen) * cfgScale)
-                     <br>While low values ignore text, high values overbake text - view the '20' scale example to see how that goes. An overbaked image tends to look very highly saturated, with very sharp lines between black and white.
-                     <br>An image that's slightly overbaked is essentially the Text Encoder's quintessential image for that text, with no room left for the image-generator's creativity on details.
-                     <br>An image that's extremely overbaked is nothing of value - a simple mathematical error. Consider for example a single pixel, where it has an emptyGen of 0.4 and textGen of 0.45 - for cfgScale of 1, the equation is "f = 0.4 + ((0.45 - 0.4) * 1) = 0.4 + (0.05 * 1) = 0.45". For cfgScale 7, "f = 0.4 + (0.05 * 7) = 0.75" ... for cfgScale of 20, "f = 0.4 + (0.05 * 20) = 0.4 + (1.0) = 1.4" ... this is a problem because "1.4" is higher than the maximum "1", therefore it gets clipped off. When a difference of "0.05" or "0.03" or "0.07" all end up with a pixel value of "1" due to clipping at the top, it's inevitable that the image simply becomes a flat empty image. All the detail is in the value over "1", and so all the detail is removed.
+                     <br>Or, in (simplified) mathematical form: <code>finalGen = emptyGen + ((textGen - emptyGen) * cfgScale)</code>, where each variable ranges from 0 to 1.
+                     <br>While low scaling values ignore text, high values overbake text - view the '20' scale example to see how that goes. An overbaked image tends to look very highly saturated, with very sharp lines between black and white.
+                     <br>An image that's slightly overscaled is essentially made to approach the Text Encoder's quintessential image for that text, with no room left for the image-generator's creativity on details.
+                     <br>An image that's extremely overbaked stops having meaning of its own, and is instead a simple mathematical error. Consider for example a single pixel, where it has an emptyGen of 0.4 and textGen of 0.45 - for cfgScale of 1, the equation is "<code>f = 0.4 + ((0.45 - 0.4) * 1) = 0.4 + (0.05 * 1) = 0.45</code>". For cfgScale 7, "<code>f = 0.4 + (0.05 * 7) = 0.75</code>" ... for cfgScale of 20, "<code>f = 0.4 + (0.05 * 20) = 0.4 + (1.0) = 1.4</code>" ... this is a problem because "1.4" is higher than the maximum "1", therefore it gets clipped off. When a difference of "0.05" or "0.03" or "0.07" all end up with a pixel value of "1" due to clipping at the top, it's inevitable that the image simply becomes a flat empty image. All the detail is in the value over "1", and so all the detail is removed.
                      <br>Note also how changing the step count affects the results of the CFG Scale.
         values:
             7:
@@ -226,11 +232,11 @@ axes:
                      <br>Broadly speaking, more steps means better quality output, up to a point.
                      <br>More steps also naturally means longer to run.
                      <br>Many users like to run at lower step counts (for speed) until they get what they want, then re-run with a very high step count (for quality) to create their final output image.
-                     <br>Step counts strongly relate to samplers - different samplers treat step counts differently. 'DPM Adaptive' for example ignores the step count value entirely, to calculate it on its own. Other samplers might secretly run two steps per 'step' for various forms of internal benefit. Refer to the sampler selection for specifics.
+                     <br>Step counts strongly relate to samplers - different samplers treat step counts differently. 'DPM Adaptive' for example ignores the step count value entirely, to calculate it on its own. Other samplers might secretly run two or more steps per 'step' for various forms of internal benefit. Refer to the sampler selection for specifics.
         values:
             50:
                 title: 50
-                description: 50 steps is the original default for the early versions of Stable Diffusion, intended to work with with the original sample, DDIM. For modern samplers, 50 is enough to create a very high quality output.
+                description: 50 steps is the original default for the early versions of Stable Diffusion, intended to work with with the original sample, DDIM. For other modern samplers like Euler, 50 is enough to create a very high quality output.
                 params:
                     steps: 50
             20:

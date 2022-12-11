@@ -4,7 +4,26 @@ grid:
     author: mcmonkey, for educational usage
     # TODO
     description: >
-                 TODO: Description that explains the basics of SD.
+                 </h4><h5>Just want the grid? <a href="#image_table">it's at the bottom, click here to jump</a>.</h5>
+                 <br><br>This page is a Mega-Grid of Stable Diffusion settings, intended to help educate about what each of these options is, and what the results of changing the options are.
+                 <br>If you're brand new to SD, you're on the wrong page, this page will be too overwhelming. Find a beginner's guide to SD, and install the <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111 WebUI</a>. Consider joining the <a href="https://discord.gg/xU8y74HG4d">WebUI's discord as well</a>.
+                 <br>
+                 <br>If you've tried the basics of SD and are looking to understand the features like Samplers, Step counts, CFG Scale, etc. this is the perfect page for you.
+                 <br>For example, to see how Samplers and Step Counts compare, scroll to the grid at the bottom, and select the <code>Steps</code> for the X-Axis and <code>Samplers</code> for the Y-Axis and you'll get a 2D grid showing how they compare.
+                 <br>You can also view the Samplers selector to view descriptions of each Sampler, and a description of the concept of a Sampler on the left side. Note that these descriptions are scrollable.
+                 <br>Every axis is selectable - for example, you can have X=Steps, Y=Samplers, and then click between different Prompts or different Models.
+                 <br>
+                 <hr>
+                 <br>Stable Diffusion is a <i>Latent Diffusion Text-To-Image</i> Artificial Intelligence model.
+                 <br>The meaning "text to image AI model" part is simple enough: it's a magic blackbox that you put text into, and get images out.
+                 <br>The "diffusion" word indicates that it works not by having the AI just pump out an image from nothing, but instead it generates random noise and has the AI "denoise" the image: it tries to guess what the image was before it was compressed to random noise. This is a magic trick to make the AI produce much higher quality outputs than it otherwise could. <a href="https://www.youtube.com/watch?v=1CIpzeNxIhU">Here's a video from Dr. Mike Pound at Computerphile on how this works.</a>
+                 <br>The word "latent" means that it's not working on the raw pixels for denoising, instead it's working on seemingly-meaningless data inside the AI's core that <i>represents</i> sections of pixels. The important thing about this is that it's a magic trick to speed up the AI by letting it get the same results while working with much less data, not to mention letting it generate optimized forms of the image data.
+                 <br>
+                 <hr>
+                 <br>This page was generated using <a href="https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script">Infinite-Axis Grid Generation For SD</a>, you can use it to make your own.
+                 <br>
+                 <br><small><i>Appreciate the work I put into this and my other projects? <a href="https://github.com/sponsors/mcmonkey4eva">You can support my work through GitHub Sponsors</a>.</i></small>
+                 <h4>
     params:
         OutWidth: 256
         OutHeight: 256
@@ -20,6 +39,7 @@ axes:
                      <br>StabilityAI spent millions of dollars training a brand new model from scratch with SD 1.x. Other releases, especially those from other organizations, started from Stability's model and added more training data into it.
                      <br>Training takes the form of <i>native training</i> (creating new models or adding into them), <i>finetuning</i> (similar to native training, but with an emphasis on just improving the details or adding some new concepts in), and <i>DreamBooth</i> (adding a single concept or small number of concepts in way that runs very quickly but can damage parts of the model other than the basis).
                      <br>Model files contain several gigabytes of data (about 2 GiB for fp16 fines, 4 GiB for fp32 files, and 7 GiB for the original releases that contained extra data).
+                     <br>FP32 and FP16 are largely equivalent, with only a small loss of precision for FP16, with the benefit of only need half as much filespace. In most cases, you want the FP16 version of a model. The extra precision of FP32 is most useful for training with.
                      <br>The primary component of a model is the <a href="https://en.wikipedia.org/wiki/U-Net">UNet</a> - the part of the AI that handles the diffusion steps.
                      <br>It also contains data for the text encoder, and a VAE (refer to the VAE selector for details on VAE).
                      <br>
@@ -28,6 +48,8 @@ axes:
                      <br>Checkpoint files are "pickles", meaning they contain python executable code. This can theoretically be used for malicious purposes. Be careful downloading "<code>.ckpt</code>" or "<code>.pt</code>" files from unknown sources.
                      <br>Modern model file distribution is recommended to be done with "<code>.safetensors</code>" files. These files contain only the model data, with no room for code injection.
                      <br>If you want to use a model from a questionable source, but only a "<code>ckpt</code>" is available, ask the author to post a "<code>safetensors</code>" version.
+                     <br>
+                     <br>Note that official SD models come as both "EMA" and "nonEMA" forms. "EMA" means "Exponential Moving Average", and is a way to compensate for an issue with AI training where the AI overrepresents the last few images it sees. In a choice between EMA and nonEMA, you mostly want the EMA version. The nonEMA version is only useful (but still not even required) if you're going to continue training the model further. This gets confused as some older models released had names like "full-ema", wherein the "full" meant "also including non-ema", and the other model didn't mention "ema" at all, but in fact was the EMA-only version, ie the preferred version.
         values:
             sd_15:
                 title: Stable Diffusion 1.5
@@ -87,6 +109,7 @@ axes:
                      <br>This means that for each single latent data point, the VAE must produce 8x8 (64 total) pixels.
                      <br>In early days of SD, the importance of the VAE was underestimated - it was later discovered that a VAE could be separately trained and extended and the results are dramatically better quality of output than training the base model on its own.
                      <br>As such, StabilityAI and other organizations began releasing separated VAE models, which can now be loaded in and swapped around freely in modern SD UIs.
+                     <br>A VAE can be thought as a very specialized type of AI image upscaler, that only works with the main AI model's latent data - and, thanks to this data, works much better than a normal image upscaler.
         values:
             none:
                 title: None
@@ -186,7 +209,11 @@ axes:
                      <br>Or, in (simplified) mathematical form: <code>finalGen = emptyGen + ((textGen - emptyGen) * cfgScale)</code>, where each variable ranges from 0 to 1.
                      <br>While low scaling values ignore text, high values overbake text - view the '20' scale example to see how that goes. An overbaked image tends to look very highly saturated, with very sharp lines between black and white.
                      <br>An image that's slightly overscaled is essentially made to approach the Text Encoder's quintessential image for that text, with no room left for the image-generator's creativity on details.
-                     <br>An image that's extremely overbaked stops having meaning of its own, and is instead a simple mathematical error. Consider for example a single pixel, where it has an emptyGen of 0.4 and textGen of 0.45 - for cfgScale of 1, the equation is "<code>f = 0.4 + ((0.45 - 0.4) * 1) = 0.4 + (0.05 * 1) = 0.45</code>". For cfgScale 7, "<code>f = 0.4 + (0.05 * 7) = 0.75</code>" ... for cfgScale of 20, "<code>f = 0.4 + (0.05 * 20) = 0.4 + (1.0) = 1.4</code>" ... this is a problem because "1.4" is higher than the maximum "1", therefore it gets clipped off. When a difference of "0.05" or "0.03" or "0.07" all end up with a pixel value of "1" due to clipping at the top, it's inevitable that the image simply becomes a flat empty image. All the detail is in the value over "1", and so all the detail is removed.
+                     <br>An image that's extremely overbaked stops having meaning of its own, and is instead a simple mathematical error.
+                     <br> Consider for example a single pixel, where it has an emptyGen of 0.4 and textGen of 0.45:
+                     <br> - for cfgScale of 1, the equation is "<code>f = 0.4 + ((0.45 - 0.4) * 1) = 0.4 + (0.05 * 1) = 0.45</code>".
+                     <br> - For cfgScale 7, "<code>f = 0.4 + (0.05 * 7) = 0.75</code>".
+                     <br> - For cfgScale of 20, "<code>f = 0.4 + (0.05 * 20) = 0.4 + (1.0) = 1.4</code>" ... this is a problem because "1.4" is higher than the maximum "1", therefore it gets clipped off. When a difference of "0.05" or "0.03" or "0.07" all end up with a pixel value of "1" due to clipping at the top, it's inevitable that the image simply becomes a flat empty image. All the detail is in the value over "1", and so all the detail is removed.
                      <br>Note also how changing the step count affects the results of the CFG Scale.
         values:
             7:
@@ -277,7 +304,8 @@ axes:
             cat:
                 title: Cat (Realistic)
                 description: >
-                             A very simple prompt, just <b>a photo of a cat</b>
+                             A very simple prompt, just:
+                             <br><code>a photo of a cat</code>
                              <br>Short and simple prompts can tend towards more variety between seeds.
                              <br>This prompt will tend to produce relatively realistic pictures of cats in base SD.
                 params:
@@ -285,8 +313,8 @@ axes:
             landscape:
                 title: Landscape (Art)
                 description: >
-                             A longer prompt, trying to get specific details:
-                             <b>a beautiful green grassy landscape, a castle in the distance atop a mountain, blue sky with light clouds,  peaceful river, masterpiece, canvas painting, watercolor, highly detailed, trending on artstation, cinematic, sharp focus</b>.
+                             <code>a beautiful green grassy landscape, a castle in the distance atop a mountain, blue sky with light clouds,  peaceful river, masterpiece, canvas painting, watercolor, highly detailed, trending on artstation, cinematic, sharp focus</code>.
+                             <br>This is a longer prompt, trying to get specific details.
                              <br>This type of longer prompt will keep more consistency between seeds.
                              <br>This prompt was crafted to create a very particular artistic style.
                 params:
@@ -294,33 +322,34 @@ axes:
             woman_sd:
                 title: Beautiful Woman (SD Format)
                 description: >
-                             This prompt attempts to create a beautiful woman, in the standard SD prompting format - roughly a sentence - just as might appear on the caption of a real image in the wild, with some tag-words on the end - just as might appear on real pictures out in the wild. Most images you find online have a title and some keyword tags, and so standard SD is trained to work best with this style.
+                             <code>a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot</code>
+                             <br>This prompt attempts to create a beautiful woman, in the standard SD prompting format - roughly a sentence - just as might appear on the caption of a real image in the wild, with some tag-words on the end - just as might appear on real pictures out in the wild. Most images you find online have a title and some keyword tags, and so standard SD is trained to work best with this style.
                              <br>Prompting for these models work best by simply trying to write a description of the image you're expecting, and then tacking tags onto the end to tweak as-needed. Look up public examples of other AI users' prompts to try to learn phrasings and keywords that work best. Experiment!
-                             <br>This prompt is: <b>a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot</b>
                 params:
                     prompt: a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot
             woman_anime:
                 title: Beautiful Woman (Anime Format)
                 description: >
-                             Unlike base SD, several other trained models (such as Waifu Diffusion and NovelAI) are trained on <i>anime booru tags</i>. These are the tags found on sites such as <i>danbooru</i>. These are simply lists of relevant tag names, separated by commas.
+                             <code>1girl, beautiful, long hair, smile, sweater</code>
+                             <br>Unlike base SD, several other trained models (such as Waifu Diffusion and NovelAI) are trained on <i>anime booru tags</i>. These are the tags found on sites such as <i>danbooru</i>. These are simply lists of relevant tag names, separated by commas.
                              <br>Prompting for these models works best by looking through images posted on these booru sites to learn tag names and how they look in the original training images.
                              <br>Because these models still use SD as the base, sentence-style phrasings and words that aren't officially tags on these sites still work, they're just less optimal.
                 params:
                     prompt: 1girl, beautiful, long hair, smile, sweater
             bad_superman:
                 title: Bad Superman Prompt
-                description:
-                    description: >
-                                 This prompt, <b>superman flying through the sky with his hand outstretched</b> is an example of a rather unfortunate prompt.
-                                 <br>It asks for a specific person, with a specific but unusual pose, and a visible hand. This is a really bad case for stable diffusion, as each of these three parts can be difficult for the base model to do well.
-                                 <br>This prompt is useful to let you play with options such as the negative prompt or VAE, to see which options help 'cure' the badness of this prompt.
+                description: >
+                             <code>superman flying through the sky with his hand outstretched</code>
+                             <br>This is an example of a rather unfortunate prompt.
+                             <br>It asks for a specific person, with a specific but unusual pose, and a visible hand. This is a really bad case for stable diffusion, as each of these three parts can be difficult for the base model to do well.
+                             <br>This prompt is useful to let you play with options such as the negative prompt or VAE, to see which options help 'cure' the badness of this prompt.
                 params:
                     prompt: superman flying through the sky with his hand outstretched
             fancy:
                 title: Fancy Theme Park
                 description: >
-                             This prompt was suggested on reddit as an approximation of midjourney's styling. It's not quite there, but it creates some beautiful output. In this case it is being used with no further prompting than the suggested style:
-                             <b>light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art</b>
+                             <code>light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art</code>
+                             <br>This prompt was suggested on reddit as an approximation of midjourney's styling. It's not quite there, but it creates some beautiful output. In this case it is being used with no further prompting than the suggested style.
                 params:
                     prompt: light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art
     negative_prompt:
@@ -337,9 +366,8 @@ axes:
             nai_standard:
                 title: NovelAI Standard
                 description: >
-                             This is reported to be the official standard negative prompt from NovelAI:
-                             <b>lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry</b>
-                             <br>With <b>nsfw, explicit</b> added to be safe.
+                             <code>nsfw, explicit, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry</code>
+                             <br>This is reported to be the official standard negative prompt from NovelAI (With <b>nsfw, explicit</b> added to be safe).
                              <br>The theory of prompts like this is that by specifying a standard list of unusual attributes that almost nobody wants, output images are more likely to look nice. Nobody wants fake watermarks or signatures to be generated, so <i>just toss 'em in</i>. Some users dispute the benefit of particularly unusual negatives like 'extra digit', arguing that such a prompt won't really <i>mean much</i> to the AI.
                 params:
                     negative prompt: nsfw, explicit, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry
@@ -364,7 +392,7 @@ axes:
                 description: Seed manually specified as '2'.
                 params:
                     seed: 2
-            2:
+            3:
                 title: 3
                 description: Seed manually specified as '3'.
                 params:

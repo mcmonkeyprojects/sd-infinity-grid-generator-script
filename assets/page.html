@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="bootstrap.min.css" media="screen">
     <title>{TITLE}</title>
-    <meta name="description" content="{DESCRIPTION}" />
+    <meta name="description" content="{CLEAN_DESCRIPTION}" />
     <style>
     .sel_table tr td
     {
@@ -19,6 +19,18 @@
     .primary
     {
         background-color: #303030;
+    }
+    .axis_table_cell
+    {
+        width: 40em;
+        max-height: 8em;
+        overflow: scroll;
+    }
+    .tab-pane
+    {
+        max-width: calc(95vw - 40em);
+        max-height: 8em;
+        overflow: scroll;
     }
     </style>
     <script src="jquery.min.js"></script>
@@ -41,7 +53,7 @@
             <br>Made using the <a href="https://bootswatch.com/darkly/">Darkly Bootstrap Theme</a> by Thomas Park, which was released under the <a href="https://github.com/thomaspark/bootswatch/blob/95df99d76147797cbcb1014b639805add2327f65/LICENSE">MIT License</a>.
         </center>
     </footer>
-    <script src="data.js"></script>
-    <script src="proc.js"></script>
+    <script src="data.js?vary=3"></script>
+    <script src="proc.js?vary=3"></script>
     <script src="bootstrap.bundle.min.js"></script>
 </body>

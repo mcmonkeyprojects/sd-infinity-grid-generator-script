@@ -36,11 +36,11 @@ function fillTable() {
         }
     }
     for (var val of xAxis.values) {
-        newContent += "<td title=\"" + val.description + "\">" + val.title + "</td>";
+        newContent += "<td title=\"" + val.description.replaceAll('"', "&quot;") + "\">" + val.title + "</td>";
     }
     newContent += "</th>";
     for (var val of yAxis.values) {
-        newContent += "<tr><td title=\"" + val.description + "\">" + val.title + "</td>";
+        newContent += "<tr><td title=\"" + val.description.replaceAll('"', "&quot;") + "\">" + val.title + "</td>";
         var url = "";
         for (var subAxis of rawData.axes) {
             if (subAxis.id == x) {

@@ -36,7 +36,16 @@ def getNameList():
 def fixDict(d):
     if d is None:
         return None
+    if type(d) is not dict:
+        raise RuntimeError(f"Value '{d}' is supposed to be submapping but isn't (it's plaintext, a list, or some other incorrect format). Did you typo the formatting?")
     return {str(k).lower(): v for k, v in d.items()}
+
+def cleanForWeb(text):
+    if text is None:
+        return None
+    if type(text) is not str:
+        raise RuntimeError(f"Value '{text}' is supposed to be text but isn't (it's a datamapping, list, or some other incorrect format). Did you typo the formatting?")
+    return text.replace('"', '&quot;')
 
 def cleanName(name):
     return str(name).lower().replace(' ', '').strip()
@@ -429,24 +438,27 @@ class WebDataBuilder():
         content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
         primary = True
         for axis in grid.axes:
-            axisDescrip = axis.description or ''
-            trClass = "primary" if primary else "secondary"
-            content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n{axisDescrip}</td>\n<td><ul class="nav nav-tabs" role="tablist">\n'
-            primary = not primary
-            isFirst = True
-            for val in axis.values:
-                selected = "true" if isFirst else "false"
-                active = " active" if isFirst else ""
-                isFirst = False
-                descrip = val.description or ''
-                content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{val.title}: {descrip}">{val.title}</a></li>\n'
-            content += '</ul>\n<div class="tab-content">\n'
-            isFirst = True
-            for val in axis.values:
-                active = " active show" if isFirst else ""
-                isFirst = False
-                descrip = val.description or ''
-                content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel">{descrip}</div>\n'
+            try:
+                axisDescrip = cleanForWeb(axis.description or '')
+                trClass = "primary" if primary else "secondary"
+                content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n<div class="axis_table_cell">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist">\n'
+                primary = not primary
+                isFirst = True
+                for val in axis.values:
+                    selected = "true" if isFirst else "false"
+                    active = " active" if isFirst else ""
+                    isFirst = False
+                    descrip = cleanForWeb(val.description or '')
+                    content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{val.title}: {descrip}">{val.title}</a></li>\n'
+                content += '</ul>\n<div class="tab-content">\n'
+                isFirst = True
+                for val in axis.values:
+                    active = " active show" if isFirst else ""
+                    isFirst = False
+                    descrip = cleanForWeb(val.description or '')
+                    content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel">{descrip}</div>\n'
+            except Exception as e:
+                raise RuntimeError(f"Failed to build HTML for axis '{axis.id}': {e}")
             content += '</div></td></tr>\n'
             xSelect += f'<input type="radio" class="btn-check" name="x_axis_selector" id="x_{axis.id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="x_{axis.id}" title="{axisDescrip}">{axis.title}</label>\n'
             ySelect += f'<input type="radio" class="btn-check" name="y_axis_selector" id="y_{axis.id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="y_{axis.id}" title="{axisDescrip}">{axis.title}</label>\n'
@@ -455,7 +467,7 @@ class WebDataBuilder():
         content += f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">Y Axis:&nbsp;\n{ySelect}</div></center></div>\n'
         content += '<div><center><input class="form-check-input" type="checkbox" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
         content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
-        html = html.replace("{TITLE}", grid.title).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
+        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
         return html
 
     def EmitWebData(path, grid):

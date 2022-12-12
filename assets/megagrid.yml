@@ -101,7 +101,7 @@ axes:
                              <br>When their "NovelAI Anime-Final" SD model was leaked, they were upset and tried to put a stop to its spread.
                              Soon after, however, they claimed that they intended to release their work to the public anyway, and they were only upset that somebody stole their ability to have an awesome public launch, not that the content itself was available freely to users.
                              <br>There are a lot of back and forth claims and arguments from NovelAI and in response to them. It is not the job of this grid website to tell you what to think about that or who's wrong or right.
-                             However, the NovelAI model is easily available to the public and popular in many communities, therefore I decided it is worthwhile to include in this grid.
+                             However, the NovelAI model is easily available to the public and popular in many communities, therefore I decided it is worthwhile to include in this grid. (I am only included generated output examples for educational usage, and am not distributing any of their private data).
                              <br>This model is varyingly referred to as "NAI", "NovelAI", "The leaked anime model", ...
                              <br>This model is continued from SD 1.x, with some resolution-handling improvements, and is optimal for generations ranging between <b>512x512</b> to <b>768x768</b> but can also go a little outside of that range.
                              <br>The training data used danbooru tags as the text prompt, and so the best usages of NAI will use danbooru tags separated by commas.

@@ -211,6 +211,7 @@ axes:
                     sampler: DPM++ 2M Karras
     cfg_scale:
         title: CFG Scale
+        default: 7
         description: >
                      CFG Scale, short for "Classifier Free Guidance" scale, is a multiplier on how much your input prompt text affects the image each step.
                      <br>To understand why this system is used, look no further than the output of the '1' option - without multiplying, the image barely resembles the text at all.
@@ -226,11 +227,6 @@ axes:
                      <br> - For cfgScale of 20, "<code>f = 0.4 + (0.05 * 20) = 0.4 + (1.0) = 1.4</code>" ... this is a problem because "1.4" is higher than the maximum "1", therefore it gets clipped off. When a difference of "0.05" or "0.03" or "0.07" all end up with a pixel value of "1" due to clipping at the top, it's inevitable that the image simply becomes a flat empty image. All the detail is in the value over "1", and so all the detail is removed.
                      <br>Note also how changing the step count affects the results of the CFG Scale.
         values:
-            7:
-                title: 7
-                description: 7 is a good default value for CFG Scale. It solidly encourages your text as the image guidance, but leaves room for AI creativity.
-                params:
-                    cfg scale: 7
             1:
                 title: 1
                 description: 1 is here to demonstrate what happens when you don't apply CFG Scale.
@@ -246,6 +242,11 @@ axes:
                 description: If your prompt is too strongly affecting your image and you want more creativity, dropping it down a little might help.
                 params:
                     cfg scale: 5
+            7:
+                title: 7
+                description: 7 is a good default value for CFG Scale. It solidly encourages your text as the image guidance, but leaves room for AI creativity.
+                params:
+                    cfg scale: 7
             9:
                 title: 9
                 description: If your prompt is getting ignored, bumping it up to 9 might help.

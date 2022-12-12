@@ -76,6 +76,7 @@ Usage comes in three main steps:
     - It can optionally also have `params` to specify any default parameters.
 - The file must have key `axes` to define the list of axes. This is a map-list key - meaning, add subkeys to create a list of each axis.
     - Each axis must have a `title`, and `values`. It can optionally have a `description`.
+        - You can also optionally have `default: (value_id)` to set the default selected tab.
         - There are two ways to do a value in the value list:
             - Option 1: just do like `steps=10` ... this will set title to `10`, and param `steps` to value `10`, with no description.
             - Option 2: Add a submapping with key `title`, and optional `description`, and then `params` as a sub map of parameters like `steps: 10`

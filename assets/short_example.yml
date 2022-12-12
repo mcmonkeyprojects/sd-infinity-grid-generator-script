@@ -61,6 +61,8 @@ axes:
     steps:
         title: Steps
         description: How many times to run the sampler.
+        # You can set which value is selected by default. Note that the '20' here corresponds to the '20:' key label on the value below.
+        default: 20
         values:
             10:
                 title: 10
@@ -72,6 +74,7 @@ axes:
             20: steps=20
     cfgscale:
         title: CFG Scale
+        default: 7
         values:
             3: CFG scale=3
             5: CFG scale=5

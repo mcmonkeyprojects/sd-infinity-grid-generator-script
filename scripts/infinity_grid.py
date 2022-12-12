@@ -251,6 +251,7 @@ class Axis:
         self.values = list()
         self.id = id
         self.title = obj.get("title")
+        self.default = obj.get("default")
         if self.title is None:
             raise RuntimeError(f"Invalid axis '{id}': missing title")
         self.description = obj.get("description")
@@ -443,16 +444,21 @@ class WebDataBuilder():
                 trClass = "primary" if primary else "secondary"
                 content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n<div class="axis_table_cell">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist">\n'
                 primary = not primary
-                isFirst = True
+                isFirst = axis.default is None
                 for val in axis.values:
+                    if axis.default is not None:
+                        print(f"compare {axis.default} and {val.key}")
+                        isFirst = str(axis.default) == str(val.key)
                     selected = "true" if isFirst else "false"
                     active = " active" if isFirst else ""
                     isFirst = False
                     descrip = cleanForWeb(val.description or '')
                     content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{val.title}: {descrip}">{val.title}</a></li>\n'
                 content += '</ul>\n<div class="tab-content">\n'
-                isFirst = True
+                isFirst = axis.default is None
                 for val in axis.values:
+                    if axis.default is not None:
+                        isFirst = str(axis.default) == str(val.key)
                     active = " active show" if isFirst else ""
                     isFirst = False
                     descrip = cleanForWeb(val.description or '')

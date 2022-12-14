@@ -18,6 +18,7 @@ function loadData() {
     document.getElementById('x_' + rawData.axes[0].id).click();
     document.getElementById('autoScaleImages').onchange = updateScaling;
     fillTable();
+    startAutoScroll();
 }
 
 function fillTable() {
@@ -73,6 +74,7 @@ function fillTable() {
 
 function updateScaling() {
     var percent;
+    var xAxis;
     if (document.getElementById('autoScaleImages').checked) {
         var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
         for (var axis of rawData.axes) {
@@ -95,6 +97,73 @@ function toggleDescriptions() {
     for (var cName of ["tabval_subdiv", "axis_table_cell"]) {
         for (var elem of document.getElementsByClassName(cName)) {
             elem.style.display = show ? "block" : "none";
+        }
+    }
+}
+
+var anyRangeActive = false;
+
+function toggleTimers() {
+    var show = document.getElementById('showTimers').checked;
+    if (!show) {
+        anyRangeActive = false;
+    }
+    for (var elem of document.getElementsByClassName("timer_box")) {
+        elem.style.display = show ? "block" : "none";
+    }
+}
+
+const timer = ms => new Promise(res => setTimeout(res, ms));
+
+function enableRange(id) {
+    var range = document.getElementById("range_tablist_" + id);
+    var label = document.getElementById("label_range_tablist_" + id);
+    range.oninput = function() {
+        anyRangeActive = true;
+        label.innerText = (range.value/2) + " seconds";
+    }
+    var data = {};
+    data.range = range;
+    data.counter = 0;
+    data.id = id;
+    data.tabPage = document.getElementById("tablist_" + id);
+    data.tabs = data.tabPage.getElementsByClassName("nav-link");
+    return data;
+}
+
+async function startAutoScroll() {
+    var rangeSet = [];
+    for (var axis of rawData.axes) {
+        rangeSet.push(enableRange(axis.id));
+    }
+    while (true) {
+        await timer(500);
+        if (!anyRangeActive) {
+            continue;
+        }
+        for (var data of rangeSet) {
+            if (data.range.value <= 0) {
+                continue;
+            }
+            data.counter++;
+            if (data.counter < data.range.value) {
+                continue;
+            }
+            data.counter = 0;
+            var next = false;
+            for (var tab of data.tabs) {
+                if (next) {
+                    tab.click();
+                    next = false;
+                    break;
+                }
+                if (tab.classList.contains("active")) {
+                    next = true;
+                }
+            }
+            if (next) {
+                data.tabs[0].click();
+            }
         }
     }
 }

@@ -133,6 +133,14 @@ axes:
 - Open the HTML file in a browser. Enjoy.
 - If you want to share the content, just copy/paste the whole freakin folder into a webserver somewhere.
     - Or upload to github and make GitHub.io pages host it for you.
+- You have a few different clickable options:
+    - `Show descriptions of axes and values`: if you used descriptions, you can uncheck this box to hide them. Helps save space for direct viewing.
+    - `Show auto-cycle timers`: when checked, will add timer-sliders to each field - you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).
+    - `Auto-scale images to viewport width`: this is handy for a few different scenarios
+        - A: if your images are small and your screen is big, checking this option makes them bigger
+        - B: if your images are so big they're going off the edge, checking this option makes them smaller
+        - C: if checked, you can zoom in/out of the page using your browser zoom (CTRL + Mouse Wheel) to change the UI size without affecting the image size
+            - if unchecked, you can zoom in/out to change the size of the images.
 
 #### Expanding Later
 

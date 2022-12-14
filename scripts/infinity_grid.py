@@ -17,7 +17,7 @@ import yaml
 import json
 import shutil
 from copy import copy
-from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts
+from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing
 from modules.processing import process_images, Processed
 from modules.shared import opts, cmd_opts, state
 from modules.hypernetworks import hypernetwork
@@ -389,7 +389,8 @@ class GridRunner:
             os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
             if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
                 processed.images[0] = processed.images[0].resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
-            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
+            info = processing.create_infotext(p, [p.prompt], [p.seed], [p.subseed], [])
+            images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
         return last
 

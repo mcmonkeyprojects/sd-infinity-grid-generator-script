@@ -24,8 +24,8 @@ grid:
         OutWidth: 256
         OutHeight: 256
     # Can specify the format as either 'jpg' or 'png'
-    # jpg makes smaller files, with slightly lower quality, and no metadata
-    # png makes bigger files, at better quality, with metadata
+    # jpg makes smaller file sizes, with slightly lower quality
+    # png makes bigger file sizes, at better quality
     format: jpg
 
 # "axes" is the root key of the list of axes

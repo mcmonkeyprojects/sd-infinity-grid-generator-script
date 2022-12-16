@@ -106,12 +106,14 @@ axes:
     - `PromptReplace` can be used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
         - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
         - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
-- Note that it will be processed from bottom to top - so if you have `samplers`, then `steps`, then `seeds`, it will:
-    - choose one sampler and step count, and iterate all seeds.
-    - then it will do the next sample and step count, and iterate all seeds.
-    - once all seeds are done for that pair, it will retain the same sampler, and choose the next step count, then iterate all seeds.
-    - etc. on repeat until all steps are done, then it will finally choose the last sample.
-- So, things that take time to load, like `Model`, should be put near the top.
+- Note that it will be processed from bottom to top
+    - so if you have `samplers`, then `steps`, then `seeds`, it will:
+        - choose one sampler and step count, and iterate all seeds.
+        - then it will do the next sample and step count, and iterate all seeds.
+        - once all seeds are done for that pair, it will retain the same sampler, and choose the next step count, then iterate all seeds.
+        - etc. on repeat until all steps are done, then it will finally choose the last sample.
+    - So, things that take time to load, like `Model`, should be put near the top.
+- Note that `ClipSkip`, `Model`, `VAE`, `Hypernetwork` are global settings, and as such you must make sure that you don't slip them into some values but not all. For example, if you have one model set to `ClipSkip: 2` in a model list, you must set all other models to `ClipSkip: 1` to reset them, otherwise the `ClipSkip: 2` will persist across generations.
 
 #### 2: Grid Content Generation via WebUI
 

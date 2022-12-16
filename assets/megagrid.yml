@@ -71,6 +71,7 @@ axes:
                              <br>This model is trained for <b>512x512</b> images primarily, and struggles with any resolution more than a small range away from this.
                 params:
                     model: sd-v1-5-pruned-emaonly
+                    ClipSkip: 1
                     width: 512
                     height: 512
             sd_21:
@@ -82,6 +83,7 @@ axes:
                              <br>This model is trained for <b>768x768</b> images primarily, but is able to work with a much wider range of other resolutions than SD1.x could.
                 params:
                     model: sd-v2-1_768-ema-pruned
+                    ClipSkip: 2
                     width: 768
                     height: 768
             wd_13:
@@ -92,6 +94,7 @@ axes:
                              <br>The model is continued from SD 1.x, and so has the same limitations and features of SD 1.x.
                 params:
                     model: wd-v1-3-float32
+                    ClipSkip: 1
                     width: 512
                     height: 512
             nai:

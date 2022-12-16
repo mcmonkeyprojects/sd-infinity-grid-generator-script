@@ -1,6 +1,6 @@
 # Stable Diffusion Infinity Grid Generator
 
-![img](github/img_2.png)
+![img](github/megagrid_ref.png)
 
 Extension for the [AUTOMATIC1111 Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that generates infinite-dimensional grids.
 
@@ -20,7 +20,7 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 ### Status
 
-Works as intended for the most part. Has only been tested by me, needs community testing. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
+Works as intended, actively maintained. Has been tested by me, and has gotten some testing and feedback from the community. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
 
 --------------
 
@@ -43,7 +43,7 @@ Here's a big MegaGrid using almost every mode option in one, with detailed educa
 
 Here's a very small web demo you can try to test how the output looks and works: https://mcmonkeyprojects.github.io/short_example and you can view the generated asset files for that demo [here](https://github.com/mcmonkeyprojects/mcmonkeyprojects.github.io/tree/master/short_example).
 
-![img](github/img_1.png)
+![img](github/simple_ref.png)
 
 --------------
 
@@ -61,11 +61,13 @@ Here's a very small web demo you can try to test how the output looks and works:
 ### Usage
 
 Usage comes in three main steps:
-- 1: Build a grid definition
-- 2: Generate its contents
-- 3: View/use the generated output page
+- [1: Build a grid definition](#1-grid-definition-file)
+- [2: Generate its contents](#2-grid-content-generation-via-webui)
+- [3: View/use the generated output page](#3-using-the-output)
 
 #### 1: Grid Definition File
+
+![img](github/yaml_settings_blur.png)
 
 - Grid information is defined by YAML files, in the extension folder under `assets`. Find the `assets/short_example.yml` file to see an example of the full format.
 - You can create new files in the assets directory (as long as the `.yml` extension stays), or copy/paste an example file and edit it. I recommend you do not edit the actual example file directly to avoid git issues.
@@ -117,6 +119,8 @@ axes:
 
 #### 2: Grid Content Generation via WebUI
 
+![img](github/webui_ref.png)
+
 - Open the WebUI
 - Go to the `txt2img` or `img2img` tab
 - At the bottom of the page, find the `Script` selection box, and select `Generate Infinite-Axis Grid`
@@ -124,10 +128,12 @@ axes:
 - Select your grid definition file from earlier.
     - If it's not there, you might just need to hit the Refresh button on the right side.
     - If it's still not, there double check that your file is in the `assets/` folder of the extension, and that it has a proper `.yml` extension.
-- Hit your `Generate` button, and wait.
+- Hit your `Generate` button (the usual big orange one at the top), and wait.
 - The output folder will be named based on your `.yml` file's name.
 
 #### 3: Using The Output
+
+![img](github/files_ref.png)
 
 - Find the `index.html` file
     - It's normally in `(your grid output directory)/(filename)/index.html`
@@ -143,6 +149,7 @@ axes:
         - C: if checked, you can zoom in/out of the page using your browser zoom (CTRL + Mouse Wheel) to change the UI size without affecting the image size
             - if unchecked, you can zoom in/out to change the size of the images.
     - `Advanced Settings`: when clicked, it will open a dropdown with more advanced settings
+        - ![img](github/advanced_settings_ref.png)
         - `Auto cycle every (x) seconds`: you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).
         - `Show value`: you can uncheck any box to hide a value from the grid. Helps if you want to ignore some of the values and get a clean grid of just the ones you care about. This was suggested by [piyarsquare in issue #4](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/4).
     - You can also click on any image to view it fullscreen and see its metadata (if included in output).

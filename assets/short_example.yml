@@ -18,7 +18,7 @@ grid:
     # These can be overridden by an axis.
     params:
         steps: 20
-        Sampler: Euler
+        Sampler: euler
         # You can specify custom width/height to rescale images to as parameters.
         # If you set eg 256x256, it will save significant file space.
         OutWidth: 256
@@ -47,7 +47,7 @@ axes:
                 # You can configure multiple parameter settings arbitrarily here.
                 params:
                     # View the readme for accepted parameter types and formats.
-                    Sampler: Euler A
+                    Sampler: euler a
             euler:
                 title: Euler
                 description: Good ol k_euler.
@@ -57,7 +57,7 @@ axes:
                 title: DDIM
                 description: The original.
                 params:
-                    Sampler: DDIM
+                    Sampler: ddim
     steps:
         title: Steps
         description: How many times to run the sampler.

@@ -32,7 +32,7 @@ function unescapeHtml(text) {
 function fillTable() {
     var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
     var y = document.querySelector('input[name="y_axis_selector"]:checked').id.substring(2);
-    var table = document.getElementById("image_table");
+    var table = document.getElementById('image_table');
     var newContent = "<th>";
     var xAxis = null;
     var yAxis = null;
@@ -45,34 +45,34 @@ function fillTable() {
         }
     }
     for (var val of xAxis.values) {
-        newContent += "<td title=\"" + val.description.replaceAll('"', "&quot;") + "\">" + val.title + "</td>";
+        newContent += '<td title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</td>';
     }
     newContent += "</th>";
     for (var val of yAxis.values) {
-        newContent += "<tr><td title=\"" + val.description.replaceAll('"', "&quot;") + "\">" + val.title + "</td>";
+        newContent += '<tr><td title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
         var url = "";
         for (var subAxis of rawData.axes) {
             if (subAxis.id == x) {
-                url += "/{X}"
+                url += '/{X}';
             }
             else if (subAxis.id == y) {
-                url += "/" + val.key;
+                url += '/' + val.key;
             }
             else {
                 var valSelectedKey;
                 for (var subVal of subAxis.values) {
-                    if (window.getComputedStyle(document.getElementById('tab_' + subAxis.id + '__' + subVal.key)).display != "none") {
+                    if (window.getComputedStyle(document.getElementById('tab_' + subAxis.id + '__' + subVal.key)).display != 'none') {
                         valSelectedKey = subVal.key;
                     }
                 }
-                url += "/" + valSelectedKey;
+                url += '/' + valSelectedKey;
             }
         }
         for (var xVal of xAxis.values) {
-            var actualUrl = url.replace("{X}", xVal.key).substring(1) + "." + rawData.ext;
-            newContent += "<td><img class=\"table_img\" id=\"autogen_img_" + escapeHtml(actualUrl).replace(' ', '%20') + "\" onclick=\"doPopupFor(this)\" src=\"" + actualUrl + "\" /></td>";
+            var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
+            newContent += '<td><img class="table_img" id="autogen_img_' + escapeHtml(actualUrl).replace(' ', '%20') + '" onclick="doPopupFor(this)" src="' + actualUrl + '" /></td>';
         }
-        newContent += "</tr>";
+        newContent += '</tr>';
         if (x == y) {
             break;
         }
@@ -91,21 +91,21 @@ function updateScaling() {
                 xAxis = axis;
             }
         }
-        percent = (90 / xAxis.values.length) + "vw";
+        percent = (90 / xAxis.values.length) + 'vw';
     }
     else {
         percent = "";
     }
-    for (var image of document.getElementById("image_table").getElementsByClassName("table_img")) {
+    for (var image of document.getElementById('image_table').getElementsByClassName('table_img')) {
         image.style.width = percent;
     }
 }
 
 function toggleDescriptions() {
     var show = document.getElementById('showDescriptions').checked;
-    for (var cName of ["tabval_subdiv", "axis_table_cell"]) {
+    for (var cName of ['tabval_subdiv', 'axis_table_cell']) {
         for (var elem of document.getElementsByClassName(cName)) {
-            elem.style.display = show ? "block" : "none";
+            elem.style.display = show ? 'block' : 'none';
         }
     }
 }
@@ -117,26 +117,26 @@ function toggleTimers() {
     if (!show) {
         anyRangeActive = false;
     }
-    for (var elem of document.getElementsByClassName("timer_box")) {
-        elem.style.display = show ? "block" : "none";
+    for (var elem of document.getElementsByClassName('timer_box')) {
+        elem.style.display = show ? 'block' : 'none';
     }
 }
 
 const timer = ms => new Promise(res => setTimeout(res, ms));
 
 function enableRange(id) {
-    var range = document.getElementById("range_tablist_" + id);
-    var label = document.getElementById("label_range_tablist_" + id);
+    var range = document.getElementById('range_tablist_' + id);
+    var label = document.getElementById('label_range_tablist_' + id);
     range.oninput = function() {
         anyRangeActive = true;
-        label.innerText = (range.value/2) + " seconds";
+        label.innerText = (range.value/2) + ' seconds';
     }
     var data = {};
     data.range = range;
     data.counter = 0;
     data.id = id;
-    data.tabPage = document.getElementById("tablist_" + id);
-    data.tabs = data.tabPage.getElementsByClassName("nav-link");
+    data.tabPage = document.getElementById('tablist_' + id);
+    data.tabs = data.tabPage.getElementsByClassName('nav-link');
     return data;
 }
 
@@ -166,7 +166,7 @@ async function startAutoScroll() {
                     next = false;
                     break;
                 }
-                if (tab.classList.contains("active")) {
+                if (tab.classList.contains('active')) {
                     next = true;
                 }
             }

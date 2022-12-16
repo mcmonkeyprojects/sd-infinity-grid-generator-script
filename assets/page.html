@@ -62,6 +62,9 @@
     .timer_range {
         vertical-align: bottom;
     }
+    .tab_hidden {
+        display: none;
+    }
     </style>
     <script src="jquery.min.js"></script>
 </head>
@@ -83,7 +86,7 @@
                 </div>
             </div>
         </div>
-        <br><input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
+        <br><input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" autocomplete="off" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
     </center>
     <br>
     {CONTENT}

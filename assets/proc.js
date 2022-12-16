@@ -105,7 +105,12 @@ function toggleDescriptions() {
     var show = document.getElementById('showDescriptions').checked;
     for (var cName of ['tabval_subdiv', 'axis_table_cell']) {
         for (var elem of document.getElementsByClassName(cName)) {
-            elem.style.display = show ? 'block' : 'none';
+            if (show) {
+                elem.classList.remove('tab_hidden');
+            }
+            else {
+                elem.classList.add('tab_hidden');
+            }
         }
     }
 }

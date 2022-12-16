@@ -502,7 +502,7 @@ class WebDataBuilder():
                 axisDescrip = cleanForWeb(axis.description or '')
                 trClass = "primary" if primary else "secondary"
                 content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n'
-                advancedSettings += f'<h4>{axis.title}</h4><div class="timer_box">Auto cycle every <input style="width:30em;" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>\n'
+                advancedSettings += f'\n<h4>{axis.title}</h4><div class="timer_box">Auto cycle every <input style="width:30em;" autocomplete="off" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>\nShow value: '
                 content += f'<div class="axis_table_cell">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
                 isFirst = axis.default is None
@@ -515,6 +515,7 @@ class WebDataBuilder():
                     isFirst = False
                     descrip = cleanForWeb(val.description or '')
                     content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{val.title}: {descrip}">{val.title}</a></li>\n'
+                    advancedSettings += f'<input class="form-check-input" type="checkbox" autocomplete="off" id="showval_{axis.id}__{val.key}" checked="true" onchange="javascript:toggleShowVal(\'{axis.id}\', \'{val.key}\')"> <label class="form-check-label" for="showval_{axis.id}__{val.key}" title="Uncheck this to hide \'{val.title}\' from the page.">{val.title}</label>'
                 content += '</ul>\n<div class="tab-content">\n'
                 isFirst = axis.default is None
                 for val in axis.values:

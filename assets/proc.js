@@ -45,10 +45,16 @@ function fillTable() {
         }
     }
     for (var val of xAxis.values) {
+        if (!document.getElementById('showval_' + xAxis.id + '__' + val.key).checked) {
+            continue;
+        }
         newContent += '<td title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</td>';
     }
     newContent += "</th>";
     for (var val of yAxis.values) {
+        if (!document.getElementById('showval_' + yAxis.id + '__' + val.key).checked) {
+            continue;
+        }
         newContent += '<tr><td title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
         var url = "";
         for (var subAxis of rawData.axes) {
@@ -69,6 +75,9 @@ function fillTable() {
             }
         }
         for (var xVal of xAxis.values) {
+            if (!document.getElementById('showval_' + xAxis.id + '__' + xVal.key).checked) {
+                continue;
+            }
             var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
             newContent += '<td><img class="table_img" id="autogen_img_' + escapeHtml(actualUrl).replace(' ', '%20') + '" onclick="doPopupFor(this)" src="' + actualUrl + '" /></td>';
         }
@@ -115,6 +124,18 @@ function toggleDescriptions() {
     }
 }
 
+function toggleShowVal(axis, val) {
+    var show = document.getElementById('showval_' + axis + '__' + val).checked;
+    var element = document.getElementById('clicktab_' + axis + '__' + val);
+    if (show) {
+        element.classList.remove('tab_hidden');
+    }
+    else {
+        element.classList.add('tab_hidden');
+    }
+    fillTable();
+}
+
 var anyRangeActive = false;
 
 const timer = ms => new Promise(res => setTimeout(res, ms));
@@ -156,17 +177,28 @@ async function startAutoScroll() {
             data.counter = 0;
             var next = false;
             for (var tab of data.tabs) {
-                if (next) {
+                if (tab.classList.contains('active')) {
+                    next = true;
+                }
+                else if (tab.classList.contains('tab_hidden')) {
+                    // Skip past
+                }
+                else if (next) {
                     tab.click();
                     next = false;
                     break;
                 }
-                if (tab.classList.contains('active')) {
-                    next = true;
-                }
             }
-            if (next) {
-                data.tabs[0].click();
+            if (next) { // Click the first non-hidden
+                for (var tab of data.tabs) {
+                    if (tab.classList.contains('tab_hidden')) {
+                        // Skip past
+                    }
+                    else {
+                        tab.click();
+                        break;
+                    }
+                }
             }
         }
     }

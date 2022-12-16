@@ -144,6 +144,7 @@ axes:
             - if unchecked, you can zoom in/out to change the size of the images.
     - `Advanced Settings`: when clicked, it will open a dropdown with more advanced settings
         - `Auto cycle every (x) seconds`: you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).
+        - `Show value`: you can uncheck any box to hide a value from the grid. Helps if you want to ignore some of the values and get a clean grid of just the ones you care about. This was suggested by [piyarsquare in issue #4](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/4).
     - You can also click on any image to view it fullscreen and see its metadata (if included in output).
 
 #### Expanding Later

@@ -10,15 +10,15 @@ An "infinite axis grid" is like an X/Y plot grid, but with, well, more axes on i
 
 ### Goals and Use Cases
 
-Part of the goal of this system is to develop educational charts, to provide a universal answer to the classic question of "what does (X) setting do? But what about with (Y)?".
+The primary goal is to let people generate their own fancy grids to explore how different settings affect their renders in a convenient form.
 
-There is a built in ability to add description text to fields, for the specific purpose of enhancing educational page output.
+Another goal of this system is to develop educational charts, to provide a universal answer to the classic question of "what does (X) setting do? But what about with (Y)?" - [The MegaGrid](https://sd.mcmonkey.org/megagrid/). There is a built in ability to add description text to fields, for the specific purpose of enhancing educational page output.
 
 ### Pros/Cons
 
-The advantage of this design is it allows you to rapidly compare the results of different combinations of settings, without having to wait to generation times.
+The advantage of this design is it allows you to rapidly compare the results of different combinations of settings, without having to wait to for generation times for each specific sub-grid as-you-go - you just run it all once in advance (perhaps overnight for a large run), and then after that browse through it in realtime.
 
-The disadvantage is that time to generate a grid is exponential - if you have 5 samplers, 5 seeds, 5 step counts, 5 CFG scales... that's 5^4, or 625 images. Add another variable and now it's 3125 images. You can see how this quickly jumps from a two minute render to a two hour render.
+The disadvantage is that time to generate a grid is exponential - if you have 5 samplers, 5 seeds, 5 step counts, 5 CFG scales... that's 5^4, or 625 images. Add another variable with 5 options and now it's 3125 images. You can see how this quickly jumps from a two minute render to a two hour render.
 
 --------------
 
@@ -32,6 +32,8 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
     - [2: Grid Content Generation via WebUI](#2-grid-content-generation-via-webui)
     - [3: Using The Output](#3-using-the-output)
     - [Expanding Later](#expanding-later)
+- [Credits](#credits)
+- [Common Issues](#common-issues)
 - [License](#License)
 
 --------------
@@ -56,11 +58,11 @@ Current overall project status: **Works well, actively maintained**. Has been te
 
 - You must have the [AUTOMATIC1111 Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) already installed and working. Refer to that project's readme for help with that.
 - Open the WebUI, go to to the `Extensions` tab
-- -EITHER- Option A:
+- -EITHER- Option **A**:
     - go to the `Available` tab with
     - click `Load from` (with the default list)
-    - Scroll down to find `Infinity Grid Generator`
-- -OR- Option B:
+    - Scroll down to find `Infinity Grid Generator`, or use `CTRL+F` to find it
+- -OR- Option **B**:
     - Click on `Install from URL`
     - Copy/paste this project's URL into the `URL for extension's git repository` textbox: `https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script`
 - Click `Install`
@@ -74,15 +76,20 @@ Usage comes in three main steps:
 - [1: Build a grid definition](#1-grid-definition-file)
 - [2: Generate its contents](#2-grid-content-generation-via-webui)
 - [3: View/use the generated output page](#3-using-the-output)
+- You can also [expand your grid later](#expanding-later)
 
-#### 1: Grid Definition File
+--------------
+
+### 1: Grid Definition File
 
 ![img](github/yaml_settings_blur.png)
 
-- Grid information is defined by YAML files, in the extension folder under `assets`. Find the `assets/short_example.yml` file to see an example of the full format.
-- You can create new files in the assets directory (as long as the `.yml` extension stays), or copy/paste an example file and edit it. I recommend you do not edit the actual example file directly to avoid git issues.
-- I recommend editing with a good text editor, such as *VS Code* or *Notepad++*. Don't use *MS Word* or *Windows Notepad* as those might cause trouble.
-- All text inputs allow for raw HTML, so, be careful. You can use `&lt;` for `<`, and `&gt;` for `>`, `&#58;` for `:`, and `&amp;` for `&`.
+- Grid information is defined by **YAML files**, in the extension folder under `assets`. Find the `assets/short_example.yml` file to see an example of the full format.
+
+**If you do not want to follow an example file:**
+- You can **create new files** in the assets directory (as long as the `.yml` extension stays), or copy/paste an example file and edit it. I recommend you do not edit the actual example file directly to avoid git issues.
+- I recommend editing with a **good text editor**, such as *VS Code* or *Notepad++*. Don't use *MS Word* or *Windows Notepad* as those might cause trouble.
+- All text inputs allow for **raw HTML**, so, be careful. You can use `&lt;` for `<`, and `&gt;` for `>`, `&#58;` for `:`, and `&amp;` for `&`.
 - The file must have key `grid`, with subkey `title` and `description` to define the file data.
     - It must also have `format` as `jpg` or `png`
     - It can optionally also have `params` to specify any default parameters.
@@ -109,23 +116,29 @@ axes:
 ```
 
 - Names and descriptions can always be whatever you want, as HTML text.
-- Settings supported for parameters:
+- **Settings supported for parameters**:
     - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Hypernetwork`, `HypernetworkStrength`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`, `OutWidth`, `OutHeight`, `PromptReplace`
-    - All names are case insensitive and spacing insensitive. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
+    - All names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.
     - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
     - `PromptReplace` can be used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
         - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
         - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
+    - Note that `Model`, `VAE`, `Hypernetwork` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity.
 - Note that it will be processed from bottom to top
-    - so if you have `samplers`, then `steps`, then `seeds`, it will:
-        - choose one sampler and step count, and iterate all seeds.
-        - then it will do the next sample and step count, and iterate all seeds.
-        - once all seeds are done for that pair, it will retain the same sampler, and choose the next step count, then iterate all seeds.
-        - etc. on repeat until all steps are done, then it will finally choose the last sample.
-    - So, things that take time to load, like `Model`, should be put near the top.
-- Note that `Model`, `VAE`, `Hypernetwork` are global settings, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model choice for the values that lack specificity.
+    - so if you have  first `samplers` DDIM and Euler, then `steps` 20 and 10, then `seeds` 1 and 2, it will go in this order:
+        - Sampler=DDIM, Steps=20, Seed=1
+        - Sampler=DDIM, Steps=20, Seed=**2**
+        - Sampler=DDIM, Steps=**10**, Seed=1
+        - Sampler=DDIM, Steps=10, Seed=2
+        - Sampler=**Euler**, Steps=20, Seed=1
+        - Sampler=Euler, Steps=20, Seed=2
+        - Sampler=Euler, Steps=10, Seed=1
+        - Sampler=Euler, Steps=10, Seed=2
+    - So, things that take time to load, like `Model`, should be put near the top, so they don't have to be loaded repeatedly.
+
+--------------
 
 ### 2: Grid Content Generation via WebUI
 
@@ -141,6 +154,8 @@ axes:
 - Hit your `Generate` button (the usual big orange one at the top), and wait.
 - The output folder will be named based on your `.yml` file's name.
 
+--------------
+
 ### 3: Using The Output
 
 ![img](github/files_ref.png)
@@ -149,8 +164,8 @@ axes:
     - It's normally in `(your grid output directory)/(filename)/index.html`
         - The example file might output to `outputs/grids/short_example/index.html`
 - Open the HTML file in a browser. Enjoy.
-- If you want to share the content, just copy/paste the whole freakin folder into a webserver somewhere.
-    - Or upload to github and make GitHub.io pages host it for you.
+- If you want to share the content, just copy/paste the whole folder into a webserver somewhere.
+    - Or upload to github and make GitHub.io pages host it for you. [See example here](https://github.com/mcmonkeyprojects/mcmonkeyprojects.github.io)
 - You have a few different clickable options:
     - `Show descriptions of axes and values`: if you used descriptions, you can uncheck this box to hide them. Helps save space for direct viewing.
     - `Auto-scale images to viewport width`: this is handy for a few different scenarios
@@ -163,6 +178,8 @@ axes:
         - `Auto cycle every (x) seconds`: you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).
         - `Show value`: you can uncheck any box to hide a value from the grid. Helps if you want to ignore some of the values and get a clean grid of just the ones you care about. This was suggested by [piyarsquare in issue #4](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/4).
     - You can also click on any image to view it fullscreen and see its metadata (if included in output).
+
+--------------
 
 ### Expanding Later
 
@@ -186,6 +203,17 @@ If you want to add more content to a grid you already made, you can do that:
 - Thanks to the authors of all issues labeled as [Completed](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues?q=label%3ACompleted).
 - Thanks to StabilityAI, RunwayML, CompVis for Stable Diffusion, and the researchers whose work was incorporated.
 - Thanks to AUTOMATIC1111 and the long list of contributors for the WebUI.
+
+----------------------
+
+### Common Issues
+
+```
+  File "stable-diffusion-webui\modules\images.py", line 508, in _atomically_save_image
+    image_format = Image.registered_extensions()[extension]
+KeyError: '.jpg
+```
+If you have this error, just hit generate again. I'm not sure why it happens, it just does at random sometimes on the first time the WebUI starts up.
 
 ----------------------
 

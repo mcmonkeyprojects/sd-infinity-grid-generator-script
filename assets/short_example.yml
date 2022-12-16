@@ -10,6 +10,7 @@ grid:
     # This will be displayed on the bottom of the page.
     author: Created by YOUR NAME HERE for SOME REASON HERE
     # Give a page description
+    # Descriptions are HTML, so you can use HTML, or to write raw symbols, use escape codes:  &lt; for <    &gt; for >    &amp; for &    &#58; for :
     description: >
                  This is to demonstrate the concept of how the infinite-axis grid system works.
                  This description here demonstrates multi-line YAML strings.
@@ -19,6 +20,7 @@ grid:
     params:
         steps: 20
         Sampler: euler
+        seed: 1
         # You can specify custom width/height to rescale images to as parameters.
         # If you set eg 256x256, it will save significant file space.
         OutWidth: 256

@@ -113,7 +113,7 @@ axes:
         - once all seeds are done for that pair, it will retain the same sampler, and choose the next step count, then iterate all seeds.
         - etc. on repeat until all steps are done, then it will finally choose the last sample.
     - So, things that take time to load, like `Model`, should be put near the top.
-- Note that `ClipSkip`, `Model`, `VAE`, `Hypernetwork` are global settings, and as such you must make sure that you don't slip them into some values but not all. For example, if you have one model set to `ClipSkip: 2` in a model list, you must set all other models to `ClipSkip: 1` to reset them, otherwise the `ClipSkip: 2` will persist across generations.
+- Note that `Model`, `VAE`, `Hypernetwork` are global settings, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model choice for the values that lack specificity.
 
 #### 2: Grid Content Generation via WebUI
 
@@ -143,6 +143,7 @@ axes:
         - B: if your images are so big they're going off the edge, checking this option makes them smaller
         - C: if checked, you can zoom in/out of the page using your browser zoom (CTRL + Mouse Wheel) to change the UI size without affecting the image size
             - if unchecked, you can zoom in/out to change the size of the images.
+    - You can also click on any image to view it fullscreen and see its metadata (if included in output).
 
 #### Expanding Later
 

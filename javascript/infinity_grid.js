@@ -19,7 +19,7 @@ new_titles = {
     "Overwrite existing images (for updating grids)": "If checked, any existing image files will be overwritten - this is useful if you want to redo the grid with completely different base settings. If unchecked, if an image already exists, it will be skipped - this is useful for adding new options to an existing grid.",
     "Generate infinite-grid webviewer page": "If checked, generate the webviewer page. If unchecked, won't generate. You can uncheck this for dryruns that don't need it, or to avoid overwriting customized pages.",
     "Do a dry run to validate your grid file": "If checked, no images will be rendered - it will just validate your YAML and all its content. Check the WebUI's console for any messages.",
-    "Publish full generation metadata for viewing on-page": "If checked, any/all image metadata will be stored in the webpage's files, and the internal values of each axis. This is useful for viewing, but if you're sharing a generation where some details are private (eg exact prompt text) you'll want to uncheck this.",
+    "Publish full generation metadata for viewing on-page": "If checked, any/all image metadata will be stored in the webpage's files, and the internal values of each axis. This is useful for viewing, but if you're sharing a generation where some details are private (eg exact prompt text) you'll want to uncheck this. Note that this doesn't change whether metadata gets stored in images or not, edit your Settings tab to configure that.",
     "Validate PromptReplace input": "If unchecked, will allow useless PromptReplace settings to be ignored. If checked, will error if the replace won't do anything."
 }
 

@@ -405,6 +405,7 @@ class GridRunner:
             if not dry:
                 print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
             p = copy(self.p)
+            oldClipSkip = opts.CLIP_stop_at_last_layers
             set.applyTo(p, dry)
             if dry:
                 continue
@@ -417,6 +418,7 @@ class GridRunner:
             info = processing.create_infotext(p, [p.prompt], [p.seed], [p.subseed], [])
             images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
+            opts.CLIP_stop_at_last_layers = oldClipSkip
         return last
 
 class SettingsFixer():

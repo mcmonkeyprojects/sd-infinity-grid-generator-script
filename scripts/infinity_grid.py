@@ -16,6 +16,7 @@ import glob
 import yaml
 import json
 import shutil
+import math
 from copy import copy
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing
 from modules.processing import process_images, Processed
@@ -75,6 +76,17 @@ def getVaeFor(name):
 
 def getSamplerFor(name):
     return getBestInList(name, sd_samplers.all_samplers_map.keys())
+
+def chooseBetterFileName(rawName, fullName):
+    partialName = os.path.splitext(os.path.basename(fullName))[0]
+    if '/' in rawName or '\\' in rawName or '.' in rawName or len(rawName) >= len(partialName):
+        return rawName
+    return partialName
+
+def fixNum(num):
+    if num is None or math.isinf(num) or math.isnan(num):
+        return None
+    return num
 
 ######################### Value Modes #########################
 def applySampler(p, v):
@@ -174,7 +186,7 @@ validModes = {
 ######################### Validation #########################
 def validateParams(params):
     for p,v in params.items():
-        validateSingleParam(p, v)
+        params[p] = validateSingleParam(p, v)
 
 def validateSingleParam(p, v):
         p = cleanName(p)
@@ -203,19 +215,32 @@ def validateSingleParam(p, v):
             if max is not None and vFloat > max:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
         elif p == "model":
-            if getModelFor(v) is None:
+            actualModel = getModelFor(v)
+            if actualModel is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized - valid {list(map(lambda m: m.title, sd_models.checkpoints_list.values()))}")
+            return chooseBetterFileName(v, actualModel)
         elif p == "hypernetwork":
             hnName = cleanName(v)
-            if hnName != "none" and getHypernetworkFor(hnName) is None:
+            if hnName == "none":
+                return hnName
+            actualHn = getHypernetworkFor(hnName)
+            if actualHn is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized - valid: {list(shared.hypernetworks.keys())}")
+            return chooseBetterFileName(v, actualHn)
         elif p == "vae":
             vaeName = cleanName(v)
-            if vaeName != "none" and vaeName != "auto" and getVaeFor(vaeName) is None:
+            if vaeName == "none" or vaeName == "auto":
+                return vaeName
+            actualVae = getVaeFor(vaeName)
+            if actualVae is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized - valid: {list(sd_vae.vae_dict.keys())}")
+            return chooseBetterFileName(v, actualVae)
         elif p == "sampler":
-            if getSamplerFor(cleanName(v)) is None:
+            actualSampler = getSamplerFor(cleanName(v))
+            if actualSampler is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
+            return actualSampler
+        return v
 
 ######################### YAML Parsing and Processing #########################
 class AxisValue:
@@ -408,11 +433,39 @@ class SettingsFixer():
 
 ######################### Web Data Builders #########################
 class WebDataBuilder():
-    def buildJson(grid):
+
+    def getBaseParamData(p):
+        return {
+            "sampler": p.sampler_name,
+            "seed": p.seed,
+            "steps": p.steps,
+            "cfgscale": p.cfg_scale,
+            "model": chooseBetterFileName('', shared.sd_model.sd_checkpoint_info.model_name).replace(',', '').replace(':', ''),
+            "vae": (None if sd_vae.loaded_vae_file is None else (chooseBetterFileName('', sd_vae.loaded_vae_file).replace(',', '').replace(':', ''))),
+            "width": p.width,
+            "height": p.height,
+            "hypernetwork": (None if shared.loaded_hypernetwork is None else (chooseBetterFileName('', shared.loaded_hypernetwork.name)).replace(',', '').replace(':', '')),
+            "hypernetworkstrength": (None if shared.loaded_hypernetwork is None or shared.opts.sd_hypernetwork_strength >= 1 else shared.opts.sd_hypernetwork_strength),
+            "prompt": p.prompt,
+            "negativeprompt": p.negative_prompt,
+            "varseed": (None if p.subseed_strength == 0 else p.subseed),
+            "varstrength": (None if p.subseed_strength == 0 else p.subseed_strength),
+            "clipskip": opts.CLIP_stop_at_last_layers,
+            "denoising": getattr(p, 'denoising_strength', None),
+            "eta": fixNum(p.eta),
+            "sigmachurn": fixNum(p.s_churn),
+            "sigmatmin": fixNum(p.s_tmin),
+            "sigmatmax": fixNum(p.s_tmax),
+            "sigmanoise": fixNum(p.s_noise)
+        }
+
+    def buildJson(grid, publish_gen_metadata, p):
         result = {}
         result['title'] = grid.title
         result['description'] = grid.description
         result['ext'] = grid.format
+        if publish_gen_metadata:
+            result['metadata'] = WebDataBuilder.getBaseParamData(p)
         axes = list()
         for axis in grid.axes:
             jAxis = {}
@@ -425,6 +478,8 @@ class WebDataBuilder():
                 jVal['key'] = val.key
                 jVal['title'] = val.title
                 jVal['description'] = val.description or ""
+                if publish_gen_metadata:
+                    jVal['params'] = val.params
                 values.append(jVal)
             jAxis['values'] = values
             axes.append(jAxis)
@@ -479,10 +534,10 @@ class WebDataBuilder():
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
         return html
 
-    def EmitWebData(path, grid):
+    def EmitWebData(path, grid, publish_gen_metadata, p):
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
-        json = WebDataBuilder.buildJson(grid)
+        json = WebDataBuilder.buildJson(grid, publish_gen_metadata, p)
         with open(os.path.join(path, "data.js"), 'w') as f:
             f.write("rawData = " + json)
         assetDir = os.path.join(Script.BASEDIR, "assets")
@@ -510,6 +565,7 @@ class Script(scripts.Script):
         generate_page = gr.Checkbox(value=True, label="Generate infinite-grid webviewer page")
         dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
         validate_replace = gr.Checkbox(value=True, label="Validate PromptReplace input")
+        publish_gen_metadata = gr.Checkbox(value=True, label="Publish full generation metadata for viewing on-page")
         # Maintain our own refreshable list of yaml files, to avoid all the oddities of other scripts demanding you drag files and whatever
         # Refresh code based roughly on how the base WebUI does refreshing of model files and all
         with gr.Row():
@@ -520,15 +576,16 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, grid_file, refresh_button]
+        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button]
 
-    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, grid_file, refresh_button):
+    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
         p.batch_size = 1
         p.do_not_save_samples = True
         p.do_not_save_grid = True
+        p.seed = processing.get_fixed_seed(p.seed)
         # Validate to avoid abuse
         if '..' in grid_file or grid_file == "":
             raise RuntimeError(f"Unacceptable filename '{grid_file}'")
@@ -551,7 +608,7 @@ class Script(scripts.Script):
         with SettingsFixer():
             result = runner.run(dry_run)
         if generate_page:
-            WebDataBuilder.EmitWebData(folder, grid)
+            WebDataBuilder.EmitWebData(folder, grid, publish_gen_metadata, p)
         if dry_run:
             print("Infinite Grid dry run succeeded without error")
         if result is None:

@@ -177,12 +177,103 @@ async function startAutoScroll() {
     }
 }
 
+function genParamQuote(text) {
+    // Referenced to match generation_parameters_copypaste.py - quote(text)
+    if (!text.includes(',')) {
+        return text;
+    }
+    return '"' + text.toString().replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '"';
+}
+
+function formatMet(name, val, bad) {
+    if (val == null) {
+        return "";
+    }
+    val = val.toString();
+    if (bad !== undefined && val == bad) {
+        return "";
+    }
+    return name + ": " + genParamQuote(val) + ", "
+}
+
+function formatMetadata(valSet) {
+    var count = Object.keys(valSet).length;
+    if (count == 0) {
+        return "";
+    }
+    else if (count == 1) {
+        return valSet["error"];
+    }
+    // Referenced to match processing.py - create_infotext(p)
+    var negative = valSet["negativeprompt"];
+    if (negative.length > 0) {
+        negative = "\nNegative prompt: " + negative;
+    }
+    // Keys we have but gen-param doesn't: VAE, sigma(churn/tmin/tmax/noise)
+    var keyData = formatMet("Steps", valSet["steps"])
+        + formatMet("Sampler", valSet["sampler"])
+        + formatMet("CFG scale", valSet["cfgscale"])
+        + formatMet("Seed", valSet["seed"])
+        // face restore
+        + formatMet("Size", valSet["width"] + "x" + valSet["height"])
+        // model hash
+        + formatMet("Model", valSet["model"])
+        + formatMet("Hypernet", valSet["hypernetwork"], "none")
+        + formatMet("Hypernet strength", valSet["hypernetworkstrength"], "none")
+        // Batch size, batch pos
+        + formatMet("Variation seed", valSet["varseed"], "0")
+        + formatMet("Variation seed strength", valSet["varstrength"], "0")
+        // Seed resize from
+        + formatMet("Denoising strength", valSet["denoising"])
+        // Conditional mask weight
+        + formatMet("Eta", valSet["eta"])
+        + formatMet("Clip skip", valSet["clipskip"], "1")
+        // ENSD
+        ;
+    keyData = keyData.substring(0, keyData.length - 2);
+    return valSet["prompt"] + negative + "\n" + keyData;
+}
+
+function crunchMetadata(url) {
+    if (!('metadata' in rawData)) {
+        return {};
+    }
+    initialData = rawData.metadata;
+    var index = 0;
+    for (var part of url.substring(0, url.indexOf('.')).split('/')) {
+        var axis = rawData.axes[index++];
+        var actualVal = null;
+        for (var val of axis.values) {
+            if (val.key == part) {
+                actualVal = val;
+                break;
+            }
+        }
+        if (actualVal == null) {
+            return { "error": "metadata parsing failed for part " + index + ": " + part };
+        }
+        for (var [key, value] of Object.entries(actualVal.params)) {
+            if (key == "promptreplace") {
+                var replacers = value.split('=', 2);
+                var match = replacers[0].trim();
+                var replace = replacers[1].trim();
+                initialData["prompt"] = initialData["prompt"].replaceAll(match, replace);
+                initialData["negativeprompt"] = initialData["negativeprompt"].replaceAll(match, replace);
+            }
+            else {
+                initialData[key] = value;
+            }
+        }
+    }
+    return initialData;
+}
+
 function doPopupFor(img) {
-    console.log("popup for " + img);
     var modalElem = document.getElementById('image_info_modal');
     var url = img.id.substring('autogen_img_'.length);
-    var text = 'Image: ' + url + '<br>';
-    modalElem.innerHTML = '<div class="modal-dialog" onclick="javascript:$(\'#image_info_modal\').modal(\'hide\');">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="' + unescapeHtml(url) + '"><br><div class="popup_modal_undertext">' + text + '</div>';
+    var params = escapeHtml(formatMetadata(crunchMetadata(unescapeHtml(url)))).replaceAll("\n", "\n<br>");
+    var text = 'Image: ' + url + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
+    modalElem.innerHTML = '<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="' + unescapeHtml(url) + '"><br><div class="popup_modal_undertext">' + text + '</div>';
     $('#image_info_modal').modal('toggle');
 }
 

@@ -38,19 +38,21 @@
         border: 1px solid black;
     }
     .popup_modal_background {
+        font-family: monospace, monospace;
         background-color: rgb(50, 50, 50, 0.7);
         text-align: center;
     }
     .popup_modal_img {
-        width: 90vmin;
+        width: calc(min(100vw, 100vh - 6em));
         position: relative;
         margin: auto;
     }
     .popup_modal_undertext {
         background-color: #404060;
+        overflow-wrap: break-word;
     }
     .modal_inner_div {
-        width: 90vmin;
+        width: calc(min(100vw, 100vh - 6em));
         margin: auto;
     }
     </style>

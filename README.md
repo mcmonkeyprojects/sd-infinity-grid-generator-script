@@ -2,15 +2,19 @@
 
 ![img](github/megagrid_ref.png)
 
+### Concept
+
 Extension for the [AUTOMATIC1111 Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that generates infinite-dimensional grids.
 
 An "infinite axis grid" is like an X/Y plot grid, but with, well, more axes on it. Of course, monitors are 2D, so this is implemented in practice by generating a webpage that lets you select which two primary axes to display, and then choose the current value for each of the other axes.
 
-This design was partially inspired by the "XYZ Plot" script by "xrypgame". Sections of code are referenced from the WebUI itself, and its default "X/Y Plot" script.
+### Goals and Use Cases
 
 Part of the goal of this system is to develop educational charts, to provide a universal answer to the classic question of "what does (X) setting do? But what about with (Y)?".
 
 There is a built in ability to add description text to fields, for the specific purpose of enhancing educational page output.
+
+### Pros/Cons
 
 The advantage of this design is it allows you to rapidly compare the results of different combinations of settings, without having to wait to generation times.
 
@@ -18,15 +22,10 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 
 --------------
 
-### Status
-
-Works as intended, actively maintained. Has been tested by me, and has gotten some testing and feedback from the community. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
-
---------------
-
 ### Table of Contents
 
 - [Examples](#Examples)
+- [Status](#Status)
 - [Installation](#Installation)
 - [Usage](#Usage)
     - [1: Grid Definition File](#1-grid-definition-file)
@@ -47,12 +46,23 @@ Here's a very small web demo you can try to test how the output looks and works:
 
 --------------
 
+### Status
+
+Current overall project status: **Works well, actively maintained**. Has been tested by me, and has gotten some testing and feedback from the community. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
+
+--------------
+
 ### Installation
 
 - You must have the [AUTOMATIC1111 Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) already installed and working. Refer to that project's readme for help with that.
-- Open the WebUI, go to to the `Extensions` tab.
-- Click on `Install from URL`
-- Copy/paste this project's URL into the `URL for extension's git repository` textbox: `https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script`
+- Open the WebUI, go to to the `Extensions` tab
+- -EITHER- Option A:
+    - go to the `Available` tab with
+    - click `Load from` (with the default list)
+    - Scroll down to find `Infinity Grid Generator`
+- -OR- Option B:
+    - Click on `Install from URL`
+    - Copy/paste this project's URL into the `URL for extension's git repository` textbox: `https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script`
 - Click `Install`
 - Restart or reload the WebUI
 
@@ -89,7 +99,7 @@ Micro example:
 grid:
     title: Tiny example
     author: someone
-    description: This is just to show core format rules. View the example `.yml` files in assets for better examples.
+    description: This is just to show core format. View the example `.yml` files in assets for better examples.
     format: jpg
 axes:
     1:
@@ -117,7 +127,7 @@ axes:
     - So, things that take time to load, like `Model`, should be put near the top.
 - Note that `Model`, `VAE`, `Hypernetwork` are global settings, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model choice for the values that lack specificity.
 
-#### 2: Grid Content Generation via WebUI
+### 2: Grid Content Generation via WebUI
 
 ![img](github/webui_ref.png)
 
@@ -131,7 +141,7 @@ axes:
 - Hit your `Generate` button (the usual big orange one at the top), and wait.
 - The output folder will be named based on your `.yml` file's name.
 
-#### 3: Using The Output
+### 3: Using The Output
 
 ![img](github/files_ref.png)
 
@@ -154,7 +164,7 @@ axes:
         - `Show value`: you can uncheck any box to hide a value from the grid. Helps if you want to ignore some of the values and get a clean grid of just the ones you care about. This was suggested by [piyarsquare in issue #4](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/4).
     - You can also click on any image to view it fullscreen and see its metadata (if included in output).
 
-#### Expanding Later
+### Expanding Later
 
 If you want to add more content to a grid you already made, you can do that:
 
@@ -164,6 +174,18 @@ If you want to add more content to a grid you already made, you can do that:
 - You can add axes, but you'll have to regenerate all images if so.
     - Probably save as a new filename in that case.
 - If you're just adding a new value, make sure to leave `overwriting existing images` off.
+
+----------------------
+
+### Credits
+
+- This design was partially inspired by the "XYZ Plot" script by "xrypgame".
+- Sections of code are referenced from the WebUI itself, and its default "X/Y Plot" script.
+- Some sections of code were referenced from various other relevant sources, for example the Dreambooth extension by d8ahazard was referenced for a JavaScript code trick (titles override).
+- Some sections of code were referenced from, well, random StackOverflow answers and a variety of other googled up documentation and answer sites. I haven't kept track of them, but I'm glad to live in a world where so many developers are happy and eager to help each other learn and grow. So, thank you to all members of the FOSS community!
+- Thanks to the authors of all issues labeled as [Completed](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues?q=label%3ACompleted).
+- Thanks to StabilityAI, RunwayML, CompVis for Stable Diffusion, and the researchers whose work was incorporated.
+- Thanks to AUTOMATIC1111 and the long list of contributors for the WebUI.
 
 ----------------------
 

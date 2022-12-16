@@ -37,6 +37,22 @@
         vertical-align: top;
         border: 1px solid black;
     }
+    .popup_modal_background {
+        background-color: rgb(50, 50, 50, 0.7);
+        text-align: center;
+    }
+    .popup_modal_img {
+        width: 80vmin;
+        position: relative;
+        margin: auto;
+    }
+    .popup_modal_undertext {
+        background-color: #404060;
+    }
+    .modal_inner_div {
+        width: 80vmin;
+        margin: auto;
+    }
     </style>
     <script src="jquery.min.js"></script>
 </head>
@@ -51,6 +67,7 @@
     </center>
     <br>
     {CONTENT}
+    <div class="modal modal-fullscreen popup_modal_background" id="image_info_modal"></div>
     <br><div style="width:256px;height:512px;"></div> <!-- Spacer to reduce screen-jumping if images load while you're scrolled down -->
     <footer>
         <center>

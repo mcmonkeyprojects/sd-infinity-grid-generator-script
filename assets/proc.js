@@ -21,6 +21,14 @@ function loadData() {
     startAutoScroll();
 }
 
+function escapeHtml(text) {
+    return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+function unescapeHtml(text) {
+    return text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#039;', "'").replaceAll('&amp;', '&');
+}
+
 function fillTable() {
     var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
     var y = document.querySelector('input[name="y_axis_selector"]:checked').id.substring(2);
@@ -61,7 +69,8 @@ function fillTable() {
             }
         }
         for (var xVal of xAxis.values) {
-            newContent += "<td><img class=\"table_img\" src=\"" + url.replace("{X}", xVal.key).substring(1) + "." + rawData.ext + "\" /></td>";
+            var actualUrl = url.replace("{X}", xVal.key).substring(1) + "." + rawData.ext;
+            newContent += "<td><img class=\"table_img\" id=\"autogen_img_" + escapeHtml(actualUrl).replace(' ', '%20') + "\" onclick=\"doPopupFor(this)\" src=\"" + actualUrl + "\" /></td>";
         }
         newContent += "</tr>";
         if (x == y) {
@@ -166,6 +175,15 @@ async function startAutoScroll() {
             }
         }
     }
+}
+
+function doPopupFor(img) {
+    console.log("popup for " + img);
+    var modalElem = document.getElementById('image_info_modal');
+    var url = img.id.substring('autogen_img_'.length);
+    var text = 'Image: ' + url + '<br>';
+    modalElem.innerHTML = '<div class="modal-dialog" onclick="javascript:$(\'#image_info_modal\').modal(\'hide\');">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="' + unescapeHtml(url) + '"><br><div class="popup_modal_undertext">' + text + '</div>';
+    $('#image_info_modal').modal('toggle');
 }
 
 loadData();

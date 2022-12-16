@@ -495,13 +495,14 @@ class WebDataBuilder():
         xSelect = ""
         ySelect = ""
         content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
+        advancedSettings = ''
         primary = True
         for axis in grid.axes:
             try:
                 axisDescrip = cleanForWeb(axis.description or '')
                 trClass = "primary" if primary else "secondary"
                 content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n'
-                content += f'<div class="timer_box" style="display:none;width:39em;"><input style="width:30em;" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>'
+                advancedSettings += f'<h4>{axis.title}</h4><div class="timer_box">Auto cycle every <input style="width:30em;" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>\n'
                 content += f'<div class="axis_table_cell">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
                 isFirst = axis.default is None
@@ -533,7 +534,7 @@ class WebDataBuilder():
         content += f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">Y Axis:&nbsp;\n{ySelect}</div></center></div>\n'
         content += '<div><center><input class="form-check-input" type="checkbox" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
         content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
-        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author)
+        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author)
         return html
 
     def EmitWebData(path, grid, publish_gen_metadata, p):

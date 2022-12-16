@@ -112,16 +112,6 @@ function toggleDescriptions() {
 
 var anyRangeActive = false;
 
-function toggleTimers() {
-    var show = document.getElementById('showTimers').checked;
-    if (!show) {
-        anyRangeActive = false;
-    }
-    for (var elem of document.getElementsByClassName('timer_box')) {
-        elem.style.display = show ? 'block' : 'none';
-    }
-}
-
 const timer = ms => new Promise(res => setTimeout(res, ms));
 
 function enableRange(id) {

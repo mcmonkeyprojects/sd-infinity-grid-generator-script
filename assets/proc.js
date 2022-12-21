@@ -8,9 +8,7 @@ function loadData() {
         // axis.id/title/description
         for (var val of axis.values) {
             // val.key/title/description
-            var elem = document.getElementById('clicktab_' + axis.id + '__' + val.key);
-            elem.onclick = fillTable;
-            elem.onfocus = fillTable;
+            document.getElementById('clicktab_' + axis.id + '__' + val.key).onclick = fillTable;
         }
         document.getElementById('x_' + axis.id).onclick = fillTable;
         document.getElementById('y_' + axis.id).onclick = fillTable;
@@ -22,6 +20,81 @@ function loadData() {
     fillTable();
     startAutoScroll();
 }
+
+function getAxisById(id) {
+    for (var axis of rawData.axes) {
+        if (axis.id == id) {
+            return axis;
+        }
+    }
+}
+
+function getNextAxis(axes, startId) {
+    var next = false;
+    for (var subAxis of axes) {
+        if (subAxis.id == startId) {
+            next = true;
+        }
+        else if (next) {
+            return subAxis;
+        }
+    }
+    return null;
+}
+
+function getSelectedValKey(axis) {
+    for (var subVal of axis.values) {
+        if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display != 'none') {
+            return subVal.key;
+        }
+    }
+    return null;
+}
+
+window.addEventListener('keydown', function(kbevent) {
+    var elem = document.activeElement;
+    if (!elem.id.startsWith('clicktab_')) {
+        return;
+    }
+    var axisId = elem.id.substring('clicktab_'.length);
+    var splitIndex = axisId.indexOf('__');
+    axisId = axisId.substring(0, splitIndex);
+    var axis = getAxisById(axisId);
+    if (kbevent.key == "ArrowLeft") {
+        var tabPage = document.getElementById('tablist_' + axis.id);
+        var tabs = tabPage.getElementsByClassName('nav-link');
+        var newTab = clickTabAfterActiveTab([].slice.call(tabs).reverse());
+        newTab.focus();
+    }
+    else if (kbevent.key == "ArrowRight") {
+        var tabPage = document.getElementById('tablist_' + axis.id);
+        var tabs = tabPage.getElementsByClassName('nav-link');
+        var newTab = clickTabAfterActiveTab(tabs);
+        newTab.focus();
+    }
+    else if (kbevent.key == "ArrowUp") {
+        var next = getNextAxis(rawData.axes.slice().reverse(), axisId);
+        if (next != null) {
+            var selectedKey = getSelectedValKey(next);
+            var swapToTab = this.document.getElementById('clicktab_' + next.id + '__' + selectedKey);
+            swapToTab.focus();
+        }
+    }
+    else if (kbevent.key == "ArrowDown") {
+        var next = getNextAxis(rawData.axes, axisId);
+        if (next != null) {
+            var selectedKey = getSelectedValKey(next);
+            var swapToTab = this.document.getElementById('clicktab_' + next.id + '__' + selectedKey);
+            swapToTab.focus();
+        }
+    }
+    else {
+        return;
+    }
+    kbevent.preventDefault();
+    kbevent.stopPropagation();
+    return false;
+}, true);
 
 function escapeHtml(text) {
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -36,16 +109,8 @@ function fillTable() {
     var y = document.querySelector('input[name="y_axis_selector"]:checked').id.substring(2);
     var table = document.getElementById('image_table');
     var newContent = "<th>";
-    var xAxis = null;
-    var yAxis = null;
-    for (var axis of rawData.axes) {
-        if (axis.id == x) {
-            xAxis = axis;
-        }
-        if (axis.id == y) {
-            yAxis = axis;
-        }
-    }
+    var xAxis = getAxisById(x);
+    var yAxis = getAxisById(y);
     for (var val of xAxis.values) {
         if (!document.getElementById('showval_' + xAxis.id + '__' + val.key).checked) {
             continue;
@@ -67,13 +132,7 @@ function fillTable() {
                 url += '/' + val.key;
             }
             else {
-                var valSelectedKey;
-                for (var subVal of subAxis.values) {
-                    if (window.getComputedStyle(document.getElementById('tab_' + subAxis.id + '__' + subVal.key)).display != 'none') {
-                        valSelectedKey = subVal.key;
-                    }
-                }
-                url += '/' + valSelectedKey;
+                url += '/' + getSelectedValKey(subAxis);
             }
         }
         for (var xVal of xAxis.values) {
@@ -97,11 +156,7 @@ function updateScaling() {
     var xAxis;
     if (document.getElementById('autoScaleImages').checked) {
         var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
-        for (var axis of rawData.axes) {
-            if (axis.id == x) {
-                xAxis = axis;
-            }
-        }
+        xAxis = getAxisById(x);
         percent = (90 / xAxis.values.length) + 'vw';
     }
     else {
@@ -158,6 +213,34 @@ function enableRange(id) {
     return data;
 }
 
+function clickTabAfterActiveTab(tabs) {
+    var next = false;
+    for (var tab of tabs) {
+        if (tab.classList.contains('active')) {
+            next = true;
+        }
+        else if (tab.classList.contains('tab_hidden')) {
+            // Skip past
+        }
+        else if (next) {
+            tab.click();
+            return tab;
+        }
+    }
+    if (next) { // Click the first non-hidden
+        for (var tab of tabs) {
+            if (tab.classList.contains('tab_hidden')) {
+                // Skip past
+            }
+            else {
+                tab.click();
+                return tab;
+            }
+        }
+    }
+    return null;
+}
+
 async function startAutoScroll() {
     var rangeSet = [];
     for (var axis of rawData.axes) {
@@ -177,31 +260,7 @@ async function startAutoScroll() {
                 continue;
             }
             data.counter = 0;
-            var next = false;
-            for (var tab of data.tabs) {
-                if (tab.classList.contains('active')) {
-                    next = true;
-                }
-                else if (tab.classList.contains('tab_hidden')) {
-                    // Skip past
-                }
-                else if (next) {
-                    tab.click();
-                    next = false;
-                    break;
-                }
-            }
-            if (next) { // Click the first non-hidden
-                for (var tab of data.tabs) {
-                    if (tab.classList.contains('tab_hidden')) {
-                        // Skip past
-                    }
-                    else {
-                        tab.click();
-                        break;
-                    }
-                }
-            }
+            clickTabAfterActiveTab(data.tabs);
         }
     }
 }

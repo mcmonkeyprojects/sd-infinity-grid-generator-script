@@ -8,7 +8,9 @@ function loadData() {
         // axis.id/title/description
         for (var val of axis.values) {
             // val.key/title/description
-            document.getElementById('clicktab_' + axis.id + '__' + val.key).onclick = fillTable;
+            var elem = document.getElementById('clicktab_' + axis.id + '__' + val.key);
+            elem.onclick = fillTable;
+            elem.onfocus = fillTable;
         }
         document.getElementById('x_' + axis.id).onclick = fillTable;
         document.getElementById('y_' + axis.id).onclick = fillTable;

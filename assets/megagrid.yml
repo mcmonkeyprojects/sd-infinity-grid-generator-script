@@ -12,7 +12,7 @@ grid:
                     <div class="card-body">
                         <p class="card-text" style="text-align: left;">
                             This page is a Mega-Grid of Stable Diffusion settings, intended to help educate about what each of these options is, and what the results of changing the options are.
-                            <br>If you're brand new to SD, you're on the wrong page, this page will be too overwhelming. Find a beginner's guide to SD, and install the <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111 WebUI</a>. Consider joining the <a href="https://discord.gg/xU8y74HG4d">WebUI discord as well</a>.
+                            <br>If you're brand new to SD, you're on the wrong page, this page will be too overwhelming. Find a beginner's guide to SD, and install the <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111 WebUI</a>. Consider joining the <a href="https://discord.gg/vrfEcaBTRC">r/StableDiffusion discord as well</a>.
                             <br>If you've tried the basics of SD and are looking to understand the features like Samplers, Step counts, CFG Scale, etc. this is the perfect page for you.
                             <br><br>For example, to see how Samplers and Step Counts compare, scroll to the grid at the bottom, and select the <code>Steps</code> for the X-Axis and <code>Samplers</code> for the Y-Axis and you'll get a 2D grid showing how they compare.
                             <br><br>You can also view the Samplers selector to view descriptions of each Sampler, and a description of the concept of a Sampler on the left side. Note that these descriptions are scrollable.

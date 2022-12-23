@@ -118,7 +118,7 @@ def applyHypernetwork(p, v):
         hnName = getHypernetworkFor(hnName)
     hypernetwork.load_hypernetwork(hnName)
 def applyHypernetworkStrength(p, v):
-    hypernetwork.apply_strength = float(v)
+    hypernetwork.HypernetworkModule.multiplier = float(v)
 def applyPrompt(p, v):
     p.prompt = v
 def applyNegativePrompt(p, v):
@@ -406,6 +406,7 @@ class GridRunner:
                 print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
             p = copy(self.p)
             oldClipSkip = opts.CLIP_stop_at_last_layers
+            oldHnStrength = hypernetwork.HypernetworkModule.multiplier
             set.applyTo(p, dry)
             if dry:
                 continue
@@ -419,6 +420,7 @@ class GridRunner:
             images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
             opts.CLIP_stop_at_last_layers = oldClipSkip
+            hypernetwork.HypernetworkModule.multiplier = oldHnStrength
         return last
 
 class SettingsFixer():

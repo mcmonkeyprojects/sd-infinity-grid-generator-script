@@ -33,9 +33,14 @@
         max-height: 8em;
         overflow: auto;
     }
-    table tr td {
+    table tr td, table tr th {
         vertical-align: top;
         border: 1px solid black;
+    }
+    th {
+        position: sticky;
+        top: -1px;
+        background-color: #202020;
     }
     .popup_modal_background {
         font-family: monospace, monospace;
@@ -107,7 +112,7 @@
             <br><div style="width:256px;height:512px;"></div>
         </center>
     </footer>
-    <script src="data.js?vary=4"></script>
-    <script src="proc.js?vary=4"></script>
+    <script src="data.js?vary=5"></script>
+    <script src="proc.js?vary=5"></script>
     <script src="bootstrap.bundle.min.js"></script>
 </body>

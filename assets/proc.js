@@ -115,7 +115,7 @@ function fillTable() {
         if (!document.getElementById('showval_' + xAxis.id + '__' + val.key).checked) {
             continue;
         }
-        newContent += '<td title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</td>';
+        newContent += '<th title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</th>';
     }
     newContent += "</th>";
     for (var val of yAxis.values) {

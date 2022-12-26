@@ -126,7 +126,7 @@ def applyNegativePrompt(p, v):
 def applyVarSeed(p, v):
     p.subseed = int(v)
 def applyVarSeedStrength(p, v):
-    p.subseed_strength = int(v)
+    p.subseed_strength = float(v)
 def applyClipSkip(p, v):
     opts.data["CLIP_stop_at_last_layers"] = int(v)
 def applyDenoising(p, v):

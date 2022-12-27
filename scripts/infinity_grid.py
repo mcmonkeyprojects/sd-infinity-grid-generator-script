@@ -145,6 +145,8 @@ def applyOutWidth(p, v):
     p.inf_grid_out_width = int(v)
 def applyOutHeight(p, v):
     p.inf_grid_out_height = int(v)
+def applyRestoreFaces(p, v):
+    p.restore_faces = str(v).lower().strip() == "true"
 def applyPromptReplace(p, v):
     val = v.split('=', maxsplit=1)
     if len(val) != 2:
@@ -180,6 +182,7 @@ validModes = {
     "sigmanoise": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
     "outwidth": { "dry": True, "type": "integer", "min": 0, "apply": applyOutWidth },
     "outheight": { "dry": True, "type": "integer", "min": 0, "apply": applyOutHeight },
+    "restorefaces": { "dry": True, "type": "boolean", "apply": applyRestoreFaces },
     "promptreplace": { "dry": True, "type": "text", "apply": applyPromptReplace }
 }
 
@@ -214,6 +217,10 @@ def validateSingleParam(p, v):
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
             if max is not None and vFloat > max:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+        elif modeType == "boolean":
+            vClean = str(v).lower().strip()
+            if vClean != "true" and vClean != "false":
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
         elif p == "model":
             actualModel = getModelFor(v)
             if actualModel is None:

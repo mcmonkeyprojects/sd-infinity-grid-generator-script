@@ -211,9 +211,9 @@ If you want to add more content to a grid you already made, you can do that:
 ```
   File "stable-diffusion-webui\modules\images.py", line 508, in _atomically_save_image
     image_format = Image.registered_extensions()[extension]
-KeyError: '.jpg
+KeyError: '.jpg'
 ```
-If you have this error, just hit generate again. I'm not sure why it happens, it just does at random sometimes on the first time the WebUI starts up.
+If you have this error, just hit generate again. I'm not sure why it happens, it just does at random sometimes on the first time the WebUI starts up. It seems to happen when you use "OutWidth"/"OutHeight" settings and is prevented by running any generation without a custom out-resolution. Might be some required initialization is getting skipped when an image is rescaled?
 
 ----------------------
 

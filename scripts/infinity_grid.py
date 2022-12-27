@@ -510,7 +510,6 @@ class WebDataBuilder():
                 isFirst = axis.default is None
                 for val in axis.values:
                     if axis.default is not None:
-                        print(f"compare {axis.default} and {val.key}")
                         isFirst = str(axis.default) == str(val.key)
                     selected = "true" if isFirst else "false"
                     active = " active" if isFirst else ""

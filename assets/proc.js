@@ -341,7 +341,7 @@ function crunchMetadata(url) {
             return { "error": "metadata parsing failed for part " + index + ": " + part };
         }
         for (var [key, value] of Object.entries(actualVal.params)) {
-            if (key == "promptreplace") {
+            if (key.replaceAll(' ', '') == "promptreplace") {
                 var replacers = value.split('=', 2);
                 var match = replacers[0].trim();
                 var replace = replacers[1].trim();

@@ -172,7 +172,7 @@ axes:
                      <br>A key term to know here is "convergence": a sampler "converges" when it reaches the number of steps where increasing the step count wouldn't change the output noticeably.
                      <br>The categories can be roughly separated into:
                      <br> - the main converging set (DDIM, PLMS, Euler, DPM2, ...) - these all get the same results as eachother using different methods.
-                     <br> - The Karras converging set (DPM++ 2M Karras, LMS Karras, ...) - these all also get the same results as eachother, but slightly different from the main set.
+                     <br> - The Karras converging set (DPM++ 2M Karras, LMS Karras, ...) - these all also get the same results as eachother, but slightly different from the main set. 'Karras' refers to an alternative 'noise scheduler' (the thing that builds the random start to each image based on seed) that enables convergence in fewer steps.
                      <br> - Ancestral samplers - these produce wildly variant outputs based on the addition of extra random noise between steps. They don't necessarily converge at all - adding more steps adds more random noise, and so produces different outcomes.
                      <br> Some samplers measure step counts different - for example, DPM2 actually does 2 steps for every 'step', and 'DPM Adaptive' ignores your step count input and automatically determines how many steps are needed for convergence.
         values:

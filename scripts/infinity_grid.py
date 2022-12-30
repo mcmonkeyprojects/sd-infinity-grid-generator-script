@@ -498,6 +498,12 @@ class WebDataBuilder():
         result['axes'] = axes
         return json.dumps(result)
 
+    def radioButtonHtml(name, id, descrip, label):
+        return f'<input type="radio" class="btn-check" name="{name}" id="{id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="{id}" title="{descrip}">{label}</label>\n'
+    
+    def axisBar(label, content):
+        return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'
+
     def buildHtml(grid):
         assetDir = os.path.join(Script.BASEDIR, "assets")
         with open(os.path.join(assetDir, "page.html"), 'r') as referenceHtml:
@@ -537,11 +543,12 @@ class WebDataBuilder():
             except Exception as e:
                 raise RuntimeError(f"Failed to build HTML for axis '{axis.id}': {e}")
             content += '</div></td></tr>\n'
-            xSelect += f'<input type="radio" class="btn-check" name="x_axis_selector" id="x_{axis.id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="x_{axis.id}" title="{axisDescrip}">{axis.title}</label>\n'
-            ySelect += f'<input type="radio" class="btn-check" name="y_axis_selector" id="y_{axis.id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="y_{axis.id}" title="{axisDescrip}">{axis.title}</label>\n'
-        content += '</table>\n'
-        content += f'<center><br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">X Axis:&nbsp;\n{xSelect}</div>\n'
-        content += f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">Y Axis:&nbsp;\n{ySelect}</div></center></div>\n'
+            xSelect += WebDataBuilder.radioButtonHtml('x_axis_selector', f'x_{axis.id}', axisDescrip, axis.title)
+            ySelect += WebDataBuilder.radioButtonHtml('y_axis_selector', f'y_{axis.id}', axisDescrip, axis.title)
+        content += '</table>\n<center>'
+        content += WebDataBuilder.axisBar('X Axis', xSelect)
+        content += WebDataBuilder.axisBar('Y Axis', ySelect)
+        content += '</center></div>\n'
         content += '<div><center><input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
         content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author)

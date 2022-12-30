@@ -105,8 +105,8 @@ function unescapeHtml(text) {
 }
 
 function fillTable() {
-    var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
-    var y = document.querySelector('input[name="y_axis_selector"]:checked').id.substring(2);
+    var x = getCurrentSelectedAxis('x');
+    var y = getCurrentSelectedAxis('y');
     var table = document.getElementById('image_table');
     var newContent = "<th>";
     var xAxis = getAxisById(x);
@@ -151,13 +151,17 @@ function fillTable() {
     updateScaling();
 }
 
+function getCurrentSelectedAxis(axisPrefix) {
+    return document.querySelector('input[name="' + axisPrefix + '_axis_selector"]:checked').id.substring(2);
+}
+
 function updateScaling() {
     var percent;
-    var xAxis;
     if (document.getElementById('autoScaleImages').checked) {
-        var x = document.querySelector('input[name="x_axis_selector"]:checked').id.substring(2);
-        xAxis = getAxisById(x);
-        percent = (90 / xAxis.values.length) + 'vw';
+        var x = getCurrentSelectedAxis('x');
+        var xAxis = getAxisById(x);
+        var count = xAxis.values.length;
+        percent = (90 / count) + 'vw';
     }
     else {
         percent = "";

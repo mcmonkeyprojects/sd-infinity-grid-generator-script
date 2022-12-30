@@ -381,36 +381,39 @@ class SingleGridCall:
             applyPromptReplace(p, replace)
 
 class GridRunner:
-    def __init__(self, grid, doOverwrite, basePath, p):
+    def __init__(self, grid, doOverwrite, basePath, p, fast_skip):
         self.grid = grid
         self.totalRun = 0
         self.totalSkip = 0
         self.totalSteps = 0
         self.doOverwrite = doOverwrite
         self.basePath = basePath
+        self.fast_skip = fast_skip
         self.p = p
 
-    def buildValueSetList(axisList):
+    def buildValueSetList(self, axisList):
         result = list()
         if len(axisList) == 0:
             return result
         curAxis = axisList[0]
         if len(axisList) == 1:
             for val in curAxis.values:
-                newList = list()
-                newList.append(val)
-                result.append(SingleGridCall(newList))
+                if not val.skip or not self.fast_skip:
+                    newList = list()
+                    newList.append(val)
+                    result.append(SingleGridCall(newList))
             return result
         nextAxisList = axisList[1::]
-        for obj in GridRunner.buildValueSetList(nextAxisList):
+        for obj in self.buildValueSetList(nextAxisList):
             for val in curAxis.values:
-                newList = obj.values.copy()
-                newList.append(val)
-                result.append(SingleGridCall(newList))
+                if not val.skip or not self.fast_skip:
+                    newList = obj.values.copy()
+                    newList.append(val)
+                    result.append(SingleGridCall(newList))
         return result
 
     def preprocess(self):
-        self.valueSets = GridRunner.buildValueSetList(list(reversed(self.grid.axes)))
+        self.valueSets = self.buildValueSetList(list(reversed(self.grid.axes)))
         print(f'Have {len(self.valueSets)} unique value sets, will go into {self.basePath}')
         for set in self.valueSets:
             set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
@@ -626,6 +629,7 @@ class Script(scripts.Script):
         dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
         validate_replace = gr.Checkbox(value=True, label="Validate PromptReplace input")
         publish_gen_metadata = gr.Checkbox(value=True, label="Publish full generation metadata for viewing on-page")
+        fast_skip = gr.Checkbox(value=False, label="Use more-performant skipping")
         # Maintain our own refreshable list of yaml files, to avoid all the oddities of other scripts demanding you drag files and whatever
         # Refresh code based roughly on how the base WebUI does refreshing of model files and all
         with gr.Row():
@@ -636,9 +640,9 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button]
+        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip]
 
-    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button):
+    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
@@ -662,7 +666,7 @@ class Script(scripts.Script):
         grid.parseYaml(yamlContent, grid_file)
         # Now start using it
         folder = os.path.join(p.outpath_grids, grid_file.replace(".yml", ""))
-        runner = GridRunner(grid, do_overwrite, folder, p)
+        runner = GridRunner(grid, do_overwrite, folder, p, fast_skip)
         Script.VALIDATE_REPLACE = validate_replace
         runner.preprocess()
         with SettingsFixer():

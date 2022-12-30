@@ -20,6 +20,7 @@ new_titles = {
     "Generate infinite-grid webviewer page": "If checked, generate the webviewer page. If unchecked, won't generate. You can uncheck this for dryruns that don't need it, or to avoid overwriting customized pages.",
     "Do a dry run to validate your grid file": "If checked, no images will be rendered - it will just validate your YAML and all its content. Check the WebUI's console for any messages.",
     "Publish full generation metadata for viewing on-page": "If checked, any/all image metadata will be stored in the webpage's files, and the internal values of each axis. This is useful for viewing, but if you're sharing a generation where some details are private (eg exact prompt text) you'll want to uncheck this. Note that this doesn't change whether metadata gets stored in images or not, edit your Settings tab to configure that.",
+    "Use more-performant skipping": "Only matters if you have 'skip: true' on any values - if checked, uses a method of skipping that improves performance but prevents validation of the skipped options.",
     "Validate PromptReplace input": "If unchecked, will allow useless PromptReplace settings to be ignored. If checked, will error if the replace won't do anything."
 }
 

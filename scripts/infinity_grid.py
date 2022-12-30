@@ -510,6 +510,8 @@ class WebDataBuilder():
             html = referenceHtml.read()
         xSelect = ""
         ySelect = ""
+        x2Select = WebDataBuilder.radioButtonHtml('x2_axis_selector', f'x2_none', 'None', 'None')
+        y2Select = WebDataBuilder.radioButtonHtml('y2_axis_selector', f'y2_none', 'None', 'None')
         content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
         advancedSettings = ''
         primary = True
@@ -545,10 +547,14 @@ class WebDataBuilder():
             content += '</div></td></tr>\n'
             xSelect += WebDataBuilder.radioButtonHtml('x_axis_selector', f'x_{axis.id}', axisDescrip, axis.title)
             ySelect += WebDataBuilder.radioButtonHtml('y_axis_selector', f'y_{axis.id}', axisDescrip, axis.title)
-        content += '</table>\n<center>'
+            x2Select += WebDataBuilder.radioButtonHtml('x2_axis_selector', f'x2_{axis.id}', axisDescrip, axis.title)
+            y2Select += WebDataBuilder.radioButtonHtml('y2_axis_selector', f'y2_{axis.id}', axisDescrip, axis.title)
+        content += '</table>\n<div class="axis_selectors">'
         content += WebDataBuilder.axisBar('X Axis', xSelect)
         content += WebDataBuilder.axisBar('Y Axis', ySelect)
-        content += '</center></div>\n'
+        content += WebDataBuilder.axisBar('X Super-Axis', x2Select)
+        content += WebDataBuilder.axisBar('Y Super-Axis', y2Select)
+        content += '</div></div>\n'
         content += '<div><center><input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
         content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author)

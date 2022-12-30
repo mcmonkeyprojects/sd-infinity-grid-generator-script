@@ -3,20 +3,26 @@
  */
 
 function loadData() {
+    document.getElementById('x_' + rawData.axes[0].id).click();
+    document.getElementById('x2_none').click();
+    document.getElementById('y2_none').click();
     // rawData.ext/title/description
     for (var axis of rawData.axes) {
         // axis.id/title/description
         for (var val of axis.values) {
             // val.key/title/description
-            document.getElementById('clicktab_' + axis.id + '__' + val.key).onclick = fillTable;
+            document.getElementById('clicktab_' + axis.id + '__' + val.key).addEventListener('click', fillTable);
         }
-        document.getElementById('x_' + axis.id).onclick = fillTable;
-        document.getElementById('y_' + axis.id).onclick = fillTable;
+        for (var prefix of ['x_', 'y_', 'x2_', 'y2_']) {
+            document.getElementById(prefix + axis.id).addEventListener('click', fillTable);
+        }
+        for (var label of ['x2_none', 'y2_none']) {
+            document.getElementById(label).addEventListener('click', fillTable);
+        }
         console.log(document.getElementById('x_' + axis.id))
     }
     console.log("Loaded data for '" + rawData.title + "'");
-    document.getElementById('x_' + rawData.axes[0].id).click();
-    document.getElementById('autoScaleImages').onchange = updateScaling;
+    document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
     fillTable();
     startAutoScroll();
 }
@@ -104,22 +110,11 @@ function unescapeHtml(text) {
     return text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#039;', "'").replaceAll('&amp;', '&');
 }
 
-function getXAxisTh(xAxis, val) {
-    if (!canShowVal(xAxis.id, val.key)) {
-        return '';
-    }
-    return '<th title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</th>';
-}
-
-function getYAxisTD(val) {
-    return '<td class="axis_label_td" title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
-}
-
 function canShowVal(axis, val) {
     return document.getElementById('showval_' + axis + '__' + val).checked;
 }
 
-function getXAxisContent(x, y, xAxis, val) {
+function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
     var url = "";
     for (var subAxis of rawData.axes) {
         if (subAxis.id == x) {
@@ -127,6 +122,12 @@ function getXAxisContent(x, y, xAxis, val) {
         }
         else if (subAxis.id == y) {
             url += '/' + val.key;
+        }
+        else if (x2Axis != null && subAxis.id == x2Axis.id) {
+            url += '/' + x2val.key;
+        }
+        else if (y2Axis != null && subAxis.id == y2Axis.id) {
+            url += '/' + y2val.key;
         }
         else {
             url += '/' + getSelectedValKey(subAxis);
@@ -143,24 +144,57 @@ function getXAxisContent(x, y, xAxis, val) {
     return newContent;
 }
 
+function optDescribe(isFirst, val) {
+    return isFirst && val != null ? '<span title="' + escapeHtml(val.description) + '"><b>' + val.title + '</b></span><br>' : (val != null ? '<br>' : '');
+}
+
 function fillTable() {
     var x = getCurrentSelectedAxis('x');
     var y = getCurrentSelectedAxis('y');
+    var x2 = getCurrentSelectedAxis('x2');
+    var y2 = getCurrentSelectedAxis('y2');
+    console.log('Do fill table, x=' + x + ', y=' + y + ', x2=' + x2 + ', y2=' + y2);
     var xAxis = getAxisById(x);
     var yAxis = getAxisById(y);
+    var x2Axis = x2 == 'None' || x2 == x || x2 == y ? null : getAxisById(x2);
+    var y2Axis = y2 == 'None' || y2 == x2 || y2 == x || y2 == y ? null : getAxisById(y2);
     var table = document.getElementById('image_table');
-    var newContent = "<th>";
-    for (var val of xAxis.values) {
-        newContent += getXAxisTh(xAxis, val);
-    }
-    newContent += "</th>";
-    for (var val of yAxis.values) {
-        if (!canShowVal(yAxis.id, val.key)) {
+    var newContent = '<th>';
+    for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
+        if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
             continue;
         }
-        newContent += '<tr>' + getYAxisTD(val) + getXAxisContent(x, y, xAxis, val) + '</tr>';
-        if (x == y) {
-            break;
+        var x2first = true;
+        for (var val of xAxis.values) {
+            if (!canShowVal(xAxis.id, val.key)) {
+                return '';
+            }
+            newContent += '<th title="' + val.description.replaceAll('"', "&quot;") + '">' + optDescribe(x2first, x2val) + val.title + '</th>';
+            x2first = false;
+        }
+    }
+    newContent += '</th>';
+    for (var y2val of (y2Axis == null ? [null] : y2Axis.values)) {
+        if (y2val != null && !canShowVal(y2Axis.id, y2val.key)) {
+            continue;
+        }
+        var y2first = true;
+        for (var val of yAxis.values) {
+            if (!canShowVal(yAxis.id, val.key)) {
+                continue;
+            }
+            newContent += '<tr><td class="axis_label_td" title="' + escapeHtml(val.description) + '">' + optDescribe(y2first, y2val) + val.title + '</td>';
+            y2first = false;
+            for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
+                if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
+                    continue;
+                }
+                newContent += getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val);
+            }
+            newContent += '</tr>';
+            if (x == y) {
+                break;
+            }
         }
     }
     table.innerHTML = newContent;
@@ -168,7 +202,9 @@ function fillTable() {
 }
 
 function getCurrentSelectedAxis(axisPrefix) {
-    return document.querySelector('input[name="' + axisPrefix + '_axis_selector"]:checked').id.substring(2);
+    var id = document.querySelector('input[name="' + axisPrefix + '_axis_selector"]:checked').id;
+    var index = id.indexOf('_');
+    return id.substring(index + 1);
 }
 
 function updateScaling() {
@@ -177,6 +213,11 @@ function updateScaling() {
         var x = getCurrentSelectedAxis('x');
         var xAxis = getAxisById(x);
         var count = xAxis.values.length;
+        var x2 = getCurrentSelectedAxis('x2');
+        if (x2 != 'None') {
+            var x2Axis = getAxisById(x2);
+            count *= x2Axis.values.length;
+        }
         percent = (90 / count) + 'vw';
     }
     else {

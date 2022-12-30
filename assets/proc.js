@@ -297,7 +297,6 @@ function formatMetadata(valSet) {
     if (negative.length > 0) {
         negative = "\nNegative prompt: " + negative;
     }
-    // Keys we have but gen-param doesn't: VAE, sigma(churn/tmin/tmax/noise)
     var keyData = formatMet("Steps", valSet["steps"])
         + formatMet("Sampler", valSet["sampler"])
         + formatMet("CFG scale", valSet["cfgscale"])
@@ -318,8 +317,18 @@ function formatMetadata(valSet) {
         + formatMet("Clip skip", valSet["clipskip"], "1")
         // ENSD
         ;
+        // Not part of normal gen-params
+    var extraData = formatMet("VAE", valSet["vae"])
+        + formatMet("Sigma Churn", valSet["sigmachurn"], "0")
+        + formatMet("Sigma T-Min", valSet["sigmatmin"], "0")
+        + formatMet("Sigma T-Max", valSet["sigmatmax"], "1")
+        + formatMet("Sigma Noise", valSet["sigmanoise"], "1")
+        ;
     keyData = keyData.substring(0, keyData.length - 2);
-    return valSet["prompt"] + negative + "\n" + keyData;
+    if (extraData.length > 2) {
+        extraData = extraData.substring(0, extraData.length - 2);
+    }
+    return valSet["prompt"] + negative + "\n" + keyData + "\n" + extraData;
 }
 
 function crunchMetadata(url) {

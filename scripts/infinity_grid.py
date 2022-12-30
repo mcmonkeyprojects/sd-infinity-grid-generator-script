@@ -285,16 +285,16 @@ class Axis:
         self.title = obj.get("title")
         self.default = obj.get("default")
         if self.title is None:
-            raise RuntimeError(f"Invalid axis '{id}': missing title")
+            raise RuntimeError("missing title")
         self.description = obj.get("description")
         valuesObj = obj.get("values")
         if valuesObj is None:
-            raise RuntimeError(f"Invalid axis '{id}': missing values")
+            raise RuntimeError("missing values")
         for key, val in valuesObj.items():
             try:
                 self.values.append(AxisValue(self, key, val))
             except Exception as e:
-                raise RuntimeError(f"Invalid axis '{id}': value '{key}' errored: {e}")
+                raise RuntimeError(f"value '{key}' errored: {e}")
 
 class GridFileHelper:
     def parseYaml(self, yamlContent, grid_file):

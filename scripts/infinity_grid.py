@@ -375,8 +375,6 @@ class SingleGridCall:
             mode = validModes[cleanName(name)]
             if not dry or mode["dry"]:
                 mode["apply"](p, val)
-            elif mode == "model":
-                p.sd_model_name = val
         for replace in self.replacements:
             applyPromptReplace(p, replace)
 
@@ -484,7 +482,7 @@ class WebDataBuilder():
             "restorefaces": (opts.face_restoration_model if p.restore_faces else None),
             "steps": p.steps,
             "cfgscale": p.cfg_scale,
-            "model": (p.sd_model_name if hasattr(p, 'sd_model_name') else chooseBetterFileName('', shared.sd_model.sd_checkpoint_info.model_name)).replace(',', '').replace(':', ''),
+            "model": chooseBetterFileName('', shared.sd_model.sd_checkpoint_info.model_name).replace(',', '').replace(':', ''),
             "vae": (None if sd_vae.loaded_vae_file is None else (chooseBetterFileName('', sd_vae.loaded_vae_file).replace(',', '').replace(':', ''))),
             "width": p.width,
             "height": p.height,

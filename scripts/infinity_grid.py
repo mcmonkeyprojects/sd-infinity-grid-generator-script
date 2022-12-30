@@ -286,11 +286,13 @@ class AxisValue:
             self.params = { cleanName(halves[0]): halves[1] }
             self.description = None
             self.skip = False
+            self.show = True
         else:
             self.title = val.get("title")
             self.description = val.get("description")
-            self.skip = (str(val.get("skip") or "")).lower() == "true"
+            self.skip = (str(val.get("skip"))).lower() == "true"
             self.params = fixDict(val.get("params"))
+            self.show = (str(val.get("show"))).lower() != "false"
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             validateParams(self.params)
@@ -521,6 +523,7 @@ class WebDataBuilder():
                 jVal['key'] = str(val.key).lower()
                 jVal['title'] = val.title
                 jVal['description'] = val.description or ""
+                jVal['show'] = val.show
                 if publish_gen_metadata:
                     jVal['params'] = val.params
                 values.append(jVal)

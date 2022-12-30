@@ -100,6 +100,7 @@ Usage comes in three main steps:
             - Option 1: just do like `steps=10` ... this will set title to `10`, and param `steps` to value `10`, with no description.
             - Option 2: Add a submapping with key `title`, and optional `description`, and then `params` as a sub map of parameters like `steps: 10`
                 - A value with a full format can be set to skip rendering via adding `skip: true`. This is useful for eg if some values are only valid in certain combinations, you can do runs with some skipped. Skipped values will be kept in the HTML output.
+                - A value may specify `show: false` to default uncheck the 'Show value' advanced option.
 
 Micro example:
 ```yml

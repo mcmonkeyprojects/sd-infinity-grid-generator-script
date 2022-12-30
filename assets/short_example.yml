@@ -71,6 +71,15 @@ axes:
                 description: Ten times.
                 params:
                     Steps: 10
+            secret_option:
+                title: Secret Option
+                description: The hidden secret option!
+                # You can set 'skip: true' to not generate images for a value option
+                skip: true
+                # You can also set 'show: false' to default hide it from the page (can be shown again with the advanced options box)
+                show: false
+                params:
+                    steps: 150
             # You can be lazy too. This will set param 'steps' to '15' and set title to '15'.
             15: steps=15
             20: steps=20

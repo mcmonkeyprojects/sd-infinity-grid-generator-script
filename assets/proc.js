@@ -10,8 +10,13 @@ function loadData() {
     for (var axis of rawData.axes) {
         // axis.id/title/description
         for (var val of axis.values) {
-            // val.key/title/description
-            document.getElementById('clicktab_' + axis.id + '__' + val.key).addEventListener('click', fillTable);
+            // val.key/title/description/show
+            var clicktab = document.getElementById('clicktab_' + axis.id + '__' + val.key);
+            clicktab.addEventListener('click', fillTable);
+            if (!val.show) {
+                document.getElementById('showval_' + axis.id + '__' + val.key).checked = false;
+                clicktab.classList.add('tab_hidden');
+            }
         }
         for (var prefix of ['x_', 'y_', 'x2_', 'y2_']) {
             document.getElementById(prefix + axis.id).addEventListener('click', fillTable);

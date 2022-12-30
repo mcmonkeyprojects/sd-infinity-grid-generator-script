@@ -179,7 +179,7 @@ axes:
             # Not currently included: 'LMS', 'Heun', 'DPM2 a', 'DPM++ 2S a', 'DPM++ SDE', 'DPM fast', 'DPM adaptive', 'LMS Karras', 'DPM2 Karras', 'DPM2 a Karras', 'DPM++ 2S a Karras'
             ddim:
                 title: DDIM
-                description: DDIM, "Denoising Diffusion Implicit Models", is an old sampler that predates Stable Diffusion (published by Standard researchers in 2020, modified from DDPM, published in 2020 by a Berkeley research group), and was included in the original CompVis version of SD. DDIM converges to a good image within 50 fast iterations.
+                description: DDIM, "Denoising Diffusion Implicit Models", is an old sampler that predates Stable Diffusion (published by Stanford researchers in 2020, modified from DDPM, published in 2020 by a Berkeley research group), and was included in the original CompVis version of SD. DDIM converges to a good image within 50 fast iterations.
                 params:
                     sampler: DDIM
             plms:

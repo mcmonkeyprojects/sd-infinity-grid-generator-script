@@ -362,7 +362,7 @@ function formatMetadata(valSet) {
         + formatMet("Sampler", valSet["sampler"])
         + formatMet("CFG scale", valSet["cfgscale"])
         + formatMet("Seed", valSet["seed"])
-        + formatMet("Face restoration", valSet["restorefaces"], "")
+        + formatMet("Face restoration", valSet["restorefaces"], "false")
         + formatMet("Size", valSet["width"] + "x" + valSet["height"])
         // model hash
         + formatMet("Model", valSet["model"])
@@ -384,6 +384,7 @@ function formatMetadata(valSet) {
         + formatMet("Sigma T-Min", valSet["sigmatmin"], "0")
         + formatMet("Sigma T-Max", valSet["sigmatmax"], "1")
         + formatMet("Sigma Noise", valSet["sigmanoise"], "1")
+        + (valSet["restorefaces"] == "CodeFormer" ? formatMet("CodeFormer Weight", valSet["codeformerweight"]) : "")
         ;
     keyData = keyData.substring(0, keyData.length - 2);
     if (extraData.length > 2) {
@@ -411,7 +412,8 @@ function crunchMetadata(url) {
             return { "error": "metadata parsing failed for part " + index + ": " + part };
         }
         for (var [key, value] of Object.entries(actualVal.params)) {
-            if (key.replaceAll(' ', '') == "promptreplace") {
+            key = key.replaceAll(' ', '');
+            if (key == "promptreplace") {
                 var replacers = value.split('=', 2);
                 var match = replacers[0].trim();
                 var replace = replacers[1].trim();

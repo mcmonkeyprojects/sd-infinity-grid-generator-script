@@ -20,7 +20,7 @@ import math
 from copy import copy
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing
 from modules.processing import process_images, Processed
-from modules.shared import opts, cmd_opts, state
+from modules.shared import opts
 from modules.hypernetworks import hypernetwork
 
 ######################### Constants #########################
@@ -77,6 +77,9 @@ def getVaeFor(name):
 def getSamplerFor(name):
     return getBestInList(name, sd_samplers.all_samplers_map.keys())
 
+def getFaceRestorer(name):
+    return getBestInList(name, map(lambda m: m.name(), shared.face_restorers))
+
 def chooseBetterFileName(rawName, fullName):
     partialName = os.path.splitext(os.path.basename(fullName))[0]
     if '/' in rawName or '\\' in rawName or '.' in rawName or len(rawName) >= len(partialName):
@@ -128,7 +131,9 @@ def applyVarSeed(p, v):
 def applyVarSeedStrength(p, v):
     p.subseed_strength = float(v)
 def applyClipSkip(p, v):
-    opts.data["CLIP_stop_at_last_layers"] = int(v)
+    opts.CLIP_stop_at_last_layers = int(v)
+def applyCodeformerWeight(p, v):
+    opts.code_former_weight = float(v)
 def applyDenoising(p, v):
     p.denoising_strength = float(v)
 def applyEta(p, v):
@@ -146,7 +151,14 @@ def applyOutWidth(p, v):
 def applyOutHeight(p, v):
     p.inf_grid_out_height = int(v)
 def applyRestoreFaces(p, v):
-    p.restore_faces = str(v).lower().strip() == "true"
+    input = str(v).lower().strip()
+    if input == "false":
+        p.restore_faces = False
+        return
+    p.restore_faces = True
+    restorer = getFaceRestorer(input)
+    if restorer is not None:
+        opts.face_restoration_model = restorer
 def applyPromptReplace(p, v):
     val = v.split('=', maxsplit=1)
     if len(val) != 2:
@@ -182,7 +194,8 @@ validModes = {
     "sigmanoise": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
     "outwidth": { "dry": True, "type": "integer", "min": 0, "apply": applyOutWidth },
     "outheight": { "dry": True, "type": "integer", "min": 0, "apply": applyOutHeight },
-    "restorefaces": { "dry": True, "type": "boolean", "apply": applyRestoreFaces },
+    "restorefaces": { "dry": True, "type": "text", "apply": applyRestoreFaces },
+    "codeformerweight": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyCodeformerWeight },
     "promptreplace": { "dry": True, "type": "text", "apply": applyPromptReplace }
 }
 
@@ -246,7 +259,16 @@ def validateSingleParam(p, v):
             actualSampler = getSamplerFor(cleanName(v))
             if actualSampler is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
-            return actualSampler
+        elif p == "restorefaces":
+            restorerName = cleanName(v)
+            if restorerName == "true":
+                return opts.face_restoration_model
+            if restorerName == "false":
+                return "false"
+            actualRestorer = getFaceRestorer(restorerName)
+            if actualRestorer is None:
+                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': Face Restorer name unrecognized - valid: 'true', 'false', {list(map(lambda m: m.name(), shared.face_restorers))}")
+            return actualRestorer
         return v
 
 ######################### YAML Parsing and Processing #########################
@@ -353,6 +375,8 @@ class SingleGridCall:
             mode = validModes[cleanName(name)]
             if not dry or mode["dry"]:
                 mode["apply"](p, val)
+            elif mode == "model":
+                p.sd_model_name = val
         for replace in self.replacements:
             applyPromptReplace(p, replace)
 
@@ -413,6 +437,8 @@ class GridRunner:
                 print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
             p = copy(self.p)
             oldClipSkip = opts.CLIP_stop_at_last_layers
+            oldCodeformerWeight = opts.code_former_weight
+            oldFaceRestorer = opts.face_restoration_model
             oldHnStrength = hypernetwork.HypernetworkModule.multiplier
             set.applyTo(p, dry)
             if dry:
@@ -427,20 +453,26 @@ class GridRunner:
             images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=self.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
             last = processed
             opts.CLIP_stop_at_last_layers = oldClipSkip
+            opts.code_former_weight = oldCodeformerWeight
+            opts.face_restoration_model = oldFaceRestorer
             hypernetwork.HypernetworkModule.multiplier = oldHnStrength
         return last
 
 class SettingsFixer():
     def __enter__(self):
-        self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
-        self.hypernetwork = opts.sd_hypernetwork
         self.model = shared.sd_model
+        self.hypernetwork = opts.sd_hypernetwork
+        self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
+        self.code_former_weight = opts.code_former_weight
+        self.face_restoration_model = opts.face_restoration_model
 
     def __exit__(self, exc_type, exc_value, tb):
         sd_models.reload_model_weights(self.model)
         hypernetwork.load_hypernetwork(self.hypernetwork)
         hypernetwork.apply_strength()
-        opts.data["CLIP_stop_at_last_layers"] = self.CLIP_stop_at_last_layers
+        opts.code_former_weight = self.code_former_weight
+        opts.face_restoration_model = self.face_restoration_model
+        opts.CLIP_stop_at_last_layers = self.CLIP_stop_at_last_layers
 
 ######################### Web Data Builders #########################
 class WebDataBuilder():
@@ -452,7 +484,7 @@ class WebDataBuilder():
             "restorefaces": (opts.face_restoration_model if p.restore_faces else None),
             "steps": p.steps,
             "cfgscale": p.cfg_scale,
-            "model": chooseBetterFileName('', shared.sd_model.sd_checkpoint_info.model_name).replace(',', '').replace(':', ''),
+            "model": (p.sd_model_name if hasattr(p, 'sd_model_name') else chooseBetterFileName('', shared.sd_model.sd_checkpoint_info.model_name)).replace(',', '').replace(':', ''),
             "vae": (None if sd_vae.loaded_vae_file is None else (chooseBetterFileName('', sd_vae.loaded_vae_file).replace(',', '').replace(':', ''))),
             "width": p.width,
             "height": p.height,
@@ -463,6 +495,7 @@ class WebDataBuilder():
             "varseed": (None if p.subseed_strength == 0 else p.subseed),
             "varstrength": (None if p.subseed_strength == 0 else p.subseed_strength),
             "clipskip": opts.CLIP_stop_at_last_layers,
+            "codeformerweight": opts.code_former_weight,
             "denoising": getattr(p, 'denoising_strength', None),
             "eta": fixNum(p.eta),
             "sigmachurn": fixNum(p.s_churn),

@@ -126,6 +126,7 @@ axes:
         - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
         - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
     - Note that `Model`, `VAE`, `Hypernetwork` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity.
+    - `RestoreFaces` is a boolean: `true` to enable, `false` to disable
 - Note that it will be processed from bottom to top
     - so if you have  first `samplers` DDIM and Euler, then `steps` 20 and 10, then `seeds` 1 and 2, it will go in this order:
         - Sampler=DDIM, Steps=20, Seed=1
@@ -178,6 +179,8 @@ axes:
         - `Auto cycle every (x) seconds`: you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).
         - `Show value`: you can uncheck any box to hide a value from the grid. Helps if you want to ignore some of the values and get a clean grid of just the ones you care about. This was suggested by [piyarsquare in issue #4](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/4).
     - You can also click on any image to view it fullscreen and see its metadata (if included in output).
+    - You can also set the `X Super-axis` and `Y Super-axis` to unique axes to get a grid-of-grids!
+        - ![img](github/super_axis_demo.png)
 
 --------------
 

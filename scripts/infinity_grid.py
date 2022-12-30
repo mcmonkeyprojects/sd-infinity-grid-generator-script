@@ -253,7 +253,7 @@ def validateSingleParam(p, v):
 class AxisValue:
     def __init__(self, axis, key, val):
         self.axis = axis
-        self.key = key
+        self.key = str(key).lower()
         self.params = list()
         if isinstance(val, str):
             halves = val.split('=', maxsplit=1)
@@ -281,7 +281,7 @@ class AxisValue:
 class Axis:
     def __init__(self, id, obj):
         self.values = list()
-        self.id = id
+        self.id = str(id).lower()
         self.title = obj.get("title")
         self.default = obj.get("default")
         if self.title is None:
@@ -481,13 +481,13 @@ class WebDataBuilder():
         axes = list()
         for axis in grid.axes:
             jAxis = {}
-            jAxis['id'] = axis.id
+            jAxis['id'] = str(axis.id).lower()
             jAxis['title'] = axis.title
             jAxis['description'] = axis.description or ""
             values = list()
             for val in axis.values:
                 jVal = {}
-                jVal['key'] = val.key
+                jVal['key'] = str(val.key).lower()
                 jVal['title'] = val.title
                 jVal['description'] = val.description or ""
                 if publish_gen_metadata:
@@ -499,7 +499,7 @@ class WebDataBuilder():
         return json.dumps(result)
 
     def radioButtonHtml(name, id, descrip, label):
-        return f'<input type="radio" class="btn-check" name="{name}" id="{id}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="{id}" title="{descrip}">{label}</label>\n'
+        return f'<input type="radio" class="btn-check" name="{name}" id="{str(id).lower()}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="{str(id).lower()}" title="{descrip}">{label}</label>\n'
     
     def axisBar(label, content):
         return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'

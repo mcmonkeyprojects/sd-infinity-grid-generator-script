@@ -104,45 +104,61 @@ function unescapeHtml(text) {
     return text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#039;', "'").replaceAll('&amp;', '&');
 }
 
+function getXAxisTh(xAxis, val) {
+    if (!canShowVal(xAxis.id, val.key)) {
+        return '';
+    }
+    return '<th title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</th>';
+}
+
+function getYAxisTD(val) {
+    return '<td class="axis_label_td" title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
+}
+
+function canShowVal(axis, val) {
+    return document.getElementById('showval_' + axis + '__' + val).checked;
+}
+
+function getXAxisContent(x, y, xAxis, val) {
+    var url = "";
+    for (var subAxis of rawData.axes) {
+        if (subAxis.id == x) {
+            url += '/{X}';
+        }
+        else if (subAxis.id == y) {
+            url += '/' + val.key;
+        }
+        else {
+            url += '/' + getSelectedValKey(subAxis);
+        }
+    }
+    var newContent = '';
+    for (var xVal of xAxis.values) {
+        if (!canShowVal(xAxis.id, xVal.key)) {
+            continue;
+        }
+        var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
+        newContent += '<td><img class="table_img" id="autogen_img_' + escapeHtml(actualUrl).replace(' ', '%20') + '" onclick="doPopupFor(this)" src="' + actualUrl + '" /></td>';
+    }
+    return newContent;
+}
+
 function fillTable() {
     var x = getCurrentSelectedAxis('x');
     var y = getCurrentSelectedAxis('y');
-    var table = document.getElementById('image_table');
-    var newContent = "<th>";
     var xAxis = getAxisById(x);
     var yAxis = getAxisById(y);
+    var table = document.getElementById('image_table');
+    var newContent = "<th>";
     for (var val of xAxis.values) {
-        if (!document.getElementById('showval_' + xAxis.id + '__' + val.key).checked) {
-            continue;
-        }
-        newContent += '<th title="' + val.description.replaceAll('"', "&quot;") + '">' + val.title + '</th>';
+        newContent += getXAxisTh(xAxis, val);
     }
     newContent += "</th>";
     for (var val of yAxis.values) {
-        if (!document.getElementById('showval_' + yAxis.id + '__' + val.key).checked) {
+        if (!canShowVal(yAxis.id, val.key)) {
             continue;
         }
-        newContent += '<tr><td class="axis_label_td" title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
-        var url = "";
-        for (var subAxis of rawData.axes) {
-            if (subAxis.id == x) {
-                url += '/{X}';
-            }
-            else if (subAxis.id == y) {
-                url += '/' + val.key;
-            }
-            else {
-                url += '/' + getSelectedValKey(subAxis);
-            }
-        }
-        for (var xVal of xAxis.values) {
-            if (!document.getElementById('showval_' + xAxis.id + '__' + xVal.key).checked) {
-                continue;
-            }
-            var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
-            newContent += '<td><img class="table_img" id="autogen_img_' + escapeHtml(actualUrl).replace(' ', '%20') + '" onclick="doPopupFor(this)" src="' + actualUrl + '" /></td>';
-        }
-        newContent += '</tr>';
+        newContent += '<tr>' + getYAxisTD(val) + getXAxisContent(x, y, xAxis, val) + '</tr>';
         if (x == y) {
             break;
         }
@@ -186,7 +202,7 @@ function toggleDescriptions() {
 }
 
 function toggleShowVal(axis, val) {
-    var show = document.getElementById('showval_' + axis + '__' + val).checked;
+    var show = canShowVal(axis, val);
     var element = document.getElementById('clicktab_' + axis + '__' + val);
     if (show) {
         element.classList.remove('tab_hidden');

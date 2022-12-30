@@ -449,6 +449,7 @@ class WebDataBuilder():
         return {
             "sampler": p.sampler_name,
             "seed": p.seed,
+            "restorefaces": (opts.face_restoration_model if p.restore_faces else None),
             "steps": p.steps,
             "cfgscale": p.cfg_scale,
             "model": chooseBetterFileName('', shared.sd_model.sd_checkpoint_info.model_name).replace(',', '').replace(':', ''),

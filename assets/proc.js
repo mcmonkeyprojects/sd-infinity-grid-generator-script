@@ -301,7 +301,7 @@ function formatMetadata(valSet) {
         + formatMet("Sampler", valSet["sampler"])
         + formatMet("CFG scale", valSet["cfgscale"])
         + formatMet("Seed", valSet["seed"])
-        // face restore
+        + formatMet("Face restoration", valSet["restorefaces"], "")
         + formatMet("Size", valSet["width"] + "x" + valSet["height"])
         // model hash
         + formatMet("Model", valSet["model"])

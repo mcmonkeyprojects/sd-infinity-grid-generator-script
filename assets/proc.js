@@ -160,6 +160,7 @@ function fillTable() {
     var y2Axis = y2 == 'None' || y2 == x2 || y2 == x || y2 == y ? null : getAxisById(y2);
     var table = document.getElementById('image_table');
     var newContent = '<th>';
+    var superFirst = true;
     for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
         if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
             continue;
@@ -169,11 +170,13 @@ function fillTable() {
             if (!canShowVal(xAxis.id, val.key)) {
                 return '';
             }
-            newContent += '<th title="' + val.description.replaceAll('"', "&quot;") + '">' + optDescribe(x2first, x2val) + val.title + '</th>';
+            newContent += '<th' + (superFirst ? '' : ' class="superaxis_second"') + ' title="' + val.description.replaceAll('"', "&quot;") + '">' + optDescribe(x2first, x2val) + val.title + '</th>';
             x2first = false;
         }
+        superFirst = !superFirst;
     }
     newContent += '</th>';
+    superFirst = true;
     for (var y2val of (y2Axis == null ? [null] : y2Axis.values)) {
         if (y2val != null && !canShowVal(y2Axis.id, y2val.key)) {
             continue;
@@ -183,7 +186,7 @@ function fillTable() {
             if (!canShowVal(yAxis.id, val.key)) {
                 continue;
             }
-            newContent += '<tr><td class="axis_label_td" title="' + escapeHtml(val.description) + '">' + optDescribe(y2first, y2val) + val.title + '</td>';
+            newContent += '<tr><td class="axis_label_td' + (superFirst ? '' : ' superaxis_second') + '" title="' + escapeHtml(val.description) + '">' + optDescribe(y2first, y2val) + val.title + '</td>';
             y2first = false;
             for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
                 if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
@@ -196,6 +199,7 @@ function fillTable() {
                 break;
             }
         }
+        superFirst = !superFirst;
     }
     table.innerHTML = newContent;
     updateScaling();

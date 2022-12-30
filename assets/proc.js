@@ -122,7 +122,7 @@ function fillTable() {
         if (!document.getElementById('showval_' + yAxis.id + '__' + val.key).checked) {
             continue;
         }
-        newContent += '<tr><td title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
+        newContent += '<tr><td class="axis_label_td" title="' + val.description.replaceAll('"', '&quot;') + '">' + val.title + '</td>';
         var url = "";
         for (var subAxis of rawData.axes) {
             if (subAxis.id == x) {

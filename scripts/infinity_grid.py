@@ -446,6 +446,8 @@ class GridRunner:
             set.applyTo(p, dry)
             if dry:
                 continue
+            p.seed = processing.get_fixed_seed(p.seed)
+            p.subseed = processing.get_fixed_seed(p.subseed)
             processed = process_images(p)
             if len(processed.images) != 1:
                 raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")

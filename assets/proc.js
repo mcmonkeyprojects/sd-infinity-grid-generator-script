@@ -62,9 +62,74 @@ function getSelectedValKey(axis) {
     return null;
 }
 
+var popoverLastImg = null;
+
+function clickRowImage(rows, x, y) {
+    $('#image_info_modal').modal('hide');
+    var columns = rows[y].getElementsByTagName('td');
+    columns[x].getElementsByTagName('img')[0].click();
+}
+
 window.addEventListener('keydown', function(kbevent) {
-    if (kbevent.key == 'Escape' && $('#image_info_modal').is(':visible')) {
-        $('#image_info_modal').modal('toggle');
+    if ($('#image_info_modal').is(':visible')) {
+        if (kbevent.key == 'Escape') {
+            $('#image_info_modal').modal('toggle');
+            kbevent.preventDefault();
+            kbevent.stopPropagation();
+            return false;
+        }
+        var tableElem = document.getElementById('image_table');
+        var rows = tableElem.getElementsByTagName('tr');
+        var matchedRow = null, matchedColumn = null;
+        var x = 0, y = 0;
+        for (var row of rows) {
+            var columns = row.getElementsByTagName('td');
+            for (var column of columns) {
+                var images = column.getElementsByTagName('img');
+                if (images.length == 1 && images[0] == popoverLastImg) {
+                    matchedRow = row;
+                    matchedColumn = column;
+                    break;
+                }
+                x++;
+            }
+            if (matchedRow != null) {
+                break;
+            }
+            x = 0;
+            y++;
+        }
+        if (matchedRow == null) {
+            return;
+        }
+        if (kbevent.key == "ArrowLeft") {
+            if (x > 1) {
+                x--;
+                clickRowImage(rows, x, y);
+            }
+        }
+        else if (kbevent.key == "ArrowRight") {
+            x++;
+            var columns = matchedRow.getElementsByTagName('td');
+            if (columns.length > x) {
+                clickRowImage(rows, x, y);
+            }
+        }
+        else if (kbevent.key == "ArrowUp") {
+            if (y > 1) {
+                y--;
+                clickRowImage(rows, x, y);
+            }
+        }
+        else if (kbevent.key == "ArrowDown") {
+            y++;
+            if (rows.length > y) {
+                clickRowImage(rows, x, y);
+            }
+        }
+        else {
+            return;
+        }
         kbevent.preventDefault();
         kbevent.stopPropagation();
         return false;
@@ -464,6 +529,7 @@ function crunchMetadata(url) {
 }
 
 function doPopupFor(img) {
+    popoverLastImg = img;
     var modalElem = document.getElementById('image_info_modal');
     var url = img.id.substring('autogen_img_'.length);
     var params = escapeHtml(formatMetadata(crunchMetadata(unescapeHtml(url)))).replaceAll("\n", "\n<br>");

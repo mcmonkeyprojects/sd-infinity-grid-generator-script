@@ -180,7 +180,7 @@ axes:
         - ![img](github/advanced_settings_ref.png)
         - `Auto cycle every (x) seconds`: you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).
         - `Show value`: you can uncheck any box to hide a value from the grid. Helps if you want to ignore some of the values and get a clean grid of just the ones you care about. This was suggested by [piyarsquare in issue #4](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/4).
-    - You can also click on any image to view it fullscreen and see its metadata (if included in output).
+    - You can also click on any image to view it fullscreen and see its metadata (if included in output). While in this mode, you can use arrow keys to quick navigate between images, or press Escape to close (This suggested by [itswhateverman in issue #5](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/5) and [issue #17](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/17)).
     - You can also set the `X Super-axis` and `Y Super-axis` to unique axes to get a grid-of-grids!
         - ![img](github/super_axis_demo.png)
 

@@ -63,6 +63,12 @@ function getSelectedValKey(axis) {
 }
 
 window.addEventListener('keydown', function(kbevent) {
+    if (kbevent.key == 'Escape' && $('#image_info_modal').is(':visible')) {
+        $('#image_info_modal').modal('toggle');
+        kbevent.preventDefault();
+        kbevent.stopPropagation();
+        return false;
+    }
     var elem = document.activeElement;
     if (!elem.id.startsWith('clicktab_')) {
         return;

@@ -251,6 +251,26 @@ function toggleDescriptions() {
     }
 }
 
+function toggleShowAllAxis(axisId) {
+    var axis = getAxisById(axisId);
+    var any = false;
+    for (var val of axis.values) {
+        any = canShowVal(axisId, val.key);
+        if (any) {
+            break;
+        }
+    }
+    for (var val of axis.values) {
+        document.getElementById('showval_' + axisId + '__' + val.key).checked = !any;
+        var element = document.getElementById('clicktab_' + axisId + '__' + val.key);
+        element.classList.remove('tab_hidden'); // Remove either way to guarantee no duplication
+        if (any) {
+            element.classList.add('tab_hidden');
+        }
+    }
+    fillTable();
+}
+
 function toggleShowVal(axis, val) {
     var show = canShowVal(axis, val);
     var element = document.getElementById('clicktab_' + axis + '__' + val);

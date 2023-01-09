@@ -350,7 +350,7 @@ class GridFileHelper:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {gridObj}")
         self.params = fixDict(gridObj.get("params"))
         if self.params is not None:
-            validateParams(self.params)
+            validateParams(self, self.params)
         axesObj = fixDict(yamlContent.get("axes"))
         if axesObj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")

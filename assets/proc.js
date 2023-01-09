@@ -173,7 +173,7 @@ function fillTable() {
         var x2first = true;
         for (var val of xAxis.values) {
             if (!canShowVal(xAxis.id, val.key)) {
-                return '';
+                continue;
             }
             newContent += '<th' + (superFirst ? '' : ' class="superaxis_second"') + ' title="' + val.description.replaceAll('"', "&quot;") + '">' + optDescribe(x2first, x2val) + val.title + '</th>';
             x2first = false;

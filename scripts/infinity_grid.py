@@ -200,9 +200,9 @@ validModes = {
 }
 
 ######################### Validation #########################
-def validateParams(params):
+def validateParams(grid, params):
     for p,v in params.items():
-        params[p] = validateSingleParam(p, v)
+        params[p] = validateSingleParam(p, grid.procVariables(v))
 
 def validateSingleParam(p, v):
         p = cleanName(p)
@@ -273,7 +273,7 @@ def validateSingleParam(p, v):
 
 ######################### YAML Parsing and Processing #########################
 class AxisValue:
-    def __init__(self, axis, key, val):
+    def __init__(self, axis, grid, key, val):
         self.axis = axis
         self.key = str(key).lower()
         self.params = list()
@@ -281,6 +281,8 @@ class AxisValue:
             halves = val.split('=', maxsplit=1)
             if len(halves) != 2:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': not expected format")
+            halves[0] = grid.procVariables(halves[0])
+            halves[1] = grid.procVariables(halves[1])
             validateSingleParam(halves[0], halves[1])
             self.title = halves[1]
             self.params = { cleanName(halves[0]): halves[1] }
@@ -288,14 +290,14 @@ class AxisValue:
             self.skip = False
             self.show = True
         else:
-            self.title = val.get("title")
-            self.description = val.get("description")
-            self.skip = (str(val.get("skip"))).lower() == "true"
+            self.title = grid.procVariables(val.get("title"))
+            self.description = grid.procVariables(val.get("description"))
+            self.skip = (str(grid.procVariables(val.get("skip")))).lower() == "true"
             self.params = fixDict(val.get("params"))
-            self.show = (str(val.get("show"))).lower() != "false"
+            self.show = (str(grid.procVariables(val.get("show")))).lower() != "false"
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
-            validateParams(self.params)
+            validateParams(grid, self.params)
     
     def __str__(self):
         return f"(title={self.title}, description={self.description}, params={self.params})"
@@ -303,34 +305,47 @@ class AxisValue:
         return self.__str__()
 
 class Axis:
-    def __init__(self, id, obj):
+    def __init__(self, grid, id, obj):
         self.values = list()
         self.id = str(id).lower()
-        self.title = obj.get("title")
-        self.default = obj.get("default")
+        self.title = grid.procVariables(obj.get("title"))
+        self.default = grid.procVariables(obj.get("default"))
         if self.title is None:
             raise RuntimeError("missing title")
-        self.description = obj.get("description")
+        self.description = grid.procVariables(obj.get("description"))
         valuesObj = obj.get("values")
         if valuesObj is None:
             raise RuntimeError("missing values")
         for key, val in valuesObj.items():
             try:
-                self.values.append(AxisValue(self, key, val))
+                self.values.append(AxisValue(self, grid, key, val))
             except Exception as e:
                 raise RuntimeError(f"value '{key}' errored: {e}")
 
 class GridFileHelper:
+    def procVariables(self, text):
+        if text is None:
+            return None
+        text = str(text)
+        for key, val in self.variables.items():
+            text = text.replace(key, val)
+        return text
+
     def parseYaml(self, yamlContent, grid_file):
+        self.variables = dict()
         self.axes = list()
         yamlContent = fixDict(yamlContent)
+        varsObj = fixDict(yamlContent.get("variables"))
+        if varsObj is not None:
+            for key, val in varsObj.items():
+                self.variables[str(key).lower()] = str(val)
         gridObj = fixDict(yamlContent.get("grid"))
         if gridObj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'grid' root key")
-        self.title = gridObj.get("title")
-        self.description = gridObj.get("description")
-        self.author = gridObj.get("author")
-        self.format = gridObj.get("format")
+        self.title = self.procVariables(gridObj.get("title"))
+        self.description = self.procVariables(gridObj.get("description"))
+        self.author = self.procVariables(gridObj.get("author"))
+        self.format = self.procVariables(gridObj.get("format"))
         if self.title is None or self.description is None or self.author is None or self.format is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {gridObj}")
         self.params = fixDict(gridObj.get("params"))
@@ -341,7 +356,7 @@ class GridFileHelper:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")
         for id, axisObj in axesObj.items():
             try:
-                self.axes.append(Axis(id, fixDict(axisObj)))
+                self.axes.append(Axis(self, id, fixDict(axisObj)))
             except Exception as e:
                 raise RuntimeError(f"Invalid axis '{id}': errored: {e}")
         totalCount = 1

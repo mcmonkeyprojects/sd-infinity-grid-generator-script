@@ -93,6 +93,7 @@ Usage comes in three main steps:
 - The file must have key `grid`, with subkey `title` and `description` to define the file data.
     - It must also have `format` as `jpg` or `png`
     - It can optionally also have `params` to specify any default parameters.
+- The file can optionally have key `variables` with subkey/value pairs as replacements, for example `(type): waffle` - then later in a param value you can use `a picture of a (type)` to automatically fill the variable. These can be in any format you desire, as they are simple text replacements. They apply to all values, including titles, descriptions, and params (this was added for [valconius in issue #16](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/16)).
 - The file must have key `axes` to define the list of axes. This is a map-list key - meaning, add subkeys to create a list of each axis.
     - Each axis must have a `title`, and `values`. It can optionally have a `description`.
         - You can also optionally have `default: (value_id)` to set the default selected tab.

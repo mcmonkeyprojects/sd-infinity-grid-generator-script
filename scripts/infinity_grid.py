@@ -106,9 +106,14 @@ def applyModel(p, v):
     p.sd_model = shared.sd_model
 def applyVae(p, v):
     vaeName = cleanName(v)
-    if vaeName not in ["auto", "none"]:
+    if vaeName == "none":
+        vaeName = "None"
+    elif vaeName in ["auto", "automatic"]:
+        vaeName = "Automatic"
+    else:
         vaeName = getVaeFor(vaeName)
-    sd_vae.reload_vae_weights(None, sd_vae.vae_dict[vaeName])
+    opts.sd_vae = vaeName
+    sd_vae.reload_vae_weights(None)
 def applyWidth(p, v):
     p.width = int(v)
 def applyHeight(p, v):
@@ -249,7 +254,7 @@ def validateSingleParam(p, v):
             return chooseBetterFileName(v, actualHn)
         elif p == "vae":
             vaeName = cleanName(v)
-            if vaeName == "none" or vaeName == "auto":
+            if vaeName in ["none", "auto", "automatic"]:
                 return vaeName
             actualVae = getVaeFor(vaeName)
             if actualVae is None:
@@ -458,6 +463,7 @@ class GridRunner:
             oldCodeformerWeight = opts.code_former_weight
             oldFaceRestorer = opts.face_restoration_model
             oldHnStrength = hypernetwork.HypernetworkModule.multiplier
+            oldVae = opts.sd_vae
             set.applyTo(p, dry)
             if dry:
                 continue
@@ -475,6 +481,7 @@ class GridRunner:
             opts.CLIP_stop_at_last_layers = oldClipSkip
             opts.code_former_weight = oldCodeformerWeight
             opts.face_restoration_model = oldFaceRestorer
+            opts.sd_vae = oldVae
             hypernetwork.HypernetworkModule.multiplier = oldHnStrength
         return last
 
@@ -485,14 +492,17 @@ class SettingsFixer():
         self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
         self.code_former_weight = opts.code_former_weight
         self.face_restoration_model = opts.face_restoration_model
+        self.vae = opts.sd_vae
 
     def __exit__(self, exc_type, exc_value, tb):
-        sd_models.reload_model_weights(self.model)
-        hypernetwork.load_hypernetwork(self.hypernetwork)
-        hypernetwork.apply_strength()
         opts.code_former_weight = self.code_former_weight
         opts.face_restoration_model = self.face_restoration_model
         opts.CLIP_stop_at_last_layers = self.CLIP_stop_at_last_layers
+        opts.sd_vae = self.vae
+        sd_models.reload_model_weights(self.model)
+        sd_vae.reload_vae_weights()
+        hypernetwork.load_hypernetwork(self.hypernetwork)
+        hypernetwork.apply_strength()
 
 ######################### Web Data Builders #########################
 class WebDataBuilder():

@@ -101,9 +101,8 @@ def applySteps(p, v):
 def applyCfgScale(p, v):
     p.cfg_scale = float(v)
 def applyModel(p, v):
-    info = sd_models.get_closet_checkpoint_match(getModelFor(v))
-    sd_models.reload_model_weights(shared.sd_model, info)
-    p.sd_model = shared.sd_model
+    opts.sd_model_checkpoint = getModelFor(v)
+    sd_models.reload_model_weights()
 def applyVae(p, v):
     vaeName = cleanName(v)
     if vaeName == "none":
@@ -464,6 +463,7 @@ class GridRunner:
             oldFaceRestorer = opts.face_restoration_model
             oldHnStrength = hypernetwork.HypernetworkModule.multiplier
             oldVae = opts.sd_vae
+            oldModel = opts.sd_model_checkpoint
             set.applyTo(p, dry)
             if dry:
                 continue
@@ -482,12 +482,13 @@ class GridRunner:
             opts.code_former_weight = oldCodeformerWeight
             opts.face_restoration_model = oldFaceRestorer
             opts.sd_vae = oldVae
+            opts.sd_model_checkpoint = oldModel
             hypernetwork.HypernetworkModule.multiplier = oldHnStrength
         return last
 
 class SettingsFixer():
     def __enter__(self):
-        self.model = shared.sd_model
+        self.model = opts.sd_model_checkpoint
         self.hypernetwork = opts.sd_hypernetwork
         self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
         self.code_former_weight = opts.code_former_weight
@@ -499,7 +500,8 @@ class SettingsFixer():
         opts.face_restoration_model = self.face_restoration_model
         opts.CLIP_stop_at_last_layers = self.CLIP_stop_at_last_layers
         opts.sd_vae = self.vae
-        sd_models.reload_model_weights(self.model)
+        opts.sd_model_checkpoint = self.model
+        sd_models.reload_model_weights()
         sd_vae.reload_vae_weights()
         hypernetwork.load_hypernetwork(self.hypernetwork)
         hypernetwork.apply_strength()

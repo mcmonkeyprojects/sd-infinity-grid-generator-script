@@ -156,13 +156,13 @@ axes:
                 title: None
                 description: No hypernetwork loaded.
                 params:
-                    hypernetwork: none
+                    promptreplace: <hn>=
             # Not currently included: nai_aini, furry, scalie, pony, and 1/2/3 variants, ...
             nai_anime_3:
                 title: NovelAI Anime_3
                 description: An example hypernetwork to showcase the effects a hypernetwork can have, this is the leaked "anime3" model from NovelAI.
                 params:
-                    hypernetwork: nai_anime_3
+                    promptreplace: <hn>=<hypernet:nai_anime_3:1>
     sampler:
         title: Sampler
         description: >
@@ -323,7 +323,7 @@ axes:
                              <br>Short and simple prompts can tend towards more variety between seeds.
                              <br>This prompt will tend to produce relatively realistic pictures of cats in base SD.
                 params:
-                    prompt: a photo of a cat
+                    prompt: a photo of a cat <hn>
             landscape:
                 title: Landscape (Art)
                 description: >
@@ -332,7 +332,7 @@ axes:
                              <br>This type of longer prompt will keep more consistency between seeds.
                              <br>This prompt was crafted to create a very particular artistic style.
                 params:
-                    prompt: a beautiful green grassy landscape, a castle in the distance atop a mountain, blue sky with light clouds,  peaceful river, masterpiece, canvas painting, watercolor, highly detailed, trending on artstation, cinematic, sharp focus
+                    prompt: a beautiful green grassy landscape, a castle in the distance atop a mountain, blue sky with light clouds,  peaceful river, masterpiece, canvas painting, watercolor, highly detailed, trending on artstation, cinematic, sharp focus <hn>
             woman_sd:
                 title: Beautiful Woman (SD Format)
                 description: >
@@ -340,7 +340,7 @@ axes:
                              <br>This prompt attempts to create a beautiful woman, in the standard SD prompting format - roughly a sentence - just as might appear on the caption of a real image in the wild, with some tag-words on the end - just as might appear on real pictures out in the wild. Most images you find online have a title and some keyword tags, and so standard SD is trained to work best with this style.
                              <br>Prompting for these models work best by simply trying to write a description of the image you're expecting, and then tacking tags onto the end to tweak as-needed. Look up public examples of other AI users' prompts to try to learn phrasings and keywords that work best. Experiment!
                 params:
-                    prompt: a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot
+                    prompt: a picture of a beautiful and majestic woman posing for a professional photoshoot, 4k, medium shot <hn>
             woman_anime:
                 title: Beautiful Woman (Anime Format)
                 description: >
@@ -349,7 +349,7 @@ axes:
                              <br>Prompting for these models works best by looking through images posted on these booru sites to learn tag names and how they look in the original training images.
                              <br>Because these models still use SD as the base, sentence-style phrasings and words that aren't officially tags on these sites still work, they're just less optimal.
                 params:
-                    prompt: 1girl, beautiful, long hair, smile, sweater
+                    prompt: 1girl, beautiful, long hair, smile, sweater <hn>
             bad_superman:
                 title: Bad Superman Prompt
                 description: >
@@ -358,14 +358,14 @@ axes:
                              <br>It asks for a specific person, with a specific but unusual pose, and a visible hand. This is a really bad case for stable diffusion, as each of these three parts can be difficult for the base model to do well.
                              <br>This prompt is useful to let you play with options such as the negative prompt or VAE, to see which options help 'cure' the badness of this prompt.
                 params:
-                    prompt: superman flying through the sky with his hand outstretched
+                    prompt: superman flying through the sky with his hand outstretched <hn>
             fancy:
                 title: Fancy Theme Park
                 description: >
                              <code>light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art</code>
                              <br>This prompt was suggested on reddit as an approximation of midjourney's styling. It's not quite there, but it creates some beautiful output. In this case it is being used with no further prompting than the suggested style.
                 params:
-                    prompt: light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art
+                    prompt: light dust, magnificent, theme park, medium shot, details, sharp focus, elegant, highly detailed, illustration, by jordan grimmer and greg rutkowski and ocellus and alphonse mucha and wlop, intricate, beautiful, triadic contrast colors, trending artstation, pixiv, digital art <hn>
     negative_prompt:
         title: Negative Prompt
         description: >

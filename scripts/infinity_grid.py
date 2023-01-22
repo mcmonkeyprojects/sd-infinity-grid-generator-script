@@ -21,7 +21,6 @@ from copy import copy
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing
 from modules.processing import process_images, Processed
 from modules.shared import opts
-from modules.hypernetworks import hypernetwork
 
 ######################### Constants #########################
 refresh_symbol = '\U0001f504'  # 🔄
@@ -67,9 +66,6 @@ def getBestInList(name, list):
 
 def getModelFor(name):
     return getBestInList(name, map(lambda m: m.title, sd_models.checkpoints_list.values()))
-
-def getHypernetworkFor(name):
-    return getBestInList(name, shared.hypernetworks.keys())
 
 def getVaeFor(name):
     return getBestInList(name, sd_vae.vae_dict.keys())
@@ -117,15 +113,6 @@ def applyWidth(p, v):
     p.width = int(v)
 def applyHeight(p, v):
     p.height = int(v)
-def applyHypernetwork(p, v):
-    hnName = cleanName(v)
-    if hnName == "none":
-        hnName = None
-    else:
-        hnName = getHypernetworkFor(hnName)
-    hypernetwork.load_hypernetwork(hnName)
-def applyHypernetworkStrength(p, v):
-    hypernetwork.HypernetworkModule.multiplier = float(v)
 def applyPrompt(p, v):
     p.prompt = v
 def applyNegativePrompt(p, v):
@@ -183,8 +170,6 @@ validModes = {
     "vae": { "dry": False, "type": "text", "apply": applyVae },
     "width": { "dry": True, "type": "integer", "apply": applyWidth },
     "height": { "dry": True, "type": "integer", "apply": applyHeight },
-    "hypernetwork": { "dry": False, "type": "text", "apply": applyHypernetwork },
-    "hypernetworkstrength": { "dry": False, "type": "decimal", "min": 0, "max": 1, "apply": applyHypernetworkStrength },
     "prompt": { "dry": True, "type": "text", "apply": applyPrompt },
     "negativeprompt": { "dry": True, "type": "text", "apply": applyNegativePrompt },
     "varseed": { "dry": True, "type": "integer", "apply": applyVarSeed },
@@ -243,14 +228,6 @@ def validateSingleParam(p, v):
             if actualModel is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized - valid {list(map(lambda m: m.title, sd_models.checkpoints_list.values()))}")
             return chooseBetterFileName(v, actualModel)
-        elif p == "hypernetwork":
-            hnName = cleanName(v)
-            if hnName == "none":
-                return hnName
-            actualHn = getHypernetworkFor(hnName)
-            if actualHn is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': hypernetwork name unrecognized - valid: {list(shared.hypernetworks.keys())}")
-            return chooseBetterFileName(v, actualHn)
         elif p == "vae":
             vaeName = cleanName(v)
             if vaeName in ["none", "auto", "automatic"]:
@@ -461,7 +438,6 @@ class GridRunner:
             oldClipSkip = opts.CLIP_stop_at_last_layers
             oldCodeformerWeight = opts.code_former_weight
             oldFaceRestorer = opts.face_restoration_model
-            oldHnStrength = hypernetwork.HypernetworkModule.multiplier
             oldVae = opts.sd_vae
             oldModel = opts.sd_model_checkpoint
             set.applyTo(p, dry)
@@ -483,13 +459,11 @@ class GridRunner:
             opts.face_restoration_model = oldFaceRestorer
             opts.sd_vae = oldVae
             opts.sd_model_checkpoint = oldModel
-            hypernetwork.HypernetworkModule.multiplier = oldHnStrength
         return last
 
 class SettingsFixer():
     def __enter__(self):
         self.model = opts.sd_model_checkpoint
-        self.hypernetwork = opts.sd_hypernetwork
         self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
         self.code_former_weight = opts.code_former_weight
         self.face_restoration_model = opts.face_restoration_model
@@ -503,8 +477,6 @@ class SettingsFixer():
         opts.sd_model_checkpoint = self.model
         sd_models.reload_model_weights()
         sd_vae.reload_vae_weights()
-        hypernetwork.load_hypernetwork(self.hypernetwork)
-        hypernetwork.apply_strength()
 
 ######################### Web Data Builders #########################
 class WebDataBuilder():
@@ -520,8 +492,6 @@ class WebDataBuilder():
             "vae": (None if sd_vae.loaded_vae_file is None else (chooseBetterFileName('', sd_vae.loaded_vae_file).replace(',', '').replace(':', ''))),
             "width": p.width,
             "height": p.height,
-            "hypernetwork": (None if shared.loaded_hypernetwork is None else (chooseBetterFileName('', shared.loaded_hypernetwork.name)).replace(',', '').replace(':', '')),
-            "hypernetworkstrength": (None if shared.loaded_hypernetwork is None or shared.opts.sd_hypernetwork_strength >= 1 else shared.opts.sd_hypernetwork_strength),
             "prompt": p.prompt,
             "negativeprompt": p.negative_prompt,
             "varseed": (None if p.subseed_strength == 0 else p.subseed),

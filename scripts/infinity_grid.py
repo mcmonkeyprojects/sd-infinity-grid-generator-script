@@ -640,9 +640,10 @@ class Script(scripts.Script):
                 return gr.update(choices=newChoices)
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip]
+        file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml filename)")
+        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip, file_path]
 
-    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip):
+    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip, file_path):
         # Clean up default params
         p = copy(p)
         p.n_iter = 1
@@ -653,6 +654,8 @@ class Script(scripts.Script):
         # Validate to avoid abuse
         if '..' in grid_file or grid_file == "":
             raise RuntimeError(f"Unacceptable filename '{grid_file}'")
+        if '..' in file_path:
+            raise RuntimeError(f"Unacceptable alt file path '{file_path}'")
         file = os.path.join(os.path.join(Script.BASEDIR, "assets"), grid_file)
         if not os.path.exists(file):
             raise RuntimeError(f"Non-existent file '{grid_file}'")
@@ -665,7 +668,9 @@ class Script(scripts.Script):
         grid = GridFileHelper()
         grid.parseYaml(yamlContent, grid_file)
         # Now start using it
-        folder = os.path.join(p.outpath_grids, grid_file.replace(".yml", ""))
+        if file_path.strip() == "":
+            file_path = grid_file.replace(".yml", "")
+        folder = os.path.join(p.outpath_grids, file_path)
         runner = GridRunner(grid, do_overwrite, folder, p, fast_skip)
         Script.VALIDATE_REPLACE = validate_replace
         runner.preprocess()

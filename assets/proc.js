@@ -294,7 +294,7 @@ function updateScaling() {
         var xAxis = getAxisById(x);
         var count = xAxis.values.length;
         var x2 = getCurrentSelectedAxis('x2');
-        if (x2 != 'None') {
+        if (x2 != 'none') {
             var x2Axis = getAxisById(x2);
             count *= x2Axis.values.length;
         }

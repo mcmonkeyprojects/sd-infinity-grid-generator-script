@@ -681,6 +681,17 @@ class Script(scripts.Script):
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
         file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml filename)")
+        def getPageUrlText(file):
+            if file is None:
+                return "(...)"
+            outPath = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
+            fullOutPath = os.path.join(outPath, file)
+            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={fullOutPath}/index.html\">(Click me) <code>{fullOutPath}</code></a><br>"
+        page_will_be = gr.HTML(value="(...)")
+        def updatePageUrl(filePath, selectedFile):
+            return gr.update(value=getPageUrlText(filePath or (selectedFile.replace(".yml", "") if selectedFile is not None else None)))
+        file_path.change(fn=updatePageUrl, inputs=[file_path, grid_file], outputs=[page_will_be])
+        grid_file.change(fn=updatePageUrl, inputs=[file_path, grid_file], outputs=[page_will_be])
         return [do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, file_path]
 
     def run(self, p, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, file_path):

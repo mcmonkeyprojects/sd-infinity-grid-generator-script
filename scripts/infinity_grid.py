@@ -715,10 +715,10 @@ class Script(scripts.Script):
         runner = GridRunner(grid, do_overwrite, folder, p, fast_skip)
         Script.VALIDATE_REPLACE = validate_replace
         runner.preprocess()
-        with SettingsFixer():
-            result = runner.run(dry_run)
         if generate_page:
             WebDataBuilder.EmitWebData(folder, grid, publish_gen_metadata, p)
+        with SettingsFixer():
+            result = runner.run(dry_run)
         if dry_run:
             print("Infinite Grid dry run succeeded without error")
         if result is None:

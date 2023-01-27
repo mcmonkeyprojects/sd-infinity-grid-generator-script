@@ -18,7 +18,7 @@ import json
 import shutil
 import math
 from copy import copy
-from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing
+from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, extensions
 from modules.processing import process_images, Processed
 from modules.shared import opts
 
@@ -165,7 +165,7 @@ validModes = {
     "sampler": { "dry": True, "type": "text", "apply": applySampler },
     "seed": { "dry": True, "type": "integer", "apply": applySeed },
     "steps": { "dry": True, "type": "integer", "min": 0, "max": 200, "apply": applySteps },
-    "cfgscale": { "dry": True, "type": "decimal", "min": 0, "max": 50, "apply": applyCfgScale },
+    "cfgscale": { "dry": True, "type": "decimal", "min": 0, "max": 100, "apply": applyCfgScale },
     "model": { "dry": False, "type": "text", "apply": applyModel },
     "vae": { "dry": False, "type": "text", "apply": applyVae },
     "width": { "dry": True, "type": "integer", "apply": applyWidth },
@@ -187,6 +187,46 @@ validModes = {
     "codeformerweight": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyCodeformerWeight },
     "promptreplace": { "dry": True, "type": "text", "apply": applyPromptReplace }
 }
+
+######################### Addons #########################
+
+hasInited = False
+
+def tryInit():
+    global hasInited
+    print(f"Init")
+    if hasInited:
+        return
+    hasInited = True
+    try:
+        scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
+        if len(scriptList) == 1:
+            dynamic_thresholding = scriptList[0].module
+            print(f"[Grid Generator] loading Dynamic Thresholding features from {dynamic_thresholding.__name__}")
+            def applyEnable(p, v):
+                p.dynthres_enabled = bool(v)
+            validModes["dynamicthresholdenable"] = { "dry": True, "type": "boolean", "apply": applyEnable}
+            def applyMimicScale(p, v):
+                p.dynthres_mimic_scale = float(v)
+            validModes["dynamicthresholdmimicscale"] = { "dry": True, "type": "decimal", "min": 0, "max": 100, "apply": applyMimicScale}
+            def applyThresholdPercentile(p, v):
+                p.dynthres_threshold_percentile = float(v)
+            validModes["dynamicthresholdthresholdpercentile"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyThresholdPercentile}
+            def applyMimicMode(p, v):
+                mode = getBestInList(v, dynamic_thresholding.VALID_MODES)
+                if mode is None:
+                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': dynthres mode name unrecognized - valid: {dynamic_thresholding.VALID_MODES}")
+                p.dynthres_mimic_mode = mode
+            validModes["dynamicthresholdmimicmode"] = { "dry": True, "type": "text", "apply": applyMimicMode}
+            def applyCfgMode(p, v):
+                mode = getBestInList(v, dynamic_thresholding.VALID_MODES)
+                if mode is None:
+                    raise RuntimeError(f"Invalid parameter '{p}' as '{v}': dynthres mode name unrecognized - valid: {dynamic_thresholding.VALID_MODES}")
+                p.dynthres_cfg_mode = mode
+            validModes["dynamicthresholdcfgmode"] = { "dry": True, "type": "text", "apply": applyCfgMode}
+    except ModuleNotFoundError:
+        print(f"fail")
+        pass
 
 ######################### Validation #########################
 def validateParams(grid, params):
@@ -623,7 +663,7 @@ class Script(scripts.Script):
         return True
 
     def ui(self, is_img2img):
-        help_info = gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
+        gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
         do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
         generate_page = gr.Checkbox(value=True, label="Generate infinite-grid webviewer page")
         dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
@@ -641,9 +681,10 @@ class Script(scripts.Script):
             refresh_button = gr.Button(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
         file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml filename)")
-        return [help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip, file_path]
+        return [do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, file_path]
 
-    def run(self, p, help_info, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, refresh_button, fast_skip, file_path):
+    def run(self, p, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, file_path):
+        tryInit()
         # Clean up default params
         p = copy(p)
         p.n_iter = 1

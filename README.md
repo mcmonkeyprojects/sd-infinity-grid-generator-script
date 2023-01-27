@@ -141,6 +141,10 @@ axes:
         - Sampler=Euler, Steps=10, Seed=2
     - So, things that take time to load, like `Model`, should be put near the top, so they don't have to be loaded repeatedly.
 
+#### Supported Extensions
+- Dynamic Thresholding (CFG Scale Fix): <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
+    - Adds options: `DynamicThresholdEnable` (bool: `true` or `false`), `DynamicThresholdMimicScale` (number), `DynamicThresholdThresholdPercentile` (number, 0-100), `DynamicThresholdMimicMode` (any of `Constant`, `Linear Down`, `Cosine Down`, `Linear Up`, `Cosine Up`), `DynamicThresholdCfgMode` (same options as mimic mode)
+
 --------------
 
 ### 2: Grid Content Generation via WebUI

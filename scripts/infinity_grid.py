@@ -4,7 +4,7 @@
 # Author: Alex 'mcmonkey' Goodwin
 # GitHub URL: https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script
 # Created: 2022/12/08
-# Last updated: 2022/12/08
+# Last updated: 2023/01/26
 #
 # For usage help, view the README.md file in the extension root, or via the GitHub page.
 #

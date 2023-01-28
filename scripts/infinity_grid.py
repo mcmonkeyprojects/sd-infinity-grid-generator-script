@@ -165,7 +165,7 @@ validModes = {
     "sampler": { "dry": True, "type": "text", "apply": applySampler },
     "seed": { "dry": True, "type": "integer", "apply": applySeed },
     "steps": { "dry": True, "type": "integer", "min": 0, "max": 200, "apply": applySteps },
-    "cfgscale": { "dry": True, "type": "decimal", "min": 0, "max": 100, "apply": applyCfgScale },
+    "cfgscale": { "dry": True, "type": "decimal", "min": 0, "max": 500, "apply": applyCfgScale },
     "model": { "dry": False, "type": "text", "apply": applyModel },
     "vae": { "dry": False, "type": "text", "apply": applyVae },
     "width": { "dry": True, "type": "integer", "apply": applyWidth },
@@ -208,7 +208,7 @@ def tryInit():
             validModes["dynamicthresholdenable"] = { "dry": True, "type": "boolean", "apply": applyEnable}
             def applyMimicScale(p, v):
                 p.dynthres_mimic_scale = float(v)
-            validModes["dynamicthresholdmimicscale"] = { "dry": True, "type": "decimal", "min": 0, "max": 100, "apply": applyMimicScale}
+            validModes["dynamicthresholdmimicscale"] = { "dry": True, "type": "decimal", "min": 0, "max": 500, "apply": applyMimicScale}
             def applyThresholdPercentile(p, v):
                 p.dynthres_threshold_percentile = float(v)
             validModes["dynamicthresholdthresholdpercentile"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyThresholdPercentile}

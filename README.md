@@ -143,7 +143,7 @@ axes:
 
 #### Supported Extensions
 - Dynamic Thresholding (CFG Scale Fix): <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
-    - Adds options: `DynamicThresholdEnable` (bool: `true` or `false`), `DynamicThresholdMimicScale` (number), `DynamicThresholdThresholdPercentile` (number, 0-100), `DynamicThresholdMimicMode` (any of `Constant`, `Linear Down`, `Cosine Down`, `Linear Up`, `Cosine Up`), `DynamicThresholdCfgMode` (same options as mimic mode)
+    - Adds options: `DynamicThresholdEnable` (bool: `true` or `false`), `DynamicThresholdMimicScale` (number), `DynamicThresholdThresholdPercentile` (number, 0-100), `DynamicThresholdMimicMode` (any of `Constant`, `Linear Down`, `Cosine Down`, `Linear Up`, `Cosine Up`), `DynamicThresholdCfgMode` (same options as mimic mode), `DynamicThresholdMimicScaleMinimum` (number, 0-100), `DynamicThresholdCfgScaleMinimum` (number, 0-100)
 
 --------------
 

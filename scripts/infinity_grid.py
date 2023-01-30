@@ -224,6 +224,12 @@ def tryInit():
                     raise RuntimeError(f"Invalid parameter '{p}' as '{v}': dynthres mode name unrecognized - valid: {dynamic_thresholding.VALID_MODES}")
                 p.dynthres_cfg_mode = mode
             validModes["dynamicthresholdcfgmode"] = { "dry": True, "type": "text", "apply": applyCfgMode}
+            def applyMimicScaleMin(p, v):
+                p.dynthres_mimic_scale_min = float(v)
+            validModes["dynamicthresholdmimicscaleminimum"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyMimicScaleMin}
+            def applyCfgScaleMin(p, v):
+                p.dynthres_cfg_scale_min = float(v)
+            validModes["dynamicthresholdcfgscaleminimum"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyCfgScaleMin}
     except ModuleNotFoundError:
         print(f"fail")
         pass

@@ -230,6 +230,9 @@ def tryInit():
             def applyCfgScaleMin(p, v):
                 p.dynthres_cfg_scale_min = float(v)
             validModes["dynamicthresholdcfgscaleminimum"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyCfgScaleMin}
+            def applyExperimentMode(p, v):
+                p.dynthres_experiment_mode = int(v)
+            validModes["dynamicthresholdexperimentmode"] = { "dry": True, "type": "integer", "min": 0, "max": 100, "apply": applyExperimentMode}
     except ModuleNotFoundError:
         print(f"fail")
         pass

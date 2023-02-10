@@ -233,6 +233,9 @@ def tryInit():
             def applyExperimentMode(p, v):
                 p.dynthres_experiment_mode = int(v)
             validModes["dynamicthresholdexperimentmode"] = { "dry": True, "type": "integer", "min": 0, "max": 100, "apply": applyExperimentMode}
+            def applyPowerValue(p, v):
+                p.dynthres_power_val = float(v)
+            validModes["dynamicthresholdpowervalue"] = { "dry": True, "type": "decimal", "min": 0, "max": 100, "apply": applyPowerValue}
     except ModuleNotFoundError:
         print(f"fail")
         pass

@@ -476,18 +476,31 @@ class WebDataBuilder():
 
 ######################### Main Runner Function #########################
 
-def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFolderName: str = None, doOverwrite: bool = False, fastSkip: bool = False, generatePage: bool = True, publishGenMetadata: bool = True, dryRun: bool = False):
-    fullInputPath = os.path.join(ASSET_DIR, inputFile)
-    if not os.path.exists(fullInputPath):
-        raise RuntimeError(f"Non-existent file '{inputFile}'")
-    # Parse and verify
-    with open(fullInputPath, 'r') as yamlContentText:
-        try:
-            yamlContent = yaml.safe_load(yamlContentText)
-        except yaml.YAMLError as exc:
-            raise RuntimeError(f"Invalid YAML in file '{inputFile}': {exc}")
+def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFolderName: str = None, doOverwrite: bool = False, fastSkip: bool = False, generatePage: bool = True, publishGenMetadata: bool = True, dryRun: bool = False, manualPairs: list = None):
     grid = GridFileHelper()
-    grid.parseYaml(yamlContent, inputFile)
+    if manualPairs is None:
+        fullInputPath = os.path.join(ASSET_DIR, inputFile)
+        if not os.path.exists(fullInputPath):
+            raise RuntimeError(f"Non-existent file '{inputFile}'")
+        # Parse and verify
+        with open(fullInputPath, 'r') as yamlContentText:
+            try:
+                yamlContent = yaml.safe_load(yamlContentText)
+            except yaml.YAMLError as exc:
+                raise RuntimeError(f"Invalid YAML in file '{inputFile}': {exc}")
+        grid.parseYaml(yamlContent, inputFile)
+    else:
+        grid.title = outputFolderName
+        grid.description = ""
+        grid.variables = dict()
+        grid.author = "Unspecified"
+        grid.format = "png"
+        grid.axes = list()
+        grid.params = None
+        for i in range(0, int(len(manualPairs) / 2)):
+            key = manualPairs[i * 2]
+            if isinstance(key, str) and key != "":
+                grid.axes.append(Axis(grid, key, manualPairs[i * 2 + 1]))
     # Now start using it
     if outputFolderName.strip() == "":
         outputFolderName = inputFile.replace(".yml", "")

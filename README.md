@@ -150,6 +150,7 @@ axes:
 | `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaNoise` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `Tiling` | Boolean | `true`, `false` | Useful for textures. |
+| `ImageMaskWeight` | Decimal | `0`, `0.5`, ..., `1` | Conditional image mask weight. Only applies to img2img. |
 
 - All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.

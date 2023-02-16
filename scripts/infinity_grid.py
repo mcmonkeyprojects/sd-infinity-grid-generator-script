@@ -108,6 +108,8 @@ def applyOutHeight(p, v):
     p.inf_grid_out_height = int(v)
 def applyTiling(p, v):
     p.tiling = str(v).lower().strip() == "true"
+def applyMaskWeight(p, v):
+    p.inpainting_mask_weight = float(v)
 
 def getFaceRestorer(name):
     return getBestInList(name, map(lambda m: m.name(), shared.face_restorers))
@@ -163,28 +165,29 @@ def tryInit():
     registerMode("sampler", GridSettingMode(dry=True, type="text", apply=applySampler, clean=cleanSampler))
     registerMode("seed", GridSettingMode(dry=True, type="integer", apply=applySeed))
     registerMode("steps", GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applySteps))
-    registerMode("cfgscale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyCfgScale))
+    registerMode("cfg scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyCfgScale))
     registerMode("model", GridSettingMode(dry=False, type="text", apply=applyModel, clean=cleanModel))
     registerMode("vae", GridSettingMode(dry=False, type="text", apply=applyVae, clean=cleanVae))
     registerMode("width", GridSettingMode(dry=True, type="integer", apply=applyWidth))
     registerMode("height", GridSettingMode(dry=True, type="integer", apply=applyHeight))
     registerMode("prompt", GridSettingMode(dry=True, type="text", apply=applyPrompt))
-    registerMode("negativeprompt", GridSettingMode(dry=True, type="text", apply=applyNegativePrompt))
-    registerMode("varseed", GridSettingMode(dry=True, type="integer", apply=applyVarSeed))
-    registerMode("varstrength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyVarSeedStrength))
+    registerMode("negative prompt", GridSettingMode(dry=True, type="text", apply=applyNegativePrompt))
+    registerMode("var seed", GridSettingMode(dry=True, type="integer", apply=applyVarSeed))
+    registerMode("var strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyVarSeedStrength))
     registerMode("clipskip", GridSettingMode(dry=False, type="integer", min=1, max=12, apply=applyClipSkip))
     registerMode("denoising", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyDenoising))
     registerMode("eta", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyEta))
-    registerMode("sigmachurn", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaChurn))
-    registerMode("sigmatmin", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmin))
-    registerMode("sigmatmax", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmax))
-    registerMode("sigmanoise", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaNoise))
-    registerMode("outwidth", GridSettingMode(dry=True, type="integer", min=0, apply=applyOutWidth))
-    registerMode("outheight", GridSettingMode(dry=True, type="integer", min=0, apply=applyOutHeight))
-    registerMode("restorefaces", GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, clean=cleanRestoreFaces))
-    registerMode("codeformerweight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight))
-    registerMode("promptreplace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("sigma churn", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaChurn))
+    registerMode("sigma tmin", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmin))
+    registerMode("sigma tmax", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmax))
+    registerMode("sigma noise", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaNoise))
+    registerMode("out width", GridSettingMode(dry=True, type="integer", min=0, apply=applyOutWidth))
+    registerMode("out height", GridSettingMode(dry=True, type="integer", min=0, apply=applyOutHeight))
+    registerMode("restore faces", GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, clean=cleanRestoreFaces))
+    registerMode("codeformer weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight))
+    registerMode("prompt replace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
     registerMode("tiling", GridSettingMode(dry=True, type="boolean", apply=applyTiling))
+    registerMode("image mask weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyMaskWeight))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:

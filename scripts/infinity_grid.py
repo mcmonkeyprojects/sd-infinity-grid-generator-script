@@ -161,31 +161,39 @@ def applyPromptReplace(p, v):
     p.prompt = p.prompt.replace(match, replace)
     p.negative_prompt = p.negative_prompt.replace(match, replace)
 
+class GridSettingMode:
+    def __init__(self, dry: bool, type: str, apply: function, min: float = None, max: float = None):
+        self.dry = dry
+        self.type = type
+        self.apply = apply
+        self.min = min
+        self.max = max
+
 validModes = {
-    "sampler": { "dry": True, "type": "text", "apply": applySampler },
-    "seed": { "dry": True, "type": "integer", "apply": applySeed },
-    "steps": { "dry": True, "type": "integer", "min": 0, "max": 200, "apply": applySteps },
-    "cfgscale": { "dry": True, "type": "decimal", "min": 0, "max": 500, "apply": applyCfgScale },
-    "model": { "dry": False, "type": "text", "apply": applyModel },
-    "vae": { "dry": False, "type": "text", "apply": applyVae },
-    "width": { "dry": True, "type": "integer", "apply": applyWidth },
-    "height": { "dry": True, "type": "integer", "apply": applyHeight },
-    "prompt": { "dry": True, "type": "text", "apply": applyPrompt },
-    "negativeprompt": { "dry": True, "type": "text", "apply": applyNegativePrompt },
-    "varseed": { "dry": True, "type": "integer", "apply": applyVarSeed },
-    "varstrength": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyVarSeedStrength },
-    "clipskip": { "dry": False, "type": "integer", "min": 1, "max": 12, "apply": applyClipSkip },
-    "denoising": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyDenoising },
-    "eta": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyEta },
-    "sigmachurn": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaChurn },
-    "sigmatmin": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmin },
-    "sigmatmax": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaTmax },
-    "sigmanoise": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applySigmaNoise },
-    "outwidth": { "dry": True, "type": "integer", "min": 0, "apply": applyOutWidth },
-    "outheight": { "dry": True, "type": "integer", "min": 0, "apply": applyOutHeight },
-    "restorefaces": { "dry": True, "type": "text", "apply": applyRestoreFaces },
-    "codeformerweight": { "dry": True, "type": "decimal", "min": 0, "max": 1, "apply": applyCodeformerWeight },
-    "promptreplace": { "dry": True, "type": "text", "apply": applyPromptReplace }
+    "sampler": GridSettingMode(dry=True, type="text", apply=applySampler),
+    "seed": GridSettingMode(dry=True, type="integer", apply=applySeed),
+    "steps": GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applySteps),
+    "cfgscale": GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyCfgScale),
+    "model": GridSettingMode(dry=False, type="text", apply=applyModel),
+    "vae": GridSettingMode(dry=False, type="text", apply=applyVae),
+    "width": GridSettingMode(dry=True, type="integer", apply=applyWidth),
+    "height": GridSettingMode(dry=True, type="integer", apply=applyHeight),
+    "prompt": GridSettingMode(dry=True, type="text", apply=applyPrompt),
+    "negativeprompt": GridSettingMode(dry=True, type="text", apply=applyNegativePrompt),
+    "varseed": GridSettingMode(dry=True, type="integer", apply=applyVarSeed),
+    "varstrength": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyVarSeedStrength),
+    "clipskip": GridSettingMode(dry=False, type="integer", min=1, max=12, apply=applyClipSkip),
+    "denoising": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyDenoising),
+    "eta": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyEta),
+    "sigmachurn": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaChurn),
+    "sigmatmin": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmin),
+    "sigmatmax": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmax),
+    "sigmanoise": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaNoise),
+    "outwidth": GridSettingMode(dry=True, type="integer", min=0, apply=applyOutWidth),
+    "outheight": GridSettingMode(dry=True, type="integer", min=0, apply=applyOutHeight),
+    "restorefaces": GridSettingMode(dry=True, type="text", apply=applyRestoreFaces),
+    "codeformerweight": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight),
+    "promptreplace": GridSettingMode(dry=True, type="text", apply=applyPromptReplace)
 }
 
 ######################### Addons #########################
@@ -205,37 +213,37 @@ def tryInit():
             print(f"[Grid Generator] loading Dynamic Thresholding features from {dynamic_thresholding.__name__}")
             def applyEnable(p, v):
                 p.dynthres_enabled = bool(v)
-            validModes["dynamicthresholdenable"] = { "dry": True, "type": "boolean", "apply": applyEnable}
+            validModes["dynamicthresholdenable"] = GridSettingMode(dry=True, type="boolean", apply=applyEnable)
             def applyMimicScale(p, v):
                 p.dynthres_mimic_scale = float(v)
-            validModes["dynamicthresholdmimicscale"] = { "dry": True, "type": "decimal", "min": 0, "max": 500, "apply": applyMimicScale}
+            validModes["dynamicthresholdmimicscale"] = GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyMimicScale)
             def applyThresholdPercentile(p, v):
                 p.dynthres_threshold_percentile = float(v)
-            validModes["dynamicthresholdthresholdpercentile"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyThresholdPercentile}
+            validModes["dynamicthresholdthresholdpercentile"] = GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyThresholdPercentile)
             def applyMimicMode(p, v):
                 mode = getBestInList(v, dynamic_thresholding.VALID_MODES)
                 if mode is None:
                     raise RuntimeError(f"Invalid parameter '{p}' as '{v}': dynthres mode name unrecognized - valid: {dynamic_thresholding.VALID_MODES}")
                 p.dynthres_mimic_mode = mode
-            validModes["dynamicthresholdmimicmode"] = { "dry": True, "type": "text", "apply": applyMimicMode}
+            validModes["dynamicthresholdmimicmode"] = GridSettingMode(dry=True, type="text", apply=applyMimicMode)
             def applyCfgMode(p, v):
                 mode = getBestInList(v, dynamic_thresholding.VALID_MODES)
                 if mode is None:
                     raise RuntimeError(f"Invalid parameter '{p}' as '{v}': dynthres mode name unrecognized - valid: {dynamic_thresholding.VALID_MODES}")
                 p.dynthres_cfg_mode = mode
-            validModes["dynamicthresholdcfgmode"] = { "dry": True, "type": "text", "apply": applyCfgMode}
+            validModes["dynamicthresholdcfgmode"] = GridSettingMode(dry=True, type="text", apply=applyCfgMode)
             def applyMimicScaleMin(p, v):
                 p.dynthres_mimic_scale_min = float(v)
-            validModes["dynamicthresholdmimicscaleminimum"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyMimicScaleMin}
+            validModes["dynamicthresholdmimicscaleminimum"] = GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyMimicScaleMin)
             def applyCfgScaleMin(p, v):
                 p.dynthres_cfg_scale_min = float(v)
-            validModes["dynamicthresholdcfgscaleminimum"] = { "dry": True, "type": "decimal", "min": 0.0, "max": 100.0, "apply": applyCfgScaleMin}
+            validModes["dynamicthresholdcfgscaleminimum"] = GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyCfgScaleMin)
             def applyExperimentMode(p, v):
                 p.dynthres_experiment_mode = int(v)
-            validModes["dynamicthresholdexperimentmode"] = { "dry": True, "type": "integer", "min": 0, "max": 100, "apply": applyExperimentMode}
+            validModes["dynamicthresholdexperimentmode"] = GridSettingMode(dry=True, type="integer", min=0, max=100, apply=applyExperimentMode)
             def applyPowerValue(p, v):
                 p.dynthres_power_val = float(v)
-            validModes["dynamicthresholdpowervalue"] = { "dry": True, "type": "decimal", "min": 0, "max": 100, "apply": applyPowerValue}
+            validModes["dynamicthresholdpowervalue"] = GridSettingMode(dry=True, type="decimal", min=0, max=100, apply=applyPowerValue)
     except ModuleNotFoundError:
         print(f"fail")
         pass
@@ -250,13 +258,13 @@ def validateSingleParam(p, v):
         mode = validModes.get(p)
         if mode is None:
             raise RuntimeError(f"Invalid grid default parameter '{p}': unknown mode")
-        modeType = mode["type"]
+        modeType = mode.type
         if modeType == "integer":
             vInt = int(v)
             if vInt is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
-            min = mode.get("min")
-            max = mode.get("max")
+            min = mode.min
+            max = mode.max
             if min is not None and vInt < min:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
             if max is not None and vInt > max:
@@ -265,8 +273,8 @@ def validateSingleParam(p, v):
             vFloat = float(v)
             if vFloat is None:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
-            min = mode.get("min")
-            max = mode.get("max")
+            min = mode.min
+            max = mode.max
             if min is not None and vFloat < min:
                 raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
             if max is not None and vFloat > max:

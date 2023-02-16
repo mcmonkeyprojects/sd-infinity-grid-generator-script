@@ -83,6 +83,15 @@ def fixNum(num):
 ######################### Value Modes #########################
 
 class GridSettingMode:
+    """
+    Defines a custom parameter input mode for an Infinity Grid Generator.
+    'dry' is True if the mode should be processed in dry runs, or False if it should be skipped.
+    'type' is 'text', 'integer', 'decimal', or 'boolean'
+    'apply' is a function to call taking (passthroughObject, value)
+    'min' is for integer/decimal type, the minimum value
+    'max' is for integer/decimal type, the maximum value
+    'clean' is an optional function to call that takes (passthroughObject, value) and returns a cleaned copy of the value, or raises an error if invalid
+    """
     def __init__(self, dry: bool, type: str, apply: callable, min: float = None, max: float = None, clean: callable = None):
         self.dry = dry
         self.type = type
@@ -90,6 +99,10 @@ class GridSettingMode:
         self.min = min
         self.max = max
         self.clean = clean
+
+def registerMode(name: str, mode: GridSettingMode):
+    mode.name = name
+    validModes[cleanName(name)] = mode
 
 ######################### Validation #########################
 

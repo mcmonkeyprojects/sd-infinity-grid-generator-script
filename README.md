@@ -143,7 +143,7 @@ axes:
 | `VarStrength` | Decimal | `0`, `0.5`, ..., `1` | Variation seed strength. |
 | `Restore Faces` | Named | `true`, `false`, `GFPGan`, `CodeFormer` | Limited to the given example inputs only. |
 | `CodeFormerWeight` | Decimal | `0`, `0.5`, ..., `1` | Only applicable if `RestoreFaces` is set to `CodeFormer`. |
-| `Denoising` | Decimal | `0`, `0.5`, ..., `1` | Denoising strength for img2img. |
+| `Denoising` | Decimal | `0`, `0.5`, ..., `1` | Denoising strength for img2img or HR fix. |
 | `ETA` | Decimal | `0`, `0.5`, ..., `1` | ? |
 | `ETANoiseSeedDelta` | Integer |  `0`, `31337` | use `31337` to replicate NovelAI results, use `0` for anything else. Not very useful. |
 | `SigmaChurn` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
@@ -151,7 +151,15 @@ axes:
 | `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaNoise` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `Tiling` | Boolean | `true`, `false` | Useful for textures. |
-| `ImageMaskWeight` | Decimal | `0`, `0.5`, ..., `1` | Conditional image mask weight. Only applies to img2img. |
+| `ImageMaskWeight` | Decimal | `0`, `0.5`, ..., `1` | Conditional image mask weight. Only applies to img2img or HR fix. |
+| `EnableHighresFix` | Boolean | `true`, `false` | Required for other HR settings to work. Defaults denoising strength to `0.75` if not specified. Only valid in txt2img. |
+| `HighresScale` | Decimal | `2`, `2.5`, ..., `16` | How much to scale by for HR fix. |
+| `HighresSteps` | Integer | `20`, `50`, ... | Secondary steps for HR fix. |
+| `HighrestUpscaler` | Named | `None`, `Latent`, ... | Upscaler mode to use prior to running Highres Fix. |
+| `HighresResizeWidth` | Integer | `512`, `768`, ... | Resolution to target as final output size for Highres Fix, overrides `HighresScale`. |
+| `HighresResizeHeight` | Integer | `512`, `768`, ... | See `HighresResizeWidth` above. |
+| `HighresUpscaleToWidth` | Integer | `512`, `768`, ... | Resolution to upscale to prior to running Highres Fix. |
+| `HighresUpscaleToHeight` | Integer | `512`, `768`, ... | See `HighresUpscaleToHeight` above. |
 
 - All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.

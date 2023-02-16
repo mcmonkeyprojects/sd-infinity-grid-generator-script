@@ -110,6 +110,11 @@ def validateParams(grid, params: dict):
     for p,v in params.items():
         params[p] = validateSingleParam(p, grid.procVariables(v))
 
+def applyField(name):
+    def applier(p, v):
+        setattr(p, name, v)
+    return applier
+
 def validateSingleParam(p: str, v):
     p = cleanName(p)
     mode = validModes.get(p)

@@ -144,7 +144,7 @@ axes:
 | `Restore Faces` | Named | `true`, `false`, `GFPGan`, `CodeFormer` | Limited to the given example inputs only. |
 | `CodeFormerWeight` | Decimal | `0`, `0.5`, ..., `1` | Only applicable if `RestoreFaces` is set to `CodeFormer`. |
 | `Denoising` | Decimal | `0`, `0.5`, ..., `1` | Denoising strength for img2img. |
-| `ETA` | Integer | `0`, `31337` | use `31337` to replicate NovelAI results, use `0` for anything else. Not very useful. |
+| `ETA` | Decimal | `0`, `0.5`, ..., `1` | ? |
 | `SigmaChurn` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaTmin` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
@@ -182,6 +182,7 @@ if importlib.util.find_spec("gridgencore") is not None:
         p.some_setting_here = v
     # dry: bool, type: str, apply: callable, min: float = None, max: float = None, clean: callable = None
     gridgencore.registerMode("mySettingNameHere", GridSettingMode(True, "text", apply))
+    # for apply if the param is a 'p' field, you can use gridgencore.applyField("fieldname")
 ```
 
 --------------

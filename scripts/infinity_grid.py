@@ -18,7 +18,7 @@ from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, pro
 from modules.processing import process_images, Processed
 from modules.shared import opts
 import gridgencore as core
-from gridgencore import cleanName, getBestInList, chooseBetterFileName, GridSettingMode, fixNum
+from gridgencore import cleanName, getBestInList, chooseBetterFileName, GridSettingMode, fixNum, applyField, registerMode
 
 ######################### Constants #########################
 refresh_symbol = '\U0001f504'  # 🔄
@@ -28,25 +28,19 @@ core.EXTRA_ASSETS = ["a1111webui.js"]
 
 ######################### Value Modes #########################
 
-def applySampler(p, v):
-    p.sampler_name = v
 def cleanSampler(p, v):
     actualSampler = getBestInList(cleanName(v), sd_samplers.all_samplers_map.keys())
     if actualSampler is None:
         raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
     return actualSampler
-def applySeed(p, v):
-    p.seed = int(v)
-def applySteps(p, v):
-    p.steps = int(v)
-def applyCfgScale(p, v):
-    p.cfg_scale = float(v)
 
 def getModelFor(name):
     return getBestInList(name, map(lambda m: m.title, sd_models.checkpoints_list.values()))
+
 def applyModel(p, v):
     opts.sd_model_checkpoint = getModelFor(v)
     sd_models.reload_model_weights()
+
 def cleanModel(p, v):
     actualModel = getModelFor(v)
     if actualModel is None:
@@ -55,6 +49,7 @@ def cleanModel(p, v):
 
 def getVaeFor(name):
     return getBestInList(name, sd_vae.vae_dict.keys())
+
 def applyVae(p, v):
     vaeName = cleanName(v)
     if vaeName == "none":
@@ -65,6 +60,7 @@ def applyVae(p, v):
         vaeName = getVaeFor(vaeName)
     opts.sd_vae = vaeName
     sd_vae.reload_vae_weights(None)
+
 def cleanVae(p, v):
     vaeName = cleanName(v)
     if vaeName in ["none", "auto", "automatic"]:
@@ -74,45 +70,15 @@ def cleanVae(p, v):
         raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized - valid: {list(sd_vae.vae_dict.keys())}")
     return chooseBetterFileName(v, actualVae)
 
-def applyWidth(p, v):
-    p.width = int(v)
-def applyHeight(p, v):
-    p.height = int(v)
-def applyPrompt(p, v):
-    p.prompt = v
-def applyNegativePrompt(p, v):
-    p.negative_prompt = v
-def applyVarSeed(p, v):
-    p.subseed = int(v)
-def applyVarSeedStrength(p, v):
-    p.subseed_strength = float(v)
 def applyClipSkip(p, v):
     opts.CLIP_stop_at_last_layers = int(v)
+
 def applyCodeformerWeight(p, v):
     opts.code_former_weight = float(v)
-def applyDenoising(p, v):
-    p.denoising_strength = float(v)
-def applyEta(p, v):
-    p.eta = float(v)
-def applySigmaChurn(p, v):
-    p.s_churn = float(v)
-def applySigmaTmin(p, v):
-    p.s_tmin = float(v)
-def applySigmaTmax(p, v):
-    p.s_tmax = float(v)
-def applySigmaNoise(p, v):
-    p.s_noise = float(v)
-def applyOutWidth(p, v):
-    p.inf_grid_out_width = int(v)
-def applyOutHeight(p, v):
-    p.inf_grid_out_height = int(v)
-def applyTiling(p, v):
-    p.tiling = str(v).lower().strip() == "true"
-def applyMaskWeight(p, v):
-    p.inpainting_mask_weight = float(v)
 
 def getFaceRestorer(name):
     return getBestInList(name, map(lambda m: m.name(), shared.face_restorers))
+
 def applyRestoreFaces(p, v):
     input = str(v).lower().strip()
     if input == "false":
@@ -122,6 +88,7 @@ def applyRestoreFaces(p, v):
     restorer = getFaceRestorer(input)
     if restorer is not None:
         opts.face_restoration_model = restorer
+    
 def cleanRestoreFaces(p, v):
     restorerName = cleanName(v)
     if restorerName == "true":
@@ -144,9 +111,6 @@ def applyPromptReplace(p, v):
     p.prompt = p.prompt.replace(match, replace)
     p.negative_prompt = p.negative_prompt.replace(match, replace)
 
-def registerMode(name: str, mode: GridSettingMode):
-    core.registerMode(name, mode)
-
 ######################### Addons #########################
 hasInited = False
 
@@ -162,32 +126,32 @@ def tryInit():
     core.gridRunnerPreDryHook = a1111GridRunnerPreDryHook
     core.gridRunnerRunPostDryHook = a1111GridRunnerPostDryHook
     core.webDataGetBaseParamData = a1111WebDataGetBaseParamData
-    registerMode("sampler", GridSettingMode(dry=True, type="text", apply=applySampler, clean=cleanSampler))
-    registerMode("seed", GridSettingMode(dry=True, type="integer", apply=applySeed))
-    registerMode("steps", GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applySteps))
-    registerMode("cfg scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyCfgScale))
+    registerMode("sampler", GridSettingMode(dry=True, type="text", apply=applyField("sampler_name"), clean=cleanSampler))
+    registerMode("seed", GridSettingMode(dry=True, type="integer", apply=applyField("seed")))
+    registerMode("steps", GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applyField("steps")))
+    registerMode("cfg scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("cfg_scale")))
     registerMode("model", GridSettingMode(dry=False, type="text", apply=applyModel, clean=cleanModel))
     registerMode("vae", GridSettingMode(dry=False, type="text", apply=applyVae, clean=cleanVae))
-    registerMode("width", GridSettingMode(dry=True, type="integer", apply=applyWidth))
-    registerMode("height", GridSettingMode(dry=True, type="integer", apply=applyHeight))
-    registerMode("prompt", GridSettingMode(dry=True, type="text", apply=applyPrompt))
-    registerMode("negative prompt", GridSettingMode(dry=True, type="text", apply=applyNegativePrompt))
-    registerMode("var seed", GridSettingMode(dry=True, type="integer", apply=applyVarSeed))
-    registerMode("var strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyVarSeedStrength))
+    registerMode("width", GridSettingMode(dry=True, type="integer", apply=applyField("width")))
+    registerMode("height", GridSettingMode(dry=True, type="integer", apply=applyField("height")))
+    registerMode("prompt", GridSettingMode(dry=True, type="text", apply=applyField("prompt")))
+    registerMode("negative prompt", GridSettingMode(dry=True, type="text", apply=applyField("negative_prompt")))
+    registerMode("var seed", GridSettingMode(dry=True, type="integer", apply=applyField("subseed")))
+    registerMode("var strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("subseed_strength")))
     registerMode("clipskip", GridSettingMode(dry=False, type="integer", min=1, max=12, apply=applyClipSkip))
-    registerMode("denoising", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyDenoising))
-    registerMode("eta", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyEta))
-    registerMode("sigma churn", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaChurn))
-    registerMode("sigma tmin", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmin))
-    registerMode("sigma tmax", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaTmax))
-    registerMode("sigma noise", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaNoise))
-    registerMode("out width", GridSettingMode(dry=True, type="integer", min=0, apply=applyOutWidth))
-    registerMode("out height", GridSettingMode(dry=True, type="integer", min=0, apply=applyOutHeight))
+    registerMode("denoising", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("denoising_strength")))
+    registerMode("eta", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("eta")))
+    registerMode("sigma churn", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("s_churn")))
+    registerMode("sigma tmin", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("s_tmin")))
+    registerMode("sigma tmax", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("s_tmax")))
+    registerMode("sigma noise", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("s_noise")))
+    registerMode("out width", GridSettingMode(dry=True, type="integer", min=0, apply=applyField("inf_grid_out_width")))
+    registerMode("out height", GridSettingMode(dry=True, type="integer", min=0, apply=applyField("inf_grid_out_height")))
     registerMode("restore faces", GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, clean=cleanRestoreFaces))
     registerMode("codeformer weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight))
     registerMode("prompt replace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
-    registerMode("tiling", GridSettingMode(dry=True, type="boolean", apply=applyTiling))
-    registerMode("image mask weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyMaskWeight))
+    registerMode("tiling", GridSettingMode(dry=True, type="boolean", apply=applyField("tiling")))
+    registerMode("image mask weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("inpainting_mask_weight")))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:

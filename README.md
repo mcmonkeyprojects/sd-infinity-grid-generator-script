@@ -92,7 +92,7 @@ Usage comes in three main steps:
 - [1: Build a grid definition](#1-grid-definition-file)
 - [2: Generate its contents](#2-grid-content-generation-via-webui)
 - [3: View/use the generated output page](#3-using-the-output)
-- You can also [expand your grid later](#expanding-later)
+- You can also [expand your grid later](#4-expanding-later)
 
 --------------
 

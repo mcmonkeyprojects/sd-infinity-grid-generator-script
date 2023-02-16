@@ -15,6 +15,7 @@ function formatMetadata(valSet) {
     if (negative.length > 0) {
         negative = "\nNegative prompt: " + negative;
     }
+    const handled = ["steps", "sampler", "cfgscale", "seed", "restorefaces", "width", "height", "model", "varseed", "varstrength", "denoising", "eta", "clipskip", "vae", "sigmachurn", "sigmatmin", "sigmatmax", "sigmanoise", "prompt", "negativeprompt"];
     var keyData = formatMet("Steps", valSet["steps"])
         + formatMet("Sampler", valSet["sampler"])
         + formatMet("CFG scale", valSet["cfgscale"])
@@ -41,11 +42,20 @@ function formatMetadata(valSet) {
         + formatMet("Sigma Noise", valSet["sigmanoise"], "1")
         + (valSet["restorefaces"] == "CodeFormer" ? formatMet("CodeFormer Weight", valSet["codeformerweight"]) : "")
         ;
+    lastData = "";
+    for (const [key, value] of Object.entries(valSet)) {
+        if (!handled.includes(key)) {
+            lastData += `${key}: ${value}`;
+        }
+    }
+    if (lastData.length > 2) {
+        lastData = "\n(Other): " + lastData;
+    }
     keyData = keyData.substring(0, keyData.length - 2);
     if (extraData.length > 2) {
         extraData = extraData.substring(0, extraData.length - 2);
     }
-    return valSet["prompt"] + negative + "\n" + keyData + "\n" + extraData;
+    return valSet["prompt"] + negative + "\n" + keyData + "\n" + extraData + lastData;
 }
 
 function crunchParamHook(data, key, value) {

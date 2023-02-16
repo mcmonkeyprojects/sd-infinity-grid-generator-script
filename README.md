@@ -27,11 +27,12 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 - [Examples](#Examples)
 - [Status](#Status)
 - [Installation](#Installation)
-- [Usage](#Usage)
+- [Basic Usage](#Basic-Usage)
+- [Advanced Usage](#Advanced-Usage)
     - [1: Grid Definition File](#1-grid-definition-file)
     - [2: Grid Content Generation via WebUI](#2-grid-content-generation-via-webui)
     - [3: Using The Output](#3-using-the-output)
-    - [Expanding Later](#expanding-later)
+    - [4: Expanding Later](#4-expanding-later)
 - [Credits](#credits)
 - [Common Issues](#common-issues)
 - [License](#License)
@@ -70,7 +71,22 @@ Current overall project status (as of Feb 2023): **Works well, actively maintain
 
 --------------
 
-### Usage
+### Basic Usage
+
+![img](github/create_in_ui_demo.png)
+
+- Basic usage is very simple!
+    - select the script under `Scripts`
+    - Leave file as `Create in UI`
+    - Select `Axis 1 Mode` as whatever mode you want, like `Seed` or `Sampler`
+    - In the `Axis 1 Value` box, you can type a comma-separated list like `1, 2, 3`, or a double-pipe separated list like `1girl, booru style, prompt || 1boy, has commas, so pipes avoid problems`
+    - Repeat for as many axes as you want. Leave the rest unchecked.
+    - Click your main `Generate` button and wait for it to finish.
+    - When it's done, click the button labeled `Page will be at (Click me) outputs/...` to view the full page.
+
+--------------
+
+### Advanced Usage
 
 Usage comes in three main steps:
 - [1: Build a grid definition](#1-grid-definition-file)
@@ -239,7 +255,7 @@ if importlib.util.find_spec("gridgencore") is not None:
 
 --------------
 
-### Expanding Later
+### 4: Expanding Later
 
 If you want to add more content to a grid you already made, you can do that:
 
@@ -271,7 +287,7 @@ If you want to add more content to a grid you already made, you can do that:
     image_format = Image.registered_extensions()[extension]
 KeyError: '.jpg'
 ```
-If you have this error, just hit generate again. I'm not sure why it happens, it just does at random sometimes on the first time the WebUI starts up. It seems to happen when you use "OutWidth"/"OutHeight" settings and is prevented by running any generation without a custom out-resolution. Might be some required initialization is getting skipped when an image is rescaled?
+If you have this error, just hit generate again. I'm not sure why it happens, it just does at random sometimes on the first time the WebUI starts up. It seems to happen when you use `OutWidth`/`OutHeight` settings and is prevented by running any generation without a custom out-resolution. Might be some required initialization is getting skipped when an image is rescaled?
 
 ----------------------
 

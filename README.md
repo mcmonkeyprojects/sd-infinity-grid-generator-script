@@ -145,6 +145,19 @@ axes:
 #### Supported Extensions
 - Dynamic Thresholding (CFG Scale Fix): <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
     - Adds options: `DynamicThresholdEnable` (bool: `true` or `false`), `DynamicThresholdMimicScale` (number), `DynamicThresholdThresholdPercentile` (number, 0-100), `DynamicThresholdMimicMode` (any of `Constant`, `Linear Down`, `Cosine Down`, `Half Cosine Down`, `Linear Up`, `Cosine Up`, `Half Cosine Up`, `Power Up`), `DynamicThresholdCfgMode` (same options as mimic mode), `DynamicThresholdMimicScaleMinimum` (number), `DynamicThresholdCfgScaleMinimum` (number), `DynamicThresholdPowerValue` (number)
+- Any extension has the ability to add its own modes with the following code:
+```py
+# Verify grid extension is present
+import importlib
+if importlib.util.find_spec("gridgencore") is not None:
+    import gridgencore
+    from gridgencore import GridSettingMode
+    # p is the SD processing object, v is the value
+    def apply(p, v):
+        p.some_setting_here = v
+    # dry: bool, type: str, apply: callable, min: float = None, max: float = None, clean: callable = None
+    gridgencore.registerMode("mySettingNameHere", GridSettingMode(True, "text", apply))
+```
 
 --------------
 

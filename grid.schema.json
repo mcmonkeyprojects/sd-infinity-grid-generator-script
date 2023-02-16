@@ -1,0 +1,307 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "type": "object",
+    "properties": {
+        "grid": {
+            "$ref": "#/definitions/Grid"
+        },
+        "axes": {
+            "$ref": "#/definitions/Axes"
+        },
+        "variables": {
+            "$ref": "#/definitions/Variables"
+        }
+    },
+    "required": [
+        "axes",
+        "grid"
+    ],
+    "title": "InfinityGrid",
+    "definitions": {
+        "Variables": {
+            "type": "object",
+            "patternProperties": {
+                "\\(.*\\)": {
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "number"}
+                    ]
+                }
+            }
+        },
+        "Axes": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "$ref": "#/definitions/Axis" 
+                }
+            },
+            "title": "Axes"
+        },
+        "Axis": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "number"}
+                    ]
+                },
+                "default": {
+                    "oneOf": [{
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "values": {
+                    "patternProperties": {
+                        ".*": {
+                            "$ref": "#/definitions/Value"
+                        }
+                    }
+                }
+            },
+            "required": ["title", "values"]
+
+        },
+        "Value": {
+            "oneOf": [{
+                "type": "string",
+                "pattern": "(Sampler|Seed|Steps|CFG\\s?scale|Model|VAE|Width|Height|Prompt|Negative\\s?Prompt|Var\\s?Seed|Var\\s?Strength|Clip\\s?Skip|Denoising|ETA|Sigma\\s?Churn|SigmaTmin|Sigma\\s?Tmax|Sigma\\s?Noise|Out\\s?Width|Out\\s?Height|Restore\\s?Faces|CodeFormer\\s?Weight|Prompt\\s?Replace|sampler|seed|steps|cfg\\s?scale|model|vae|width|height|prompt|negative\\s?prompt|var\\s?seed|var\\s?strength|clip\\s?skip|denoising|eta|sigma\\s?churn|sigma\\s?tmin|sigma\\s?tmax|sigma\\s?noise|out\\s?width|out\\s?height|restore\\s?faces|codeformer\\s?weight|prompt\\s?replace)\\=.*"
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "oneOf": [
+                            {"type": "string"},
+                            {"type": "number"}
+                        ]
+                    },
+                    "skip": {
+                        "type": "boolean"
+                    },
+                    "show": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "params": {
+                        "$ref": "#/definitions/GridParams"
+                    }
+                },
+                "required": ["title", "params"]
+            }
+        ]
+        },
+        "Grid": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/GridParams"
+                },
+                "format": {
+                    "type": "string",
+                    "enum": ["png", "jpg"]
+                }
+            },
+            "required": [
+                "author",
+                "description",
+                "format",
+                "title"
+            ],
+            "title": "Grid"
+        },
+        "GridParams": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Sampler": {
+                    "type": "string"
+                },
+                "sampler": {
+                    "type": "string"
+                },
+                "Seed": {
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "number"
+                },
+                "Steps": {
+                    "type": "integer"
+                },
+                "steps": {
+                    "type": "integer"
+                },
+                "CFGscale": {
+                    "type": "number"
+                },
+                "cfgscale": {
+                    "type": "number"
+                },
+                "cfg scale": {
+                    "type": "number"
+                },
+                "Model": {
+                    "type": "string",
+                    "description": "Full file name of the model to use."
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Full file name of the model to use."
+                },
+                "VAE": {
+                    "type": "string"
+                },
+                "vae": {
+                    "type": "string"
+                },
+                "Width": {
+                    "type": "integer"
+                },
+                "width": {
+                    "type": "integer"
+                },
+                "Height": {
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "Prompt": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "type": "string"
+                },
+                "NegativePrompt": {
+                    "type": "string"
+                },
+                "negativeprompt": {
+                    "type": "string"
+                },
+                "negative prompt": {
+                    "type": "string"
+                },
+                "VarSeed": {
+                    "type": "string"
+                },
+                "varseed": {
+                    "type": "string"
+                },
+                "VarStrength": {
+                    "type": "number"
+                },
+                "varstrength": {
+                    "type": "number"
+                },
+                "ClipSkip": {
+                    "type": "integer"
+                },
+                "clipskip": {
+                    "type": "integer"
+                },
+                "Denoising": {
+                    "type": "number"
+                },
+                "denoising": {
+                    "type": "number"
+                },
+                "ETA": {
+                    "type": "string"
+                },
+                "eta": {
+                    "type": "string"
+                },
+                "SigmaChurn": {
+                    "type": "number"
+                },
+                "sigmachurn": {
+                    "type": "number"
+                },
+                "SigmaTmin": {
+                    "type": "number"
+                },
+                "sigmatmin": {
+                    "type": "number"
+                },
+                "SigmaTmax": {
+                    "type": "number"
+                },
+                "sigmatmax": {
+                    "type": "number"
+                },
+                "SigmaNoise": {
+                    "type": "number"
+                },
+                "sigmanoise": {
+                    "type": "number"
+                },
+                "OutWidth": {
+                    "type": "integer"
+                },
+                "outwidth": {
+                    "type": "integer"
+                },
+                "OutHeight": {
+                    "type": "integer"
+                },
+                "outheight": {
+                    "type": "integer"
+                },
+                "RestoreFaces": {
+                    "oneOf": [{
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "string",
+                            "enum": ["GFPGan", "CodeFormer"]
+                        }
+                    ]
+                },
+                "restorefaces": {
+                    "oneOf": [{
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "string",
+                            "enum": ["GFPGan", "CodeFormer"]
+                        }
+                    ]
+                },
+                "CodeFormerWeight": {
+                    "type": "number"
+                },
+                "codeformerweight": {
+                    "type": "number"
+                },
+                "PromptReplace": {
+                    "type": "string"
+                },
+                "promptreplace": {
+                    "type": "string"
+                }
+            },
+            "title": "GridParams"
+        }
+    }
+}

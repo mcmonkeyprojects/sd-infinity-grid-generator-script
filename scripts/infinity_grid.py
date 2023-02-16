@@ -89,7 +89,12 @@ def fixNum(num):
 
 ######################### Value Modes #########################
 def applySampler(p, v):
-    p.sampler_name = getSamplerFor(v)
+    p.sampler_name = v
+def cleanSampler(p, v):
+    actualSampler = getSamplerFor(cleanName(v))
+    if actualSampler is None:
+        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
+    return actualSampler
 def applySeed(p, v):
     p.seed = int(v)
 def applySteps(p, v):
@@ -99,6 +104,11 @@ def applyCfgScale(p, v):
 def applyModel(p, v):
     opts.sd_model_checkpoint = getModelFor(v)
     sd_models.reload_model_weights()
+def cleanModel(p, v):
+    actualModel = getModelFor(v)
+    if actualModel is None:
+        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized - valid {list(map(lambda m: m.title, sd_models.checkpoints_list.values()))}")
+    return chooseBetterFileName(v, actualModel)
 def applyVae(p, v):
     vaeName = cleanName(v)
     if vaeName == "none":
@@ -109,6 +119,14 @@ def applyVae(p, v):
         vaeName = getVaeFor(vaeName)
     opts.sd_vae = vaeName
     sd_vae.reload_vae_weights(None)
+def cleanVae(p, v):
+    vaeName = cleanName(v)
+    if vaeName in ["none", "auto", "automatic"]:
+        return vaeName
+    actualVae = getVaeFor(vaeName)
+    if actualVae is None:
+        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized - valid: {list(sd_vae.vae_dict.keys())}")
+    return chooseBetterFileName(v, actualVae)
 def applyWidth(p, v):
     p.width = int(v)
 def applyHeight(p, v):
@@ -150,6 +168,16 @@ def applyRestoreFaces(p, v):
     restorer = getFaceRestorer(input)
     if restorer is not None:
         opts.face_restoration_model = restorer
+def cleanRestoreFaces(p, v):
+    restorerName = cleanName(v)
+    if restorerName == "true":
+        return opts.face_restoration_model
+    if restorerName == "false":
+        return "false"
+    actualRestorer = getFaceRestorer(restorerName)
+    if actualRestorer is None:
+        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': Face Restorer name unrecognized - valid: 'true', 'false', {list(map(lambda m: m.name(), shared.face_restorers))}")
+    return actualRestorer
 def applyPromptReplace(p, v):
     val = v.split('=', maxsplit=1)
     if len(val) != 2:
@@ -162,20 +190,21 @@ def applyPromptReplace(p, v):
     p.negative_prompt = p.negative_prompt.replace(match, replace)
 
 class GridSettingMode:
-    def __init__(self, dry: bool, type: str, apply: function, min: float = None, max: float = None):
+    def __init__(self, dry: bool, type: str, apply: callable, min: float = None, max: float = None, clean: callable = None):
         self.dry = dry
         self.type = type
         self.apply = apply
         self.min = min
         self.max = max
+        self.clean = clean
 
 validModes = {
-    "sampler": GridSettingMode(dry=True, type="text", apply=applySampler),
+    "sampler": GridSettingMode(dry=True, type="text", apply=applySampler, clean=cleanSampler),
     "seed": GridSettingMode(dry=True, type="integer", apply=applySeed),
     "steps": GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applySteps),
     "cfgscale": GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyCfgScale),
-    "model": GridSettingMode(dry=False, type="text", apply=applyModel),
-    "vae": GridSettingMode(dry=False, type="text", apply=applyVae),
+    "model": GridSettingMode(dry=False, type="text", apply=applyModel, clean=cleanModel),
+    "vae": GridSettingMode(dry=False, type="text", apply=applyVae, clean=cleanVae),
     "width": GridSettingMode(dry=True, type="integer", apply=applyWidth),
     "height": GridSettingMode(dry=True, type="integer", apply=applyHeight),
     "prompt": GridSettingMode(dry=True, type="text", apply=applyPrompt),
@@ -191,7 +220,7 @@ validModes = {
     "sigmanoise": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applySigmaNoise),
     "outwidth": GridSettingMode(dry=True, type="integer", min=0, apply=applyOutWidth),
     "outheight": GridSettingMode(dry=True, type="integer", min=0, apply=applyOutHeight),
-    "restorefaces": GridSettingMode(dry=True, type="text", apply=applyRestoreFaces),
+    "restorefaces": GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, clean=cleanRestoreFaces),
     "codeformerweight": GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight),
     "promptreplace": GridSettingMode(dry=True, type="text", apply=applyPromptReplace)
 }
@@ -227,11 +256,13 @@ def tryInit():
                 p.dynthres_mimic_mode = mode
             validModes["dynamicthresholdmimicmode"] = GridSettingMode(dry=True, type="text", apply=applyMimicMode)
             def applyCfgMode(p, v):
+                p.dynthres_cfg_mode = v
+            def cleanCfgMode(p, v):
                 mode = getBestInList(v, dynamic_thresholding.VALID_MODES)
                 if mode is None:
                     raise RuntimeError(f"Invalid parameter '{p}' as '{v}': dynthres mode name unrecognized - valid: {dynamic_thresholding.VALID_MODES}")
-                p.dynthres_cfg_mode = mode
-            validModes["dynamicthresholdcfgmode"] = GridSettingMode(dry=True, type="text", apply=applyCfgMode)
+                return mode
+            validModes["dynamicthresholdcfgmode"] = GridSettingMode(dry=True, type="text", apply=applyCfgMode, clean=cleanCfgMode)
             def applyMimicScaleMin(p, v):
                 p.dynthres_mimic_scale_min = float(v)
             validModes["dynamicthresholdmimicscaleminimum"] = GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyMimicScaleMin)
@@ -254,63 +285,38 @@ def validateParams(grid, params):
         params[p] = validateSingleParam(p, grid.procVariables(v))
 
 def validateSingleParam(p, v):
-        p = cleanName(p)
-        mode = validModes.get(p)
-        if mode is None:
-            raise RuntimeError(f"Invalid grid default parameter '{p}': unknown mode")
-        modeType = mode.type
-        if modeType == "integer":
-            vInt = int(v)
-            if vInt is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
-            min = mode.min
-            max = mode.max
-            if min is not None and vInt < min:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
-            if max is not None and vInt > max:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-        elif modeType == "decimal":
-            vFloat = float(v)
-            if vFloat is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
-            min = mode.min
-            max = mode.max
-            if min is not None and vFloat < min:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
-            if max is not None and vFloat > max:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-        elif modeType == "boolean":
-            vClean = str(v).lower().strip()
-            if vClean != "true" and vClean != "false":
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
-        elif p == "model":
-            actualModel = getModelFor(v)
-            if actualModel is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': model name unrecognized - valid {list(map(lambda m: m.title, sd_models.checkpoints_list.values()))}")
-            return chooseBetterFileName(v, actualModel)
-        elif p == "vae":
-            vaeName = cleanName(v)
-            if vaeName in ["none", "auto", "automatic"]:
-                return vaeName
-            actualVae = getVaeFor(vaeName)
-            if actualVae is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': VAE name unrecognized - valid: {list(sd_vae.vae_dict.keys())}")
-            return chooseBetterFileName(v, actualVae)
-        elif p == "sampler":
-            actualSampler = getSamplerFor(cleanName(v))
-            if actualSampler is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
-        elif p == "restorefaces":
-            restorerName = cleanName(v)
-            if restorerName == "true":
-                return opts.face_restoration_model
-            if restorerName == "false":
-                return "false"
-            actualRestorer = getFaceRestorer(restorerName)
-            if actualRestorer is None:
-                raise RuntimeError(f"Invalid parameter '{p}' as '{v}': Face Restorer name unrecognized - valid: 'true', 'false', {list(map(lambda m: m.name(), shared.face_restorers))}")
-            return actualRestorer
-        return v
+    p = cleanName(p)
+    mode = validModes.get(p)
+    if mode is None:
+        raise RuntimeError(f"Invalid grid default parameter '{p}': unknown mode")
+    modeType = mode.type
+    if modeType == "integer":
+        vInt = int(v)
+        if vInt is None:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
+        min = mode.min
+        max = mode.max
+        if min is not None and vInt < min:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
+        if max is not None and vInt > max:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+    elif modeType == "decimal":
+        vFloat = float(v)
+        if vFloat is None:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
+        min = mode.min
+        max = mode.max
+        if min is not None and vFloat < min:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
+        if max is not None and vFloat > max:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+    elif modeType == "boolean":
+        vClean = str(v).lower().strip()
+        if vClean != "true" and vClean != "false":
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
+    if mode.clean is not None:
+        return mode.clean(p, v)
+    return v
 
 ######################### YAML Parsing and Processing #########################
 class AxisValue:
@@ -444,8 +450,8 @@ class SingleGridCall:
     def applyTo(self, p, dry):
         for name, val in self.params.items():
             mode = validModes[cleanName(name)]
-            if not dry or mode["dry"]:
-                mode["apply"](p, val)
+            if not dry or mode.dry:
+                mode.apply(p, val)
         for replace in self.replacements:
             applyPromptReplace(p, replace)
 

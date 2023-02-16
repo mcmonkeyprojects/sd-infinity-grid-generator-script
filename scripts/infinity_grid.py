@@ -111,6 +111,9 @@ def applyPromptReplace(p, v):
     p.prompt = p.prompt.replace(match, replace)
     p.negative_prompt = p.negative_prompt.replace(match, replace)
 
+def applyEnsd(p, v):
+    opts.eta_noise_seed_delta = int(v)
+
 ######################### Addons #########################
 hasInited = False
 
@@ -152,6 +155,7 @@ def tryInit():
     registerMode("prompt replace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
     registerMode("tiling", GridSettingMode(dry=True, type="boolean", apply=applyField("tiling")))
     registerMode("image mask weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("inpainting_mask_weight")))
+    registerMode("eta noise seed delta", GridSettingMode(dry=True, type="integer", apply=applyEnsd))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:
@@ -220,6 +224,7 @@ def a1111GridRunnerPreDryHook(gridRunner):
     gridRunner.temp.oldClipSkip = opts.CLIP_stop_at_last_layers
     gridRunner.temp.oldCodeformerWeight = opts.code_former_weight
     gridRunner.temp.oldFaceRestorer = opts.face_restoration_model
+    gridRunner.temp.eta_noise_seed_delta = opts.eta_noise_seed_delta
     gridRunner.temp.oldVae = opts.sd_vae
     gridRunner.temp.oldModel = opts.sd_model_checkpoint
 
@@ -239,6 +244,7 @@ def a1111GridRunnerPostDryHook(gridRunner, p, set):
     opts.face_restoration_model = gridRunner.temp.oldFaceRestorer
     opts.sd_vae = gridRunner.temp.oldVae
     opts.sd_model_checkpoint = gridRunner.temp.oldModel
+    opts.eta_noise_seed_delta = gridRunner.temp.eta_noise_seed_delta
     gridRunner.temp = None
     return processed
 
@@ -264,7 +270,8 @@ def a1111WebDataGetBaseParamData(p):
         "sigmachurn": fixNum(p.s_churn),
         "sigmatmin": fixNum(p.s_tmin),
         "sigmatmax": fixNum(p.s_tmax),
-        "sigmanoise": fixNum(p.s_noise)
+        "sigmanoise": fixNum(p.s_noise),
+        "ENSD": None if opts.eta_noise_seed_delta == 0 else opts.eta_noise_seed_delta
     }
 
 class SettingsFixer():
@@ -273,12 +280,14 @@ class SettingsFixer():
         self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
         self.code_former_weight = opts.code_former_weight
         self.face_restoration_model = opts.face_restoration_model
+        self.eta_noise_seed_delta = opts.eta_noise_seed_delta
         self.vae = opts.sd_vae
 
     def __exit__(self, exc_type, exc_value, tb):
         opts.code_former_weight = self.code_former_weight
         opts.face_restoration_model = self.face_restoration_model
         opts.CLIP_stop_at_last_layers = self.CLIP_stop_at_last_layers
+        opts.eta_noise_seed_delta = self.eta_noise_seed_delta
         opts.sd_vae = self.vae
         opts.sd_model_checkpoint = self.model
         sd_models.reload_model_weights()

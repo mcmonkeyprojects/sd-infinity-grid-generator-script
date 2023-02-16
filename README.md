@@ -145,6 +145,7 @@ axes:
 | `CodeFormerWeight` | Decimal | `0`, `0.5`, ..., `1` | Only applicable if `RestoreFaces` is set to `CodeFormer`. |
 | `Denoising` | Decimal | `0`, `0.5`, ..., `1` | Denoising strength for img2img. |
 | `ETA` | Decimal | `0`, `0.5`, ..., `1` | ? |
+| `ETANoiseSeedDelta` | Integer |  `0`, `31337` | use `31337` to replicate NovelAI results, use `0` for anything else. Not very useful. |
 | `SigmaChurn` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaTmin` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |

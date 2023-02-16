@@ -28,12 +28,6 @@ core.EXTRA_ASSETS = ["a1111webui.js"]
 
 ######################### Value Modes #########################
 
-def cleanSampler(p, v):
-    actualSampler = getBestInList(cleanName(v), sd_samplers.all_samplers_map.keys())
-    if actualSampler is None:
-        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': sampler name unrecognized - valid: {list(sd_samplers.all_samplers_map.keys())}")
-    return actualSampler
-
 def getModelFor(name):
     return getBestInList(name, map(lambda m: m.title, sd_models.checkpoints_list.values()))
 
@@ -76,29 +70,15 @@ def applyClipSkip(p, v):
 def applyCodeformerWeight(p, v):
     opts.code_former_weight = float(v)
 
-def getFaceRestorer(name):
-    return getBestInList(name, map(lambda m: m.name(), shared.face_restorers))
-
 def applyRestoreFaces(p, v):
     input = str(v).lower().strip()
     if input == "false":
         p.restore_faces = False
         return
     p.restore_faces = True
-    restorer = getFaceRestorer(input)
+    restorer = getBestInList(input, map(lambda m: m.name(), shared.face_restorers))
     if restorer is not None:
         opts.face_restoration_model = restorer
-    
-def cleanRestoreFaces(p, v):
-    restorerName = cleanName(v)
-    if restorerName == "true":
-        return opts.face_restoration_model
-    if restorerName == "false":
-        return "false"
-    actualRestorer = getFaceRestorer(restorerName)
-    if actualRestorer is None:
-        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': Face Restorer name unrecognized - valid: 'true', 'false', {list(map(lambda m: m.name(), shared.face_restorers))}")
-    return actualRestorer
 
 def applyPromptReplace(p, v):
     val = v.split('=', maxsplit=1)
@@ -113,6 +93,12 @@ def applyPromptReplace(p, v):
 
 def applyEnsd(p, v):
     opts.eta_noise_seed_delta = int(v)
+
+def applyEnableHr(p, v):
+    p.enable_hr = v
+    if v:
+        if p.denoising_strength is None:
+            p.denoising_strength = 0.75
 
 ######################### Addons #########################
 hasInited = False
@@ -129,7 +115,7 @@ def tryInit():
     core.gridRunnerPreDryHook = a1111GridRunnerPreDryHook
     core.gridRunnerRunPostDryHook = a1111GridRunnerPostDryHook
     core.webDataGetBaseParamData = a1111WebDataGetBaseParamData
-    registerMode("sampler", GridSettingMode(dry=True, type="text", apply=applyField("sampler_name"), clean=cleanSampler))
+    registerMode("sampler", GridSettingMode(dry=True, type="text", apply=applyField("sampler_name"), valid_list=sd_samplers.all_samplers_map.keys()))
     registerMode("seed", GridSettingMode(dry=True, type="integer", apply=applyField("seed")))
     registerMode("steps", GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applyField("steps")))
     registerMode("cfg scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("cfg_scale")))
@@ -150,12 +136,20 @@ def tryInit():
     registerMode("sigma noise", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("s_noise")))
     registerMode("out width", GridSettingMode(dry=True, type="integer", min=0, apply=applyField("inf_grid_out_width")))
     registerMode("out height", GridSettingMode(dry=True, type="integer", min=0, apply=applyField("inf_grid_out_height")))
-    registerMode("restore faces", GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, clean=cleanRestoreFaces))
+    registerMode("restore faces", GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, valid_list=lambda: list(map(lambda m: m.name(), shared.face_restorers)) + ["true", "false"]))
     registerMode("codeformer weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight))
     registerMode("prompt replace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
     registerMode("tiling", GridSettingMode(dry=True, type="boolean", apply=applyField("tiling")))
     registerMode("image mask weight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("inpainting_mask_weight")))
     registerMode("eta noise seed delta", GridSettingMode(dry=True, type="integer", apply=applyEnsd))
+    registerMode("enable highres fix", GridSettingMode(dry=True, type="boolean", apply=applyEnableHr))
+    registerMode("highres scale", GridSettingMode(dry=True, type="decimal", min=1, max=16, apply=applyField("hr_scale")))
+    registerMode("highres steps", GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applyField("hr_second_pass_steps")))
+    registerMode("highres resize width", GridSettingMode(dry=True, type="integer", apply=applyField("hr_resize_x")))
+    registerMode("highres resize height", GridSettingMode(dry=True, type="integer", apply=applyField("hr_resize_y")))
+    registerMode("highres upscale to width", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_x")))
+    registerMode("highres upscale to height", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_y")))
+    registerMode("highres upscaler", GridSettingMode(dry=True, type="text", apply=applyField("hr_upscaler"), valid_list=lambda: list(map(lambda u: u.name, shared.sd_upscalers)) + list(shared.latent_upscale_modes.keys())))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:

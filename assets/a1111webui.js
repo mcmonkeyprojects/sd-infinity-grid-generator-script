@@ -45,11 +45,11 @@ function formatMetadata(valSet) {
     lastData = "";
     for (const [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {
-            lastData += `${key}: ${value}`;
+            lastData += `${key}: ${value}, `;
         }
     }
     if (lastData.length > 2) {
-        lastData = "\n(Other): " + lastData;
+        lastData = "\n(Other): " + lastData.substring(0, lastData.length - 2);
     }
     keyData = keyData.substring(0, keyData.length - 2);
     if (extraData.length > 2) {

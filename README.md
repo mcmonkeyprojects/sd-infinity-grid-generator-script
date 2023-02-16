@@ -149,6 +149,7 @@ axes:
 | `SigmaTmin` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `SigmaNoise` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `Tiling` | Boolean | `true`, `false` | Useful for textures. |
 
 - All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.

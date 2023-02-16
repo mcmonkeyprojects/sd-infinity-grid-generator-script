@@ -138,8 +138,11 @@ def validateSingleParam(p: str, v):
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
     elif modeType == "boolean":
         vClean = str(v).lower().strip()
-        if vClean != "true" and vClean != "false":
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
+        if vClean == "true":
+            return True
+        elif vClean == "false":
+            return False
+        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
     if mode.clean is not None:
         return mode.clean(p, v)
     return v

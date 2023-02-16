@@ -106,6 +106,8 @@ def applyOutWidth(p, v):
     p.inf_grid_out_width = int(v)
 def applyOutHeight(p, v):
     p.inf_grid_out_height = int(v)
+def applyTiling(p, v):
+    p.tiling = str(v).lower().strip() == "true"
 
 def getFaceRestorer(name):
     return getBestInList(name, map(lambda m: m.name(), shared.face_restorers))
@@ -182,6 +184,7 @@ def tryInit():
     registerMode("restorefaces", GridSettingMode(dry=True, type="text", apply=applyRestoreFaces, clean=cleanRestoreFaces))
     registerMode("codeformerweight", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyCodeformerWeight))
     registerMode("promptreplace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("tiling", GridSettingMode(dry=True, type="boolean", apply=applyTiling))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:

@@ -314,34 +314,49 @@ class Script(scripts.Script):
         output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml filename or current date)")
         page_will_be = gr.HTML(value="(...)<br><br>")
         manualGroup = gr.Group(visible=True)
-        manual_axis_count = 8
         manualAxes = list()
+        sets = list()
         with manualGroup:
             with gr.Row():
                     with gr.Column():
-                        for i in range(1, manual_axis_count + 1):
-                            with gr.Row():
-                                row_mode = gr.Dropdown(value="", label=f"Axis {i} Mode", choices=[""] + [x.name for x in core.validModes.values()])
-                                row_value = gr.Textbox(label=f"Axis {i} Value", lines=1)
-                                fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
-                                def fillAxis(modeName):
-                                    mode = core.validModes.get(cleanName(modeName))
-                                    if mode is None:
-                                        return gr.update()
-                                    elif mode.type == "boolean":
-                                        return "true, false"
-                                    elif mode.valid_list is not None:
-                                        return ", ".join(list(mode.valid_list()))
-                                    raise RuntimeError(f"Can't fill axis for {modeName}")
-                                fill_row_button.click(fn=fillAxis, inputs=[row_mode], outputs=[row_value])
-                                def onAxisChange(modeName, outFile):
-                                    mode = core.validModes.get(cleanName(modeName))
-                                    buttonUpdate = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
-                                    outFileUpdate = gr.Textbox.update() if outFile != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}")
-                                    return [buttonUpdate, outFileUpdate]
-                                row_mode.change(fn=onAxisChange, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path])
-                                manualAxes += list([row_mode, row_value])
-            
+                        axisCount = 0
+                        for group in range(0, 4):
+                            groupObj = gr.Group(visible=group == 0)
+                            with groupObj:
+                                rows = list()
+                                for i in range(0, 4):
+                                    with gr.Row():
+                                        axisCount += 1
+                                        row_mode = gr.Dropdown(value="", label=f"Axis {axisCount} Mode", choices=[""] + [x.name for x in core.validModes.values()])
+                                        row_value = gr.Textbox(label=f"Axis {axisCount} Value", lines=1)
+                                        fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
+                                        def fillAxis(modeName):
+                                            mode = core.validModes.get(cleanName(modeName))
+                                            if mode is None:
+                                                return gr.update()
+                                            elif mode.type == "boolean":
+                                                return "true, false"
+                                            elif mode.valid_list is not None:
+                                                return ", ".join(list(mode.valid_list()))
+                                            raise RuntimeError(f"Can't fill axis for {modeName}")
+                                        fill_row_button.click(fn=fillAxis, inputs=[row_mode], outputs=[row_value])
+                                        def onAxisChange(modeName, outFile):
+                                            mode = core.validModes.get(cleanName(modeName))
+                                            buttonUpdate = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
+                                            outFileUpdate = gr.Textbox.update() if outFile != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}")
+                                            return [buttonUpdate, outFileUpdate]
+                                        row_mode.change(fn=onAxisChange, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path])
+                                        manualAxes += list([row_mode, row_value])
+                                        rows.append(row_mode)
+                                sets.append([groupObj, rows])
+        for group in range(0, 3):
+            row_mode = sets[group][1][3]
+            groupObj = sets[group + 1][0]
+            nextRows = sets[group + 1][1]
+            def makeVis(prior, r1, r2, r3, r4):
+                return gr.Group.update(visible=prior+r1+r2+r3+r4 != "")
+            row_mode.change(fn=makeVis, inputs=[row_mode] + nextRows, outputs=[groupObj])
+
         grid_file.change(
             fn=lambda x: {"visible": x == "Create in UI", "__type__": "update"},
             inputs=[grid_file],

@@ -80,7 +80,7 @@ Current overall project status (as of Feb 2023): **Works well, actively maintain
     - Leave file as `Create in UI`
     - Select `Axis 1 Mode` as whatever mode you want, like `Seed` or `Sampler`
     - In the `Axis 1 Value` box, you can type a comma-separated list like `1, 2, 3`, or a double-pipe separated list like `1girl, booru style, prompt || 1boy, has commas, so pipes avoid problems`
-    - Repeat for as many axes as you want. Leave the rest unchecked.
+    - Repeat for as many axes as you want. When you configure axis #4, it will automatically add 4 more rows of axes to fill in. Leave any extras empty.
     - Click your main `Generate` button and wait for it to finish.
     - When it's done, click the button labeled `Page will be at (Click me) outputs/...` to view the full page.
 

@@ -119,23 +119,37 @@ axes:
 ```
 
 - Names and descriptions can always be whatever you want, as HTML text.
-- **Settings supported for parameters**:
-    - Basic named input: `Sampler`
-    - Filename inputs: `Model`, `VAE`
-        - Note that `Model` and `VAE` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity.
-    - Text inputs: `Prompt`, `NegativePrompt`
-    - Special text input: `PromptReplace`
-        - Used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
-            - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
-            - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
-    - Common integer inputs: `Seed`, `Steps`, `Width`, `Height`, `ClipSkip`
-    - Less common integer inputs: `VarSeed`, `VarStrength`
-    - Special feature inputs: `RestoreFaces`, `CodeFormerWeight`
-        - `RestoreFaces` has multiple input formats: `true` to enable, `false` to disable, `GFPGan` to use GFPGan, `CodeFormer` to use CodeFormer
-    - Common decimal inputs: , `CFG Scale`, `Denoising` (for img2img only)
-    - Rarely relevant inputs: `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`
-    - Image saving related integer inputs: `OutWidth`, `OutHeight`
-        - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
+
+
+#### Settings supported for parameters
+
+| Name | Type | Example | Notes |
+| --- | --- | --- | ----------- |
+| `Sampler` | Named | `DDIM`, `euler`, ... | |
+| `Model` | Filename | `sd-v1-5` | Note that `Model` and `VAE` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity. |
+| `VAE` | Filename | `kl-f8-anime2` | See note on `Model` above |
+| `Prompt` | Text | `a cat` | |
+| `NegativePrompt` | Text | `gross, weird, bad` | |
+| `PromptReplace` | Text-Pair | `some_tag = new text here` | Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`.<br>Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.<br>If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same. |
+| `Seed` | Integer | `1`, `2`, `3`, ... | |
+| `Steps` | Integer | `20`, `50`, ... | |
+| `CFG Scale` | Decimal | `5`, `7.5`, `12`, ... | |
+| `Width` | Integer | `512`, `768`, ... | Initial generation width. |
+| `Height` | Integer | `512`, `768`, ... | Initial generation height. |
+| `OutWidth` | Integer | `512`, `768`, ... | What resolution to save the image as (if unspecified, uses `Width`). Useful to save filespace. |
+| `OutHeight` | Integer | `512`, `768`, ... | Refer to `OutWidth`. |
+| `ClipSkip` | Integer | `1`, `2` | Use `2` for NAI-like models, `1` for the rest. |
+| `VarSeed` | Integer | `0`, `1`, ... | Variation seed, use with `VarStrength`. |
+| `VarStrength` | Decimal | `0`, `0.5`, ..., `1` | Variation seed strength. |
+| `Restore Faces` | Named | `true`, `false`, `GFPGan`, `CodeFormer` | Limited to the given example inputs only. |
+| `CodeFormerWeight` | Decimal | `0`, `0.5`, ..., `1` | Only applicable if `RestoreFaces` is set to `CodeFormer`. |
+| `Denoising` | Decimal | `0`, `0.5`, ..., `1` | Denoising strength for img2img. |
+| `ETA` | Integer | `0`, `31337` | use `31337` to replicate NovelAI results, use `0` for anything else. Not very useful. |
+| `SigmaChurn` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `SigmaTmin` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `SigmaNoise` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+
 - All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.

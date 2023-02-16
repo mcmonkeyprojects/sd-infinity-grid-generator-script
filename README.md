@@ -171,7 +171,7 @@ axes:
 | `EnableHighresFix` | Boolean | `true`, `false` | Required for other HR settings to work. Defaults denoising strength to `0.75` if not specified. Only valid in txt2img. |
 | `HighresScale` | Decimal | `2`, `2.5`, ..., `16` | How much to scale by for HR fix. |
 | `HighresSteps` | Integer | `20`, `50`, ... | Secondary steps for HR fix. |
-| `HighrestUpscaler` | Named | `None`, `Latent`, ... | Upscaler mode to use prior to running Highres Fix. |
+| `HighresUpscaler` | Named | `None`, `Latent`, ... | Upscaler mode to use prior to running Highres Fix. |
 | `HighresResizeWidth` | Integer | `512`, `768`, ... | Resolution to target as final output size for Highres Fix, overrides `HighresScale`. |
 | `HighresResizeHeight` | Integer | `512`, `768`, ... | See `HighresResizeWidth` above. |
 | `HighresUpscaleToWidth` | Integer | `512`, `768`, ... | Resolution to upscale to prior to running Highres Fix. |

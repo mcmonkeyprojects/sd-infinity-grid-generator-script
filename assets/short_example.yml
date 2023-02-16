@@ -1,4 +1,6 @@
 # This is a YAML file, so all content must be configured per YAML specification.
+
+# If you link YAML validators and have the VS Code "YAML" extension or similar, you can have the below line to use the (very imperfect and shifty) JSON Schema activated (not recommended for most users, it sucks).
 # yaml-language-server: $schema=grid.schema.json
 
 # This short_example.yml file will generate 540 images in total. On a decent graphics card (eg RTX 30xx) with SD 1.5, expect 10-20 minutes to run.

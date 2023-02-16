@@ -1,6 +1,4 @@
 # This is the file that is used to generate https://sd.mcmonkey.org/megagrid/
-# yaml-language-server: $schema=grid.schema.json
-
 
 grid:
     title: Educational MegaGrid

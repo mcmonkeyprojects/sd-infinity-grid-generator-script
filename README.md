@@ -120,16 +120,25 @@ axes:
 
 - Names and descriptions can always be whatever you want, as HTML text.
 - **Settings supported for parameters**:
-    - `Sampler`, `Seed`, `Steps`, `CFGscale`, `Model`, `VAE`, `Width`, `Height`, `Prompt`, `NegativePrompt`, `VarSeed`, `VarStrength`, `ClipSkip`, `Denoising`, `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`, `OutWidth`, `OutHeight`, `RestoreFaces`, `CodeFormerWeight`, `PromptReplace`
-    - All names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
+    - Basic named input: `Sampler`
+    - Filename inputs: `Model`, `VAE`
+        - Note that `Model` and `VAE` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity.
+    - Text inputs: `Prompt`, `NegativePrompt`
+    - Special text input: `PromptReplace`
+        - Used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
+            - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
+            - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
+    - Common integer inputs: `Seed`, `Steps`, `Width`, `Height`, `ClipSkip`
+    - Less common integer inputs: `VarSeed`, `VarStrength`
+    - Special feature inputs: `RestoreFaces`, `CodeFormerWeight`
+        - `RestoreFaces` has multiple input formats: `true` to enable, `false` to disable, `GFPGan` to use GFPGan, `CodeFormer` to use CodeFormer
+    - Common decimal inputs: , `CFG Scale`, `Denoising` (for img2img only)
+    - Rarely relevant inputs: `ETA`, `SigmaChurn`, `SigmaTmin`, `SigmaTmax`, `SigmaNoise`
+    - Image saving related integer inputs: `OutWidth`, `OutHeight`
+        - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
+- All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.
     - Inputs have error checking at the start, to avoid the risk of it working fine until 3 hours into a very big grid run.
-    - `OutWidth`/`OutHeight` are optional, and if specified, will rescale images to a specific size when saving. This is useful to save filespace by outputting to a smaller res.
-    - `PromptReplace` can be used like `PromptReplace: some_tag = new text here`. Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`
-        - Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.
-        - If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same.
-    - Note that `Model` and `VAE` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity.
-    - `RestoreFaces` has multiple input formats: `true` to enable, `false` to disable, `GFPGan` to use GFPGan, `CodeFormer` to use CodeFormer
 - Note that it will be processed from bottom to top
     - so if you have  first `samplers` DDIM and Euler, then `steps` 20 and 10, then `seeds` 1 and 2, it will go in this order:
         - Sampler=DDIM, Steps=20, Seed=1

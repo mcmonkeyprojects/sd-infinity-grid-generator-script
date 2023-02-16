@@ -50,7 +50,7 @@ Here's a very small web demo you can try to test how the output looks and works:
 
 ### Status
 
-Current overall project status: **Works well, actively maintained**. Has been tested by me, and has gotten some testing and feedback from the community. Could benefit from web design improvement (might need to find somebody with experience in this to help, I'm a programmer not a designer).
+Current overall project status (as of Feb 2023): **Works well, actively maintained**. Has been generally well tested.
 
 --------------
 
@@ -95,6 +95,9 @@ Usage comes in three main steps:
     - It can optionally also have `params` to specify any default parameters.
 - The file can optionally have key `variables` with subkey/value pairs as replacements, for example `(type): waffle` - then later in a param value you can use `a picture of a (type)` to automatically fill the variable. These can be in any format you desire, as they are simple text replacements. They apply to all values, including titles, descriptions, and params (this was added for [valconius in issue #16](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/16)).
 - The file must have key `axes` to define the list of axes. This is a map-list key - meaning, add subkeys to create a list of each axis.
+    - The simplest format for an axis is a setting name as the key and a comma-separated list of values inside.
+        - For example, `seed: 1, 2, 3` is a valid and complete axis.
+        - If commas may be problematic, you many instead use two pipes `||` to separate values - for example `prompt: 1girl, booru style, commas || 1boy, more commas, etc`. If `||` is used, commas will be ignored for splitting
     - Each axis must have a `title`, and `values`. It can optionally have a `description`.
         - You can also optionally have `default: (value_id)` to set the default selected tab.
         - There are two ways to do a value in the value list:
@@ -111,10 +114,8 @@ grid:
     description: This is just to show core format. View the example `.yml` files in assets for better examples.
     format: jpg
 axes:
-    1:
-        title: Sampler
-        values:
-            1: sampler=Euler
+    sampler: Euler, DDIM
+    seed: 1, 2, 3
 ```
 
 - Names and descriptions can always be whatever you want, as HTML text.

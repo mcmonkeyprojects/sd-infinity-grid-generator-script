@@ -4,7 +4,7 @@
 # Author: Alex 'mcmonkey' Goodwin
 # GitHub URL: https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script
 # Created: 2022/12/08
-# Last updated: 2023/01/26
+# Last updated: 2023/02/16
 #
 # For usage help, view the README.md file in the extension root, or via the GitHub page.
 #
@@ -18,7 +18,7 @@ import json
 import shutil
 import math
 from copy import copy
-from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, extensions
+from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing
 from modules.processing import process_images, Processed
 from modules.shared import opts
 
@@ -341,19 +341,32 @@ class Axis:
     def __init__(self, grid, id, obj):
         self.values = list()
         self.id = str(id).lower()
-        self.title = grid.procVariables(obj.get("title"))
-        self.default = grid.procVariables(obj.get("default"))
-        if self.title is None:
-            raise RuntimeError("missing title")
-        self.description = grid.procVariables(obj.get("description"))
-        valuesObj = obj.get("values")
-        if valuesObj is None:
-            raise RuntimeError("missing values")
-        for key, val in valuesObj.items():
-            try:
-                self.values.append(AxisValue(self, grid, key, val))
-            except Exception as e:
-                raise RuntimeError(f"value '{key}' errored: {e}")
+        if isinstance(obj, str):
+            self.title = id
+            self.default = None
+            self.description = ""
+            valueList = obj.split("||" if "||" in obj else ",")
+            index = 0
+            for val in valueList:
+                try:
+                    index += 1
+                    self.values.append(AxisValue(self, grid, str(index), id + "=" + val))
+                except Exception as e:
+                    raise RuntimeError(f"value '{val}' errored: {e}")
+        else:
+            self.title = grid.procVariables(obj.get("title"))
+            self.default = grid.procVariables(obj.get("default"))
+            if self.title is None:
+                raise RuntimeError("missing title")
+            self.description = grid.procVariables(obj.get("description"))
+            valuesObj = obj.get("values")
+            if valuesObj is None:
+                raise RuntimeError("missing values")
+            for key, val in valuesObj.items():
+                try:
+                    self.values.append(AxisValue(self, grid, key, val))
+                except Exception as e:
+                    raise RuntimeError(f"value '{key}' errored: {e}")
 
 class GridFileHelper:
     def procVariables(self, text):
@@ -389,7 +402,7 @@ class GridFileHelper:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")
         for id, axisObj in axesObj.items():
             try:
-                self.axes.append(Axis(self, id, fixDict(axisObj)))
+                self.axes.append(Axis(self, id, axisObj if isinstance(axisObj, str) else fixDict(axisObj)))
             except Exception as e:
                 raise RuntimeError(f"Invalid axis '{id}': errored: {e}")
         totalCount = 1

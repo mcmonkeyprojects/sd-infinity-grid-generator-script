@@ -88,17 +88,19 @@ class GridSettingMode:
     'dry' is True if the mode should be processed in dry runs, or False if it should be skipped.
     'type' is 'text', 'integer', 'decimal', or 'boolean'
     'apply' is a function to call taking (passthroughObject, value)
-    'min' is for integer/decimal type, the minimum value
-    'max' is for integer/decimal type, the maximum value
+    'min' is for integer/decimal type, optional minimum value
+    'max' is for integer/decimal type, optional maximum value
     'clean' is an optional function to call that takes (passthroughObject, value) and returns a cleaned copy of the value, or raises an error if invalid
+    'valid_list' is for text type, an optional lambda that returns a list of valid values
     """
-    def __init__(self, dry: bool, type: str, apply: callable, min: float = None, max: float = None, clean: callable = None):
+    def __init__(self, dry: bool, type: str, apply: callable, min: float = None, max: float = None, valid_list: callable = None, clean: callable = None):
         self.dry = dry
         self.type = type
         self.apply = apply
         self.min = min
         self.max = max
         self.clean = clean
+        self.valid_list = valid_list
 
 def registerMode(name: str, mode: GridSettingMode):
     mode.name = name
@@ -131,6 +133,7 @@ def validateSingleParam(p: str, v):
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
         if max is not None and vInt > max:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+        v = vInt
     elif modeType == "decimal":
         vFloat = float(v)
         if vFloat is None:
@@ -141,13 +144,20 @@ def validateSingleParam(p: str, v):
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
         if max is not None and vFloat > max:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+        v = vFloat
     elif modeType == "boolean":
         vClean = str(v).lower().strip()
         if vClean == "true":
-            return True
+            v = True
         elif vClean == "false":
-            return False
-        raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
+            v = False
+        else:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
+    elif modeType == "text" and mode.valid_list is not None:
+        validList = mode.valid_list()
+        v = getBestInList(cleanName(v), validList)
+        if v is None:
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': not matched to any entry in list {list(validList)}")
     if mode.clean is not None:
         return mode.clean(p, v)
     return v
@@ -165,7 +175,7 @@ class AxisValue:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': not expected format")
             halves[0] = grid.procVariables(halves[0])
             halves[1] = grid.procVariables(halves[1])
-            validateSingleParam(halves[0], halves[1])
+            halves[1] = validateSingleParam(halves[0], halves[1])
             self.title = halves[1]
             self.params = { cleanName(halves[0]): halves[1] }
             self.description = None

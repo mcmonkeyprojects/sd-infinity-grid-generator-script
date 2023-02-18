@@ -356,7 +356,7 @@ class Script(scripts.Script):
             def makeVis(prior, r1, r2, r3, r4):
                 return gr.Group.update(visible=prior+r1+r2+r3+r4 != "")
             row_mode.change(fn=makeVis, inputs=[row_mode] + nextRows, outputs=[groupObj])
-
+        gr.HTML('<span style="opacity:0.5;">(More input rows will be automatically added after you select modes above.)</span>')
         grid_file.change(
             fn=lambda x: {"visible": x == "Create in UI", "__type__": "update"},
             inputs=[grid_file],

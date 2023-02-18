@@ -114,6 +114,9 @@ Usage comes in three main steps:
     - The simplest format for an axis is a setting name as the key and a comma-separated list of values inside.
         - For example, `seed: 1, 2, 3` is a valid and complete axis.
         - If commas may be problematic, you many instead use two pipes `||` to separate values - for example `prompt: 1girl, booru style, commas || 1boy, more commas, etc`. If `||` is used, commas will be ignored for splitting
+        - For numeric inputs, you can use ellipses notation to quickly shorthand long lists. For example: `seed: 1, 2, ..., 10` automatically fills to `1, 2, 3, 4, 5, 6, 7, 8, 9, 10`. Or, `cfg scale: 7.0, 7.1, ..., 7.8` automatically fills to `7.0, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8`.
+            - Note that you must have two entries before and one after - the step rate is defined as the space between the two prior and the total range is defined as between the one prior and the one after.
+            - You can use ellipses multiple times in one set, for example `1, 2, ..., 6, 8, ... 14` will fill to `1, 2, 3, 4, 5, 6, 8, 10, 12, 14` (note how 1-6 are spaced 1 apart, but 6-14 are spaced two apart).
     - Each axis must have a `title`, and `values`. It can optionally have a `description`.
         - You can also optionally have `default: (value_id)` to set the default selected tab.
         - There are two ways to do a value in the value list:

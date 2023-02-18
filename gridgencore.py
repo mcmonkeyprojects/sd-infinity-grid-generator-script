@@ -80,6 +80,26 @@ def fixNum(num):
         return None
     return num
 
+def expandNumericListRanges(inList, numType):
+    outList = list()
+    for i in range(0, len(inList)):
+        rawVal = str(inList[i]).strip()
+        if rawVal in ["..", "...", "...."]:
+            if i < 2 or i + 1 >= len(inList):
+                raise RuntimeError(f"Cannot use ellipses notation at index {i}/{len(inList)} - must have at least 2 values before and 1 after.")
+            prior = outList[-1]
+            doublePrior = outList[-2]
+            after = numType(inList[i + 1])
+            step = prior - doublePrior
+            if (step < 0) != ((after - prior) < 0):
+                raise RuntimeError(f"Ellipses notation failed for step {step} between {prior} and {after} - steps backwards.")
+            count = int((after - prior) / step)
+            for x in range(1, count):
+                outList.append(prior + x * step)
+        else:
+            outList.append(numType(rawVal))
+    return outList
+
 ######################### Value Modes #########################
 
 class GridSettingMode:
@@ -121,7 +141,7 @@ def validateSingleParam(p: str, v):
     p = cleanName(p)
     mode = validModes.get(p)
     if mode is None:
-        raise RuntimeError(f"Invalid grid default parameter '{p}': unknown mode")
+        raise RuntimeError(f"Invalid grid parameter '{p}': unknown mode")
     modeType = mode.type
     if modeType == "integer":
         vInt = int(v)
@@ -205,11 +225,18 @@ class Axis:
             self.default = None
             self.description = ""
             valueList = obj.split("||" if "||" in obj else ",")
+            mode = validModes.get(cleanName(str(id)))
+            if mode is None:
+                raise RuntimeError(f"Invalid axis '{mode}': unknown mode")
+            if mode.type == "integer":
+                valueList = expandNumericListRanges(valueList, int)
+            elif mode.type == "decimal":
+                valueList = expandNumericListRanges(valueList, float)
             index = 0
             for val in valueList:
                 try:
                     index += 1
-                    self.values.append(AxisValue(self, grid, str(index), id + "=" + val.strip()))
+                    self.values.append(AxisValue(self, grid, str(index), id + "=" + str(val).strip()))
                 except Exception as e:
                     raise RuntimeError(f"value '{val}' errored: {e}")
         else:
@@ -500,7 +527,10 @@ def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFold
         for i in range(0, int(len(manualPairs) / 2)):
             key = manualPairs[i * 2]
             if isinstance(key, str) and key != "":
-                grid.axes.append(Axis(grid, key, manualPairs[i * 2 + 1]))
+                try:
+                    grid.axes.append(Axis(grid, key, manualPairs[i * 2 + 1]))
+                except Exception as e:
+                    raise RuntimeError(f"Invalid axis {(i + 1)} '{key}': errored: {e}")
     # Now start using it
     if outputFolderName.strip() == "":
         outputFolderName = inputFile.replace(".yml", "")

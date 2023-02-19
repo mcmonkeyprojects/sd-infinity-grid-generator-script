@@ -148,37 +148,37 @@ axes:
 | `Model` | Filename | `sd-v1-5` | Note that `Model` and `VAE` are **global settings**, and as such you should not have an axis where some values specify one of those params but others don't, as this will cause an unpredictable model selection for the values that lack specificity. |
 | `VAE` | Filename | `kl-f8-anime2` | See note on `Model` above |
 | `Prompt` | Text | `a cat` | |
-| `NegativePrompt` | Text | `gross, weird, bad` | |
-| `PromptReplace` | Text-Pair | `some_tag = new text here` | Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`.<br>Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.<br>If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same. |
+| `Negative Prompt` | Text | `gross, weird, bad` | |
+| `Prompt Replace` | Text-Pair | `some_tag = new text here` | Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`.<br>Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.<br>If you want multiple replacements in one value, you can just do `PromptReplace` and `Prompt Replace` and `Prompt    Replace` and etc. as they are all parsed the same. |
 | `Seed` | Integer | `1`, `2`, `3`, ... | |
 | `Steps` | Integer | `20`, `50`, ... | |
 | `CFG Scale` | Decimal | `5`, `7.5`, `12`, ... | |
 | `Width` | Integer | `512`, `768`, ... | Initial generation width. |
 | `Height` | Integer | `512`, `768`, ... | Initial generation height. |
-| `OutWidth` | Integer | `512`, `768`, ... | What resolution to save the image as (if unspecified, uses `Width`). Useful to save filespace. |
-| `OutHeight` | Integer | `512`, `768`, ... | Refer to `OutWidth`. |
-| `ClipSkip` | Integer | `1`, `2` | Use `2` for NAI-like models, `1` for the rest. |
-| `VarSeed` | Integer | `0`, `1`, ... | Variation seed, use with `VarStrength`. |
-| `VarStrength` | Decimal | `0`, `0.5`, ..., `1` | Variation seed strength. |
+| `Out Width` | Integer | `512`, `768`, ... | What resolution to save the image as (if unspecified, uses `Width`). Useful to save filespace. |
+| `Out Height` | Integer | `512`, `768`, ... | Refer to `Out Width`. |
+| `Clip Skip` | Integer | `1`, `2` | Use `2` for NAI-like models, `1` for the rest. |
+| `Var Seed` | Integer | `0`, `1`, ... | Variation seed, use with `Var Strength`. |
+| `Var Strength` | Decimal | `0`, `0.5`, ..., `1` | Variation seed strength. |
 | `Restore Faces` | Named | `true`, `false`, `GFPGan`, `CodeFormer` | Limited to the given example inputs only. |
-| `CodeFormerWeight` | Decimal | `0`, `0.5`, ..., `1` | Only applicable if `RestoreFaces` is set to `CodeFormer`. |
+| `CodeFormer Weight` | Decimal | `0`, `0.5`, ..., `1` | Only applicable if `Restore Faces` is set to `CodeFormer`. |
 | `Denoising` | Decimal | `0`, `0.5`, ..., `1` | Denoising strength for img2img or HR fix. |
 | `ETA` | Decimal | `0`, `0.5`, ..., `1` | ? |
-| `ETANoiseSeedDelta` | Integer |  `0`, `31337` | use `31337` to replicate NovelAI results, use `0` for anything else. Not very useful. |
-| `SigmaChurn` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
-| `SigmaTmin` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
-| `SigmaTmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
-| `SigmaNoise` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `ETA Noise Seed Delta` | Integer |  `0`, `31337` | use `31337` to replicate NovelAI results, use `0` for anything else. Not very useful. |
+| `Sigma Churn` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `Sigma Tmin` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `Sigma Tmax` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
+| `Sigma Noise` | Decimal | `0`, `0.5`, ..., `1` | Sampler parameter, rarely used. |
 | `Tiling` | Boolean | `true`, `false` | Useful for textures. |
-| `ImageMaskWeight` | Decimal | `0`, `0.5`, ..., `1` | Conditional image mask weight. Only applies to img2img or HR fix. |
-| `EnableHighresFix` | Boolean | `true`, `false` | Required for other HR settings to work. Defaults denoising strength to `0.75` if not specified. Only valid in txt2img. |
-| `HighresScale` | Decimal | `2`, `2.5`, ..., `16` | How much to scale by for HR fix. |
-| `HighresSteps` | Integer | `20`, `50`, ... | Secondary steps for HR fix. |
-| `HighresUpscaler` | Named | `None`, `Latent`, ... | Upscaler mode to use prior to running Highres Fix. |
-| `HighresResizeWidth` | Integer | `512`, `768`, ... | Resolution to target as final output size for Highres Fix, overrides `HighresScale`. |
-| `HighresResizeHeight` | Integer | `512`, `768`, ... | See `HighresResizeWidth` above. |
-| `HighresUpscaleToWidth` | Integer | `512`, `768`, ... | Resolution to upscale to prior to running Highres Fix. |
-| `HighresUpscaleToHeight` | Integer | `512`, `768`, ... | See `HighresUpscaleToHeight` above. |
+| `Image Mask Weight` | Decimal | `0`, `0.5`, ..., `1` | Conditional image mask weight. Only applies to img2img or HR fix. |
+| `Enable Highres Fix` | Boolean | `true`, `false` | Required for other HR settings to work. Defaults denoising strength to `0.75` if not specified. Only valid in txt2img. |
+| `Highres Scale` | Decimal | `2`, `2.5`, ..., `16` | How much to scale by for HR fix. |
+| `Highres Steps` | Integer | `20`, `50`, ... | Secondary steps for HR fix. |
+| `Highres Upscaler` | Named | `None`, `Latent`, ... | Upscaler mode to use prior to running Highres Fix. |
+| `Highres Resize Width` | Integer | `512`, `768`, ... | Resolution to target as final output size for Highres Fix, overrides `Highres Scale`. |
+| `Highres Resize Height` | Integer | `512`, `768`, ... | See `Highres Resize Width` above. |
+| `Highres Upscale To Width` | Integer | `512`, `768`, ... | Resolution to upscale to prior to running Highres Fix. |
+| `Highres Upscale To Height` | Integer | `512`, `768`, ... | See `Highres Upscale To Height` above. |
 | `Image CFG Scale` | Decimal | `5`, `7.5`, `12`, ... | Image CFG Scale, for Instruct pix2pix usage. |
 
 - All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.

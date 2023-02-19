@@ -5,7 +5,7 @@
  *
  * GitHub URL: https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script
  * Created: 2022/12/08
- * Last updated: 2022/12/08
+ * Last updated: 2023/02/19
  *
  * For usage help, view the README.md file in the extension root, or via the GitHub page.
  *
@@ -22,6 +22,11 @@ new_titles = {
     "Publish full generation metadata for viewing on-page": "If checked, any/all image metadata will be stored in the webpage's files, and the internal values of each axis. This is useful for viewing, but if you're sharing a generation where some details are private (eg exact prompt text) you'll want to uncheck this. Note that this doesn't change whether metadata gets stored in images or not, edit your Settings tab to configure that.",
     "Use more-performant skipping": "Only matters if you have 'skip: true' on any values - if checked, uses a method of skipping that improves performance but prevents validation of the skipped options.",
     "Validate PromptReplace input": "If unchecked, will allow useless PromptReplace settings to be ignored. If checked, will error if the replace won't do anything."
+}
+
+for (var i = 1; i <= 16; i++) {
+    new_titles[`Axis ${i} Mode`] = "Select the desired mode / setting - ie what value it is that should be changing, for this axis. You have as many axes as you need, just select modes and more will be added as you go.";
+    new_titles[`Axis ${i} Value`] = "Fill in values applicable to the mode, separated by commas. If it's a numeric mode, you can do for example '1, 2, 3'.";
 }
 
 ex_titles = Object.assign({}, ex_titles, new_titles);

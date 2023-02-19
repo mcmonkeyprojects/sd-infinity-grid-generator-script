@@ -152,6 +152,7 @@ def tryInit():
     registerMode("HighRes Upscale to Width", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_x")))
     registerMode("HighRes Upscale to Weight", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_y")))
     registerMode("HighRes Upscaler", GridSettingMode(dry=True, type="text", apply=applyField("hr_upscaler"), valid_list=lambda: list(map(lambda u: u.name, shared.sd_upscalers)) + list(shared.latent_upscale_modes.keys())))
+    registerMode("Image CFG Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("image_cfg_scale")))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:

@@ -183,6 +183,7 @@ axes:
 | `Highres Upscale To Width` | Integer | `512`, `768`, ... | Resolution to upscale to prior to running Highres Fix. |
 | `Highres Upscale To Height` | Integer | `512`, `768`, ... | See `Highres Upscale To Height` above. |
 | `Image CFG Scale` | Decimal | `5`, `7.5`, `12`, ... | Image CFG Scale, for Instruct pix2pix usage. |
+| `Use Result Index` | Integer | `0`, `1`, ... | Special trick to get a non-zero result image index, eg for ControlNet secondary output image. |
 
 - All setting names are **case insensitive and spacing insensitive**. That means `CFG scale`, `cfgscale`, `CFGSCALE`, etc. are all read as the same.
     - Inputs where possible also similarly insensitive, including model names.

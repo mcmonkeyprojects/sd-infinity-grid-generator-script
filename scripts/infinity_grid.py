@@ -13,11 +13,13 @@
 
 import gradio as gr
 import os
+import numpy
 from copy import copy
 from datetime import datetime
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, ui_components
 from modules.processing import process_images, Processed
 from modules.shared import opts
+from PIL import Image
 import gridgencore as core
 from gridgencore import cleanName, getBestInList, chooseBetterFileName, GridSettingMode, fixNum, applyField, registerMode
 
@@ -153,6 +155,7 @@ def tryInit():
     registerMode("HighRes Upscale to Weight", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_y")))
     registerMode("HighRes Upscaler", GridSettingMode(dry=True, type="text", apply=applyField("hr_upscaler"), valid_list=lambda: list(map(lambda u: u.name, shared.sd_upscalers)) + list(shared.latent_upscale_modes.keys())))
     registerMode("Image CFG Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("image_cfg_scale")))
+    registerMode("Use Result Index", GridSettingMode(dry=True, type="integer", min=0, max=500, apply=applyField("inf_grid_use_result_index")))
     try:
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:
@@ -223,10 +226,17 @@ def a1111GridRunnerPostDryHook(gridRunner, p, set):
     if len(processed.images) < 1:
         raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
     os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
+    resultIndex = getattr(p, 'inf_grid_use_result_index', 0)
+    if resultIndex >= len(processed.images):
+        resultIndex = len(processed.images) - 1
+    img = processed.images[resultIndex]
+    if type(img) == numpy.ndarray:
+        img = Image.fromarray(img)
     if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
-        processed.images[0] = processed.images[0].resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
+        img = img.resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
+    processed.images[resultIndex] = img
     info = processing.create_infotext(p, [p.prompt], [p.seed], [p.subseed], [])
-    images.save_image(processed.images[0], path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=gridRunner.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
+    images.save_image(img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=gridRunner.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
     opts.CLIP_stop_at_last_layers = gridRunner.temp.oldClipSkip
     opts.code_former_weight = gridRunner.temp.oldCodeformerWeight
     opts.face_restoration_model = gridRunner.temp.oldFaceRestorer

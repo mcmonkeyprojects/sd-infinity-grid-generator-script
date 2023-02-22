@@ -230,7 +230,7 @@ class Axis:
         for val in valueList:
             try:
                 index += 1
-                self.values.append(AxisValue(self, grid, str(index), id + "=" + str(val).strip()))
+                self.values.append(AxisValue(self, grid, str(index), f"{id}={str(val).strip()}"))
             except Exception as e:
                 raise RuntimeError(f"value '{val}' errored: {e}")
 

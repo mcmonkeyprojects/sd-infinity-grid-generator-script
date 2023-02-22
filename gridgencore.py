@@ -217,6 +217,23 @@ class AxisValue:
         return self.__str__()
 
 class Axis:
+    def buildFromListStr(self, id, grid, listStr):
+        valueList = listStr.split("||" if "||" in listStr else ",")
+        mode = validModes.get(cleanName(str(id)))
+        if mode is None:
+            raise RuntimeError(f"Invalid axis '{mode}': unknown mode")
+        if mode.type == "integer":
+            valueList = expandNumericListRanges(valueList, int)
+        elif mode.type == "decimal":
+            valueList = expandNumericListRanges(valueList, float)
+        index = 0
+        for val in valueList:
+            try:
+                index += 1
+                self.values.append(AxisValue(self, grid, str(index), id + "=" + str(val).strip()))
+            except Exception as e:
+                raise RuntimeError(f"value '{val}' errored: {e}")
+
     def __init__(self, grid, id: str, obj):
         self.values = list()
         self.id = str(id).lower()
@@ -224,21 +241,7 @@ class Axis:
             self.title = id
             self.default = None
             self.description = ""
-            valueList = obj.split("||" if "||" in obj else ",")
-            mode = validModes.get(cleanName(str(id)))
-            if mode is None:
-                raise RuntimeError(f"Invalid axis '{mode}': unknown mode")
-            if mode.type == "integer":
-                valueList = expandNumericListRanges(valueList, int)
-            elif mode.type == "decimal":
-                valueList = expandNumericListRanges(valueList, float)
-            index = 0
-            for val in valueList:
-                try:
-                    index += 1
-                    self.values.append(AxisValue(self, grid, str(index), id + "=" + str(val).strip()))
-                except Exception as e:
-                    raise RuntimeError(f"value '{val}' errored: {e}")
+            self.buildFromListStr(id, grid, obj)
         else:
             self.title = grid.procVariables(obj.get("title"))
             self.default = grid.procVariables(obj.get("default"))
@@ -248,11 +251,14 @@ class Axis:
             valuesObj = obj.get("values")
             if valuesObj is None:
                 raise RuntimeError("missing values")
-            for key, val in valuesObj.items():
-                try:
-                    self.values.append(AxisValue(self, grid, key, val))
-                except Exception as e:
-                    raise RuntimeError(f"value '{key}' errored: {e}")
+            elif isinstance(valuesObj, str):
+                self.buildFromListStr(id, grid, valuesObj)
+            else:
+                for key, val in valuesObj.items():
+                    try:
+                        self.values.append(AxisValue(self, grid, key, val))
+                    except Exception as e:
+                        raise RuntimeError(f"value '{key}' errored: {e}")
 
 class GridFileHelper:
     def procVariables(self, text):

@@ -166,6 +166,23 @@ def tryInit():
             registerMode("[DynamicThreshold] CFG Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_cfg_scale_min")))
             registerMode("[DynamicThreshold] Experiment Mode", GridSettingMode(dry=True, type="integer", min=0, max=100, apply=applyField("dynthres_experiment_mode")))
             registerMode("[DynamicThreshold] Power Value", GridSettingMode(dry=True, type="decimal", min=0, max=100, apply=applyField("dynthres_power_val")))
+        scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "controlnet.py"][:1]
+        if len(scriptList) == 1:
+            # Hacky but works
+            preprocessors_list = scriptList[0].script_class().preprocessor.keys()
+            module = scriptList[0].module
+            def validateParam(p, v):
+                if not shared.opts.data.get("control_net_allow_script_control", False):
+                    raise RuntimeError("ControlNet options cannot currently work, you must enable 'Allow other script to control this extension' in Settings -> ControlNet first")
+                return v
+            registerMode("[ControlNet] Enable", GridSettingMode(dry=True, type="boolean", apply=applyField("control_net_enabled"), clean=validateParam))
+            registerMode("[ControlNet] Preprocessor", GridSettingMode(dry=True, type="text", apply=applyField("control_net_module"), clean=validateParam, valid_list=lambda: list(preprocessors_list)))
+            registerMode("[ControlNet] Model", GridSettingMode(dry=True, type="text", apply=applyField("control_net_model"), clean=validateParam, valid_list=lambda: list(list(module.cn_models.keys()))))
+            registerMode("[ControlNet] Weight", GridSettingMode(dry=True, type="decimal", min=0.0, max=2.0, apply=applyField("control_net_weight"), clean=validateParam))
+            registerMode("[ControlNet] Guidance Strength", GridSettingMode(dry=True, type="decimal", min=0.0, max=1.0, apply=applyField("control_net_guidance_strength"), clean=validateParam))
+            registerMode("[ControlNet] Annotator Resolution", GridSettingMode(dry=True, type="integer", min=0, max=2048, apply=applyField("control_net_pres"), clean=validateParam))
+            registerMode("[ControlNet] Threshold A", GridSettingMode(dry=True, type="integer", min=0, max=256, apply=applyField("control_net_pthr_a"), clean=validateParam))
+            registerMode("[ControlNet] Threshold B", GridSettingMode(dry=True, type="integer", min=0, max=256, apply=applyField("control_net_pthr_b"), clean=validateParam))
     except ModuleNotFoundError as e:
         print(f"Infinity Grid Generator failed to import a dependency module: {e}")
         pass
@@ -203,7 +220,7 @@ def a1111GridRunnerPostDryHook(gridRunner, p, set):
     p.seed = processing.get_fixed_seed(p.seed)
     p.subseed = processing.get_fixed_seed(p.subseed)
     processed = process_images(p)
-    if len(processed.images) != 1:
+    if len(processed.images) < 1:
         raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
     os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
     if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):

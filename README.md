@@ -32,6 +32,7 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
     - [1: Grid Definition File](#1-grid-definition-file)
     - [Supported Extensions](#supported-extensions)
         - [Dynamic Thresholding (CFG Scale Fix)](#dynamic-thresholding-cfg-scale-fix)
+        - [ControlNet](#controlnet)
     - [2: Grid Content Generation via WebUI](#2-grid-content-generation-via-webui)
     - [3: Using The Output](#3-using-the-output)
     - [4: Expanding Later](#4-expanding-later)
@@ -216,6 +217,23 @@ Extension docs: <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
 | `DynamicThreshold Mimic Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
 | `DynamicThreshold CFG Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
 | `DynamicThreshold Power Value` | Decimal | `2`, `4`, ... | For `Power Up` mode only. |
+
+#### ControlNet
+
+Extension docs: <https://github.com/Mikubill/sd-webui-controlnet>
+
+Note: must enable `Allow other script to control this extension` in `Settings` -> `ControlNet`
+
+| Name | Type | Example | Notes |
+| --- | --- | --- | ----------- |
+| `ControlNet Enable` | Boolean | `true`, `false` | |
+| `ControlNet Preprocessor` | Named | `none`, `canny`, `depth`, `hed`, `mlsd`, `normal_map`, `openpose`, `openpose_hand`, `pidinet`, `scribble`, `fake_scribble`, `segmentation` | |
+| `ControlNet Model` | Named | `diff_control_sd15_canny_fp16`, ... | |
+| `ControlNet Weight` | Decimal | `0.0`, `0.5`, ..., `2.0` | |
+| `ControlNet Guidance Strength` | Decimal | `0.0`, `0.5`, ..., `1.0` | |
+| `ControlNet Annotator Resolution` | Integer | `64`, `512`, ..., `2048` | |
+| `ControlNet Threshold A` | Integer | `64`, `512`, ..., `256` | |
+| `ControlNet Threshold B` | Integer | `64`, `512`, ..., `256` | |
 
 #### Other Extensions
 

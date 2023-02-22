@@ -157,15 +157,15 @@ def tryInit():
         scriptList = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(scriptList) == 1:
             dynamic_thresholding = scriptList[0].module
-            registerMode("DynamicThreshold Enable", GridSettingMode(dry=True, type="boolean", apply=applyField("dynthres_enabled")))
-            registerMode("DynamicThreshold Mimic Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("dynthres_mimic_scale")))
-            registerMode("DynamicThreshold Threshold Percentile", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_threshold_percentile")))
-            registerMode("DynamicThreshold Mimic Mode", GridSettingMode(dry=True, type="text", apply=applyField("dynthres_mimic_mode"), valid_list=lambda: list(dynamic_thresholding.VALID_MODES)))
-            registerMode("DynamicThreshold CFG Mode", GridSettingMode(dry=True, type="text", apply=applyField("dynthres_cfg_mode"), valid_list=lambda: list(dynamic_thresholding.VALID_MODES)))
-            registerMode("DynamicThreshold Mimic Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_mimic_scale_min")))
-            registerMode("DynamicThreshold CFG Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_cfg_scale_min")))
-            registerMode("DynamicThreshold Experiment Mode", GridSettingMode(dry=True, type="integer", min=0, max=100, apply=applyField("dynthres_experiment_mode")))
-            registerMode("DynamicThreshold Power Value", GridSettingMode(dry=True, type="decimal", min=0, max=100, apply=applyField("dynthres_power_val")))
+            registerMode("[DynamicThreshold] Enable", GridSettingMode(dry=True, type="boolean", apply=applyField("dynthres_enabled")))
+            registerMode("[DynamicThreshold] Mimic Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("dynthres_mimic_scale")))
+            registerMode("[DynamicThreshold] Threshold Percentile", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_threshold_percentile")))
+            registerMode("[DynamicThreshold] Mimic Mode", GridSettingMode(dry=True, type="text", apply=applyField("dynthres_mimic_mode"), valid_list=lambda: list(dynamic_thresholding.VALID_MODES)))
+            registerMode("[DynamicThreshold] CFG Mode", GridSettingMode(dry=True, type="text", apply=applyField("dynthres_cfg_mode"), valid_list=lambda: list(dynamic_thresholding.VALID_MODES)))
+            registerMode("[DynamicThreshold] Mimic Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_mimic_scale_min")))
+            registerMode("[DynamicThreshold] CFG Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=applyField("dynthres_cfg_scale_min")))
+            registerMode("[DynamicThreshold] Experiment Mode", GridSettingMode(dry=True, type="integer", min=0, max=100, apply=applyField("dynthres_experiment_mode")))
+            registerMode("[DynamicThreshold] Power Value", GridSettingMode(dry=True, type="decimal", min=0, max=100, apply=applyField("dynthres_power_val")))
     except ModuleNotFoundError as e:
         print(f"Infinity Grid Generator failed to import a dependency module: {e}")
         pass

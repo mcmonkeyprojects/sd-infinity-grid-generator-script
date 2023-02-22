@@ -53,7 +53,7 @@ def cleanForWeb(text: str):
     return text.replace('"', '&quot;')
 
 def cleanName(name: str):
-    return str(name).lower().replace(' ', '').strip()
+    return str(name).lower().replace(' ', '').replace('[', '').replace(']', '').strip()
 
 def getBestInList(name: str, list: list):
     backup = None

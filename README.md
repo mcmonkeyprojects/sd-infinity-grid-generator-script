@@ -30,6 +30,8 @@ The disadvantage is that time to generate a grid is exponential - if you have 5 
 - [Basic Usage](#Basic-Usage)
 - [Advanced Usage](#Advanced-Usage)
     - [1: Grid Definition File](#1-grid-definition-file)
+    - [Supported Extensions](#supported-extensions)
+        - [Dynamic Thresholding (CFG Scale Fix)](#dynamic-thresholding-cfg-scale-fix)
     - [2: Grid Content Generation via WebUI](#2-grid-content-generation-via-webui)
     - [3: Using The Output](#3-using-the-output)
     - [4: Expanding Later](#4-expanding-later)
@@ -196,9 +198,11 @@ axes:
         - Sampler=Euler, Steps=10, Seed=2
     - So, things that take time to load, like `Model`, should be put near the top, so they don't have to be loaded repeatedly.
 
-#### Supported Extensions
+--------------
 
-##### Dynamic Thresholding (CFG Scale Fix)
+### Supported Extensions
+
+#### Dynamic Thresholding (CFG Scale Fix)
 
 Extension docs: <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
 
@@ -213,7 +217,7 @@ Extension docs: <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
 | `DynamicThreshold CFG Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
 | `DynamicThreshold Power Value` | Decimal | `2`, `4`, ... | For `Power Up` mode only. |
 
-##### Other Extensions
+#### Other Extensions
 
 - Any extension has the ability to add its own modes with the following code:
 ```py

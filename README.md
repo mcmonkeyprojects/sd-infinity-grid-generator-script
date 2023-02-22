@@ -197,8 +197,24 @@ axes:
     - So, things that take time to load, like `Model`, should be put near the top, so they don't have to be loaded repeatedly.
 
 #### Supported Extensions
-- Dynamic Thresholding (CFG Scale Fix): <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
-    - Adds options: `DynamicThresholdEnable` (bool: `true` or `false`), `DynamicThresholdMimicScale` (number), `DynamicThresholdThresholdPercentile` (number, 0-100), `DynamicThresholdMimicMode` (any of `Constant`, `Linear Down`, `Cosine Down`, `Half Cosine Down`, `Linear Up`, `Cosine Up`, `Half Cosine Up`, `Power Up`), `DynamicThresholdCfgMode` (same options as mimic mode), `DynamicThresholdMimicScaleMinimum` (number), `DynamicThresholdCfgScaleMinimum` (number), `DynamicThresholdPowerValue` (number)
+
+##### Dynamic Thresholding (CFG Scale Fix)
+
+Extension docs: <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
+
+| Name | Type | Example | Notes |
+| --- | --- | --- | ----------- |
+| `DynamicThreshold Enable` | Boolean | `true`, `false` | |
+| `DynamicThreshold Mimic Scale` | Decimal | `5`, `7.5`, `12`, ... | |
+| `DynamicThreshold Threshold Percentile` | Decimal | `0`, `0.5`, ..., `1.0` | |
+| `DynamicThreshold Mimic Mode` | Named | `Constant`, `Linear Down`, `Cosine Down`, `Half Cosine Down`, `Linear Up`, `Cosine Up`, `Half Cosine Up`, `Power Up` | |
+| `DynamicThreshold CFG Mode` | Named | `Constant`, `Linear Down`, `Cosine Down`, `Half Cosine Down`, `Linear Up`, `Cosine Up`, `Half Cosine Up`, `Power Up` | |
+| `DynamicThreshold Mimic Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
+| `DynamicThreshold CFG Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
+| `DynamicThreshold Power Value` | Decimal | `2`, `4`, ... | For `Power Up` mode only. |
+
+##### Other Extensions
+
 - Any extension has the ability to add its own modes with the following code:
 ```py
 # Verify grid extension is present

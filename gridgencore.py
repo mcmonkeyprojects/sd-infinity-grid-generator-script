@@ -6,6 +6,7 @@ import yaml
 import json
 import shutil
 import math
+import re
 from copy import copy
 
 ######################### Core Variables #########################
@@ -51,6 +52,9 @@ def cleanForWeb(text: str):
     if type(text) is not str:
         raise RuntimeError(f"Value '{text}' is supposed to be text but isn't (it's a datamapping, list, or some other incorrect format). Did you typo the formatting?")
     return text.replace('"', '&quot;')
+
+def cleanId(id: str):
+    return re.sub("[^a-z0-9]", "_", id.lower().strip())
 
 def cleanName(name: str):
     return str(name).lower().replace(' ', '').replace('[', '').replace(']', '').strip()
@@ -187,7 +191,9 @@ def validateSingleParam(p: str, v):
 class AxisValue:
     def __init__(self, axis, grid, key: str, val):
         self.axis = axis
-        self.key = str(key).lower()
+        self.key = cleanId(str(key))
+        if any(x.key == self.key for x in axis.values):
+            self.key += f"__{len(axis.values)}"
         self.params = list()
         if isinstance(val, str):
             halves = val.split('=', maxsplit=1)
@@ -236,7 +242,9 @@ class Axis:
 
     def __init__(self, grid, id: str, obj):
         self.values = list()
-        self.id = str(id).lower()
+        self.id = cleanId(str(id))
+        if any(x.id == self.id for x in grid.axes):
+            self.id += f"__{len(grid.axes)}"
         if isinstance(obj, str):
             self.title = id
             self.default = None

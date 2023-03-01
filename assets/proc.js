@@ -24,7 +24,6 @@ function loadData() {
         for (var label of ['x2_none', 'y2_none']) {
             document.getElementById(label).addEventListener('click', fillTable);
         }
-        console.log(document.getElementById('x_' + axis.id))
     }
     console.log("Loaded data for '" + rawData.title + "'");
     document.getElementById('autoScaleImages').addEventListener('change', updateScaling);

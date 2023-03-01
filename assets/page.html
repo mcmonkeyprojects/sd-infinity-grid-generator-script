@@ -12,6 +12,11 @@
         padding-right: 16px;
         padding-left: 16px;
     }
+    .sel_table
+    {
+        min-width: 60em;
+        width: 100%;
+    }
     .secondary
     {
         background-color: #202020;
@@ -22,14 +27,13 @@
     }
     .axis_table_cell
     {
-        max-width: 40em;
-        min-width: 10em;
+        width: calc(min(40em, max(10em, 100vw - 40em)));
         max-height: 8em;
         overflow: auto;
     }
     .tabval_subdiv
     {
-        max-width: calc(95vw - 40em);
+        min-width: calc(100vw - 5em - min(40em, max(10em, 100vw - 40em)));
         max-height: 8em;
         overflow: auto;
     }

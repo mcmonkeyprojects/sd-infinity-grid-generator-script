@@ -120,7 +120,7 @@ def tryInit():
     core.gridRunnerRunPostDryHook = a1111GridRunnerPostDryHook
     core.webDataGetBaseParamData = a1111WebDataGetBaseParamData
     registerMode("Model", GridSettingMode(dry=False, type="text", apply=applyModel, clean=cleanModel, valid_list=lambda: list(map(lambda m: m.title, sd_models.checkpoints_list.values()))))
-    registerMode("VAE", GridSettingMode(dry=False, type="text", apply=applyVae, clean=cleanVae, valid_list=lambda: list(sd_vae.vae_dict.keys())))
+    registerMode("VAE", GridSettingMode(dry=False, type="text", apply=applyVae, clean=cleanVae, valid_list=lambda: list(sd_vae.vae_dict.keys()) + ['none', 'auto', 'automatic']))
     registerMode("Sampler", GridSettingMode(dry=True, type="text", apply=applyField("sampler_name"), valid_list=lambda: list(sd_samplers.all_samplers_map.keys())))
     registerMode("Seed", GridSettingMode(dry=True, type="integer", apply=applyField("seed")))
     registerMode("Steps", GridSettingMode(dry=True, type="integer", min=0, max=200, apply=applyField("steps")))

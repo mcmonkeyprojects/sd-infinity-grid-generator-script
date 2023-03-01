@@ -462,7 +462,10 @@ class WebDataBuilder():
                 trClass = "primary" if primary else "secondary"
                 content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n'
                 advancedSettings += f'\n<h4>{axis.title}</h4><div class="timer_box">Auto cycle every <input style="width:30em;" autocomplete="off" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>\nShow value: '
-                content += f'<div class="axis_table_cell">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
+                axisClass = "axis_table_cell"
+                if len(axisDescrip.strip()) == 0:
+                    axisClass += " emptytab"
+                content += f'<div class="{axisClass}">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
                 isFirst = axis.default is None
                 for val in axis.values:
@@ -483,6 +486,8 @@ class WebDataBuilder():
                     active = " active show" if isFirst else ""
                     isFirst = False
                     descrip = cleanForWeb(val.description or '')
+                    if len(descrip.strip()) == 0:
+                        active += " emptytab"
                     content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel"><div class="tabval_subdiv">{descrip}</div></div>\n'
             except Exception as e:
                 raise RuntimeError(f"Failed to build HTML for axis '{axis.id}': {e}")

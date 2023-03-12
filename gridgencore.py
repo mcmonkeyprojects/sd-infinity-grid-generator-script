@@ -264,7 +264,8 @@ class AxisValue:
 
 class Axis:
     def buildFromListStr(self, id, grid, listStr):
-        valueList = listStr.split("||" if "||" in listStr else ",")
+        isSplitByDoublePipe = "||" in listStr
+        valueList = listStr.split("||" if isSplitByDoublePipe else ",")
         mode = validModes.get(cleanName(str(id)))
         if mode is None:
             raise RuntimeError(f"Invalid axis '{mode}': unknown mode")
@@ -275,6 +276,8 @@ class Axis:
         index = 0
         for val in valueList:
             try:
+                if isSplitByDoublePipe and val.strip() == "":
+                    continue
                 index += 1
                 self.values.append(AxisValue(self, grid, str(index), f"{id}={str(val).strip()}"))
             except Exception as e:

@@ -276,10 +276,11 @@ class Axis:
         index = 0
         for val in valueList:
             try:
-                if isSplitByDoublePipe and val.strip() == "":
-                    continue
+                val = str(val).strip()
                 index += 1
-                self.values.append(AxisValue(self, grid, str(index), f"{id}={str(val).strip()}"))
+                if isSplitByDoublePipe and val == "" and index == len(valueList):
+                    continue
+                self.values.append(AxisValue(self, grid, str(index), f"{id}={val}"))
             except Exception as e:
                 raise RuntimeError(f"value '{val}' errored: {e}")
 

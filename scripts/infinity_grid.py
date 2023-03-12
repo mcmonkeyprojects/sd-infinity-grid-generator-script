@@ -368,7 +368,7 @@ class Script(scripts.Script):
             if file is None:
                 return "(...)"
             outPath = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
-            fullOutPath = os.path.join(outPath, file)
+            fullOutPath = outPath + "/" + file
             return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={fullOutPath}/index.html\">(Click me) <code>{fullOutPath}</code></a><br><br>"
         def updatePageUrl(filePath, selectedFile):
             return gr.update(value=getPageUrlText(filePath or (selectedFile.replace(".yml", "") if selectedFile is not None else None)))

@@ -11,7 +11,7 @@ from copy import copy
 
 ######################### Core Variables #########################
 
-ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
+ASSET_DIR = os.path.dirname(__file__) + "/assets"
 EXTRA_FOOTER = "..."
 EXTRA_ASSETS = []
 validModes = {}
@@ -377,7 +377,7 @@ class GridRunner:
         self.valueSets = self.buildValueSetList(list(reversed(self.grid.axes)))
         print(f'Have {len(self.valueSets)} unique value sets, will go into {self.basePath}')
         for set in self.valueSets:
-            set.filepath = os.path.join(self.basePath, '/'.join(list(map(lambda v: cleanName(v.key), set.values))))
+            set.filepath = self.basePath + '/' + '/'.join(list(map(lambda v: cleanName(v.key), set.values)))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flattenParams(self.grid)
             set.doSkip = set.skip or (not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.format))
@@ -447,7 +447,7 @@ class WebDataBuilder():
         return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'
 
     def buildHtml(grid):
-        with open(os.path.join(ASSET_DIR, "page.html"), 'r') as referenceHtml:
+        with open(ASSET_DIR + "/page.html", 'r') as referenceHtml:
             html = referenceHtml.read()
         xSelect = ""
         ySelect = ""
@@ -511,12 +511,12 @@ class WebDataBuilder():
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.buildJson(grid, publish_gen_metadata, p)
-        with open(os.path.join(path, "data.js"), 'w') as f:
+        with open(path, + "/data.js", 'w') as f:
             f.write("rawData = " + json)
         for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"] + EXTRA_ASSETS:
-            shutil.copyfile(os.path.join(ASSET_DIR, f), os.path.join(path, f))
+            shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
         html = WebDataBuilder.buildHtml(grid)
-        with open(os.path.join(path, "index.html"), 'w') as f:
+        with open(path + "/index.html", 'w') as f:
             f.write(html)
         print(f"Web file is now at {path}/index.html")
 
@@ -525,7 +525,7 @@ class WebDataBuilder():
 def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFolderName: str = None, doOverwrite: bool = False, fastSkip: bool = False, generatePage: bool = True, publishGenMetadata: bool = True, dryRun: bool = False, manualPairs: list = None):
     grid = GridFileHelper()
     if manualPairs is None:
-        fullInputPath = os.path.join(ASSET_DIR, inputFile)
+        fullInputPath = ASSET_DIR + "/" + inputFile
         if not os.path.exists(fullInputPath):
             raise RuntimeError(f"Non-existent file '{inputFile}'")
         # Parse and verify
@@ -553,7 +553,7 @@ def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFold
     # Now start using it
     if outputFolderName.strip() == "":
         outputFolderName = inputFile.replace(".yml", "")
-    folder = os.path.join(outputFolderBase, outputFolderName)
+    folder = outputFolderBase + "/" + outputFolderName
     runner = GridRunner(grid, doOverwrite, folder, passThroughObj, fastSkip)
     runner.preprocess()
     if generatePage:

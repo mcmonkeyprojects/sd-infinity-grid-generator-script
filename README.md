@@ -235,6 +235,7 @@ Note: must enable `Allow other script to control this extension` in `Settings` -
 | `ControlNet Annotator Resolution` | Integer | `64`, `512`, ..., `2048` | |
 | `ControlNet Threshold A` | Integer | `64`, `512`, ..., `256` | |
 | `ControlNet Threshold B` | Integer | `64`, `512`, ..., `256` | |
+| `ControlNet Image` | Text | `pose.png`, `otherpose.jpg`, ... | Put image files in `(EXTENSION FOLDER)/assets/images/`, as `png`, `jpg`, or `webp`. Subfolders allowed. |
 
 #### Other Extensions
 

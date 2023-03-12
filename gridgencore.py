@@ -7,7 +7,9 @@ import json
 import shutil
 import math
 import re
+import pathlib
 from copy import copy
+from PIL import Image
 
 ######################### Core Variables #########################
 
@@ -15,6 +17,7 @@ ASSET_DIR = os.path.dirname(__file__) + "/assets"
 EXTRA_FOOTER = "..."
 EXTRA_ASSETS = []
 validModes = {}
+IMAGES_CACHE = None
 
 ######################### Hooks #########################
 
@@ -34,6 +37,33 @@ gridRunnerRunPostDryHook: callable = None
 webDataGetBaseParamData: callable = None
 
 ######################### Utilities #########################
+def cleanFilePath(fn: str):
+    fn = fn.replace('\\', '/')
+    while '//' in fn:
+        fn = fn.replace('//', '/')
+    return fn
+
+def listImageFiles():
+    global IMAGES_CACHE
+    if IMAGES_CACHE is not None:
+        return IMAGES_CACHE
+    imageDir = cleanFilePath(ASSET_DIR + "/images")
+    IMAGES_CACHE = list()
+    for path, _, files in os.walk(imageDir):
+        for name in files:
+            _, ext = os.path.splitext(name)
+            if ext in [".jpg", ".png", ".webp"]:
+                fn = path + "/" + name
+                fn = cleanFilePath(fn).replace(imageDir, '')
+                while fn.startswith('/'):
+                    fn = fn[1:]
+                IMAGES_CACHE.append(fn)
+    return IMAGES_CACHE
+
+def clearCaches():
+    global IMAGES_CACHE
+    IMAGES_CACHE = None
+
 def getNameList():
     fileList = glob.glob(ASSET_DIR + "/*.yml")
     justFileNames = list(map(lambda f: os.path.relpath(f, ASSET_DIR), fileList))
@@ -136,9 +166,19 @@ def validateParams(grid, params: dict):
     for p,v in params.items():
         params[p] = validateSingleParam(p, grid.procVariables(v))
 
-def applyField(name):
+def applyField(name: str):
     def applier(p, v):
         setattr(p, name, v)
+    return applier
+
+def applyFieldAsImageData(name: str):
+    def applier(p, v):
+        fName = getBestInList(v, listImageFiles())
+        if fName is None:
+            raise RuntimeError("Invalid parameter '{p}' as '{v}': image file does not exist")
+        path = ASSET_DIR + "/images/" + fName
+        image = Image.open(path)
+        setattr(p, name, image)
     return applier
 
 def validateSingleParam(p: str, v):
@@ -511,7 +551,7 @@ class WebDataBuilder():
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.buildJson(grid, publish_gen_metadata, p)
-        with open(path, + "/data.js", 'w') as f:
+        with open(path + "/data.js", 'w') as f:
             f.write("rawData = " + json)
         for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)

@@ -186,6 +186,7 @@ def tryInit():
             registerMode("[ControlNet] Annotator Resolution", GridSettingMode(dry=True, type="integer", min=0, max=2048, apply=applyField("control_net_pres"), clean=validateParam))
             registerMode("[ControlNet] Threshold A", GridSettingMode(dry=True, type="integer", min=0, max=256, apply=applyField("control_net_pthr_a"), clean=validateParam))
             registerMode("[ControlNet] Threshold B", GridSettingMode(dry=True, type="integer", min=0, max=256, apply=applyField("control_net_pthr_b"), clean=validateParam))
+            registerMode("[ControlNet] Image", GridSettingMode(dry=True, type="text", apply=core.applyFieldAsImageData("control_net_input_image"), clean=validateParam, valid_list=lambda: core.listImageFiles()))
     except ModuleNotFoundError as e:
         print(f"Infinity Grid Generator failed to import a dependency module: {e}")
         pass
@@ -303,6 +304,7 @@ class Script(scripts.Script):
         return True
 
     def ui(self, is_img2img):
+        core.listImageFiles()
         tryInit()
         gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
         with gr.Row():
@@ -333,6 +335,7 @@ class Script(scripts.Script):
                                         row_value = gr.Textbox(label=f"Axis {axisCount} Value", lines=1)
                                         fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
                                         def fillAxis(modeName):
+                                            core.clearCaches()
                                             mode = core.validModes.get(cleanName(modeName))
                                             if mode is None:
                                                 return gr.update()
@@ -385,6 +388,7 @@ class Script(scripts.Script):
         return [do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, output_file_path] + manualAxes
 
     def run(self, p, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, output_file_path, *manualAxes):
+        core.clearCaches()
         tryInit()
         # Clean up default params
         p = copy(p)

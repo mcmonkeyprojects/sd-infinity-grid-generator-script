@@ -1,3 +1,6 @@
 .vscode/
 assets/*.yml
 __pycache__/
+assets/images/**/*.png
+assets/images/**/*.jpg
+assets/images/**/*.webp

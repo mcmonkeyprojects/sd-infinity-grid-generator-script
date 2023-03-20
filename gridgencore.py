@@ -491,13 +491,130 @@ class WebDataBuilder():
         return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'
 
     def buildHtml(grid):
+        css_code = '''
+<style>
+#slide_menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 300px;
+    height: 100%;
+    background-color: #f8f9fa;
+    padding: 20px;
+    transition: left 0.3s;
+    overflow-y: hidden;
+    z-index: 10;
+}
+
+#slide_menu.open {
+}
+
+#slide_button {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 1000;
+    cursor: pointer;
+    font-size: 2em;
+}
+#drag_handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: col-resize;
+    display: flex; /* 텍스트를 중앙에 배치하기 위해 flex를 사용합니다. */
+    align-items: center; /* 세로 중앙 정렬 */
+}
+</style>
+'''
+        js_code = '''
+<script>
+let slideMenu;
+let slideButton;
+let slideContent;
+function toggleSlideMenu() {
+    slideMenu = document.getElementById("slide_menu");
+    slideButton = document.getElementById("slide_button");
+    var isHidden = slideMenu.style.transform === 'translateX(-100%)';
+    slideMenu.style.transform = isHidden ? 'translateX(0)' : 'translateX(-100%)';
+    slideMenu.style.width = isHidden ? 'auto' : '300px';
+    slideButton.innerHTML = isHidden ? '&#9668;' : '&#9658;';
+}
+function initDragHandle() {
+    dragHandle = document.getElementById('drag_handle');
+    if (dragHandle) {
+        dragHandle.addEventListener('mousedown', onMouseDown);
+    } else {
+        setTimeout(initDragHandle, 1000);
+    }
+}
+function onMouseDown(e) {
+    e.preventDefault();
+    startX = e.clientX;
+    startWidth = parseInt(document.defaultView.getComputedStyle(slideMenu).width, 10);
+    document.documentElement.addEventListener('mousemove', onMouseMove);
+    document.documentElement.addEventListener('mouseup', onMouseUp);
+}
+function onMouseMove(e) {
+    const dx = e.clientX - startX;
+    slideMenu.style.width = (startWidth + dx) + 'px';
+}
+function onMouseUp() {
+    document.documentElement.removeEventListener('mousemove', onMouseMove);
+    document.documentElement.removeEventListener('mouseup', onMouseUp);
+}
+function setSlideMenuBgColor() {
+    const slideMenu = document.getElementById('slide_menu');
+    const bodyBgColor = getComputedStyle(document.body).getPropertyValue('background-color');
+    slideMenu.style.backgroundColor = bodyBgColor;
+}
+function initSlideMenu() {
+    slideMenu = document.getElementById("slide_menu");
+    slideButton = document.getElementById("slide_button");
+    startWidth = parseInt(document.defaultView.getComputedStyle(slideMenu).width, 10);
+
+    if (slideButton && slideMenu) {
+        setSlideMenuBgColor();
+        initDragHandle();
+
+        slideButton.addEventListener("click", function () {
+            const slideMenuRect = slideMenu.getBoundingClientRect();
+            const slideMenuWidth = slideMenuRect.width;
+            if (slideMenu.classList.contains("open")) {
+                slideMenu.classList.remove("open");
+                slideMenu.classList.add("close");
+                slideButton.innerHTML = "&gt;";
+                slideMenu.style.left = -(slideMenuWidth) + 'px';
+            } else {
+                slideMenu.classList.remove("close");
+                slideMenu.classList.add("open");
+                slideButton.innerHTML = "&lt;";
+                slideMenu.style.left = '0';
+            }
+        });
+    } else {
+        setTimeout(initSlideMenu, 1000);
+    }
+}
+</script>
+'''
+        slide_button_html = '''<div class="slide_button_container"><button id="slide_button" style="position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 10; font-size: 24px;">&#10095;</button></div>'''
         with open(ASSET_DIR + "/page.html", 'r') as referenceHtml:
             html = referenceHtml.read()
         xSelect = ""
         ySelect = ""
         x2Select = WebDataBuilder.radioButtonHtml('x2_axis_selector', f'x2_none', 'None', 'None')
         y2Select = WebDataBuilder.radioButtonHtml('y2_axis_selector', f'y2_none', 'None', 'None')
-        content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
+        content = ''
+        content += f'''
+<div id="slide_menu">
+<div style="margin: auto; width: fit-content;">
+    <table class="sel_table">
+'''
         advancedSettings = ''
         primary = True
         for axis in grid.axes:
@@ -540,15 +657,52 @@ class WebDataBuilder():
             ySelect += WebDataBuilder.radioButtonHtml('y_axis_selector', f'y_{axis.id}', axisDescrip, axis.title)
             x2Select += WebDataBuilder.radioButtonHtml('x2_axis_selector', f'x2_{axis.id}', axisDescrip, axis.title)
             y2Select += WebDataBuilder.radioButtonHtml('y2_axis_selector', f'y2_{axis.id}', axisDescrip, axis.title)
-        content += '</table>\n<div class="axis_selectors">'
+            
+        advanced_settings_html = '''
+<div class="accordion advanced_settings_section" id="settings_according">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="setting_according_heading">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#settings_according_collapse" aria-expanded="false" aria-controls="settings_according_collapse">Advanced Settings</button>
+        </h2>
+        <div id="settings_according_collapse" class="accordion-collapse collapse" aria-labelledby="setting_according_heading" data-bs-parent="#settings_according">
+            <div class="accordion-body">
+                {advanced_settings_content}
+            </div>
+        </div>
+    </div>
+</div>
+<br><input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" autocomplete="off" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
+'''
+
+        advancedSettings = advanced_settings_html.format(advanced_settings_content=advancedSettings)
+
+        content = f'''
+<div class="slide_menu" id="slide_menu">
+    <center>
+        <h1>{{TITLE}}</h1>
+        <h4>{{DESCRIPTION}}</h4>
+        <noscript>This page requires JavaScript to work. Don't worry, it's all local to the current page, and open source on GitHub.</noscript>
+        <hr>
+    </center>
+    <div>
+    {advancedSettings}
+    </div>
+    <div id="drag_handle">||</div>
+    <div>
+        <table class="sel_table">
+            {content}
+        </table>
+    </div>
+    <div class="axis_selectors">
+'''.replace("{TITLE}", grid.title).replace("{DESCRIPTION}", grid.description)
         content += WebDataBuilder.axisBar('X Axis', xSelect)
         content += WebDataBuilder.axisBar('Y Axis', ySelect)
         content += WebDataBuilder.axisBar('X Super-Axis', x2Select)
         content += WebDataBuilder.axisBar('Y Super-Axis', y2Select)
-        content += '</div></div>\n'
-        content += '<div><center><input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
+        content += '</div>'
+        content += '<div><center><input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div></div>' + slide_button_html
         content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
-        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
+        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{CONTENT}", content).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER + css_code + js_code + "<script>  document.addEventListener('DOMContentLoaded', function() {    initSlideMenu();  });</script>")
         return html
 
     def EmitWebData(path, grid, publish_gen_metadata, p):

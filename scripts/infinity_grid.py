@@ -130,6 +130,14 @@ def tryInit():
     registerMode("Prompt", GridSettingMode(dry=True, type="text", apply=applyField("prompt")))
     registerMode("Negative Prompt", GridSettingMode(dry=True, type="text", apply=applyField("negative_prompt")))
     registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace2", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace3", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace4", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace5", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace6", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace7", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace8", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
+    registerMode("Prompt Replace9", GridSettingMode(dry=True, type="text", apply=applyPromptReplace))
     registerMode("Var Seed", GridSettingMode(dry=True, type="integer", apply=applyField("subseed")))
     registerMode("Var Strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=applyField("subseed_strength")))
     registerMode("ClipSkip", GridSettingMode(dry=False, type="integer", min=1, max=12, apply=applyClipSkip))
@@ -197,7 +205,9 @@ def a1111GridCallInitHook(gridCall):
     gridCall.replacements = list()
 
 def a1111GridCallParamAddHook(gridCall, p, v):
-    if cleanName(p) == "promptreplace":
+    tempstring = cleanNameautomatic101(p)
+    l1 = ['promptreplace','promptreplace1','promptreplace2','promptreplace3','promptreplace4','promptreplace5','promptreplace6','promptreplace7','promptreplace8','promptreplace9']
+    if tempstring in l1:
         gridCall.replacements.append(v)
         return True
     return False

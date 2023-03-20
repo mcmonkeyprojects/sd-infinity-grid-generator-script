@@ -152,7 +152,7 @@ def tryInit():
     registerMode("HighRes Resize Width", GridSettingMode(dry=True, type="integer", apply=applyField("hr_resize_x")))
     registerMode("HighRes Resize Height", GridSettingMode(dry=True, type="integer", apply=applyField("hr_resize_y")))
     registerMode("HighRes Upscale to Width", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_x")))
-    registerMode("HighRes Upscale to Weight", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_y")))
+    registerMode("HighRes Upscale to Height", GridSettingMode(dry=True, type="integer", apply=applyField("hr_upscale_to_y")))
     registerMode("HighRes Upscaler", GridSettingMode(dry=True, type="text", apply=applyField("hr_upscaler"), valid_list=lambda: list(map(lambda u: u.name, shared.sd_upscalers)) + list(shared.latent_upscale_modes.keys())))
     registerMode("Image CFG Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=applyField("image_cfg_scale")))
     registerMode("Use Result Index", GridSettingMode(dry=True, type="integer", min=0, max=500, apply=applyField("inf_grid_use_result_index")))

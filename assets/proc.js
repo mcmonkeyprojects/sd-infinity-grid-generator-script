@@ -448,7 +448,7 @@ function crunchMetadata(url) {
     if (!('metadata' in rawData)) {
         return {};
     }
-    initialData = rawData.metadata;
+    initialData = structuredClone(rawData.metadata);
     var index = 0;
     for (var part of url.substring(0, url.indexOf('.')).split('/')) {
         var axis = rawData.axes[index++];

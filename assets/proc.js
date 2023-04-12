@@ -2,531 +2,537 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
-function loadData() {
-    document.getElementById('x_' + rawData.axes[0].id).click();
-    document.getElementById('x2_none').click();
-    document.getElementById('y2_none').click();
-    // rawData.ext/title/description
-    for (var axis of rawData.axes) {
-        // axis.id/title/description
-        for (var val of axis.values) {
-            // val.key/title/description/show
-            var clicktab = document.getElementById('clicktab_' + axis.id + '__' + val.key);
-            clicktab.addEventListener('click', fillTable);
-            if (!val.show) {
-                document.getElementById('showval_' + axis.id + '__' + val.key).checked = false;
-                clicktab.classList.add('tab_hidden');
+'use strict';
+
+((config) => {
+    console.log('Init ###########################################');
+
+    function createStore(rawData, updateHandler) {
+        const isProxy = Symbol('isProxy');
+        let cancelId = null;
+        let oldValue = null;
+        function emitUpdate() {
+            if (!updateHandler) return;
+
+            clearTimeout(cancelId);
+            cancelId = setTimeout(() => {
+                const newValue = state.toRaw();
+                updateHandler(newValue, oldValue);
+                oldValue = newValue;
+            }, 100);
+        }
+        function toRaw(obj) {
+            const raw = Array.isArray(obj) ? [] : {};
+            Object.entries(obj).forEach(([k, v]) => {
+                if (!v[isProxy]) return Reflect.set(raw, k, v);
+                return Reflect.set(raw, k, v.toRaw());
+            });
+            return raw;
+        }
+        const handler = {
+            set(obj, key, val) {
+                if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    return false;
+                }
+                if (obj[key] === val) return true;
+                const isSuccess = Reflect.set(obj, key, val);
+                if (isSuccess) emitUpdate();
+                return isSuccess;
+            },
+            get(obj, key, val) {
+                if (key === 'toRaw') return () => toRaw(obj);
+                if (key === isProxy) return true;
+                if (!(key in obj)) return undefined;
+                if (typeof obj[key] === 'object' && obj[key] !== null && !obj[key][isProxy]) {
+                    obj[key] = new Proxy(obj[key], handler);
+                }
+                return Reflect.get(obj, key, val);
+            }
+        };
+        const state = new Proxy(rawData, handler);
+        return state;
+    }
+
+    const dataStore = createStore(
+        {
+            axes: { x: '', y: '', x2: 'none', y2: 'none' },
+            params: {},
+            hidden: {}
+        },
+        updateTable
+    );
+
+    const uiStore = createStore({}, updateUI);
+
+    function applyDefaultSetup() {
+        uiStore.descriptions = config.defaults.show_descriptions;
+        uiStore.autoscale = config.defaults.autoscale;
+        uiStore.sticky = config.defaults.sticky;
+
+        // Set UI options
+        document.getElementById('showDescriptions').checked = config.defaults.show_descriptions;
+        document.getElementById('autoScaleImages').checked = config.defaults.autoscale;
+        document.getElementById('stickyNavigation').checked = config.defaults.sticky;
+
+        // Set selected axis
+        for (const coord of Object.keys(dataStore.axes)) {
+            document.getElementById(coord + '_' + dataStore.axes[coord]).checked = true;
+        }
+    }
+
+    function loadData() {
+        dataStore.axes.x = config.axes[0].id;
+        dataStore.axes.y = config.axes[1]?.id || '';
+
+        // rawData.ext/title/description
+        for (const axis of config.axes) {
+            // axis.id/title/description
+            dataStore.params[axis.id] = axis.values[0].key;
+            dataStore.hidden[axis.id] = {};
+            for (const val of axis.values) {
+                // val.key/title/description/show
+                if (!val.show) {
+                    dataStore.hidden[axis.id][val.key] = true;
+                    document.querySelector(`.form-check-input[data-axis-id="${axis.id}"][data-val-key="${val.key}"]`).checked = false;
+                }
             }
         }
-        for (var prefix of ['x_', 'y_', 'x2_', 'y2_']) {
-            document.getElementById(prefix + axis.id).addEventListener('click', fillTable);
+
+        for (const coord of Object.keys(dataStore.axes)) {
+            dataStore.axes[coord] = config.defaults[coord] || dataStore.axes[coord];
         }
-        for (var label of ['x2_none', 'y2_none']) {
-            document.getElementById(label).addEventListener('click', fillTable);
-        }
+
+        applyDefaultSetup();
+        console.log(`Loaded data for '${config.title}'`);
     }
-    console.log(`Loaded data for '${rawData.title}'`);
-    document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
-    document.getElementById('stickyNavigation').addEventListener('change', toggleTopSticky);
-    document.getElementById('toggle_nav_button').addEventListener('click', updateTitleSticky);
-    fillTable();
-    startAutoScroll();
-    document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
-    document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
-    document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
-    for (var axis of ['x', 'y', 'x2', 'y2']) {
-        if (rawData.defaults[axis] != '') {
-            console.log('find ' + axis + '_' + rawData.defaults[axis]);
-            document.getElementById(axis + '_' + rawData.defaults[axis]).click();
-        }
+
+    function createListeners() {
+        $('#sel_table').on('shown.bs.tab', '.nav-link', ({ target }) => {
+            const { axisId, valKey } = target.dataset;
+            if (dataStore.params[axisId] !== valKey) {
+                dataStore.params[axisId] = valKey;
+            }
+        });
+
+        $('#axis_selectors').on('click', '.btn-check', ({ target }) => {
+            const [coord, ...id] = target.id.split('_');
+            dataStore.axes[coord] = id.join('_');
+        });
+
+        $('#image_table').on('click', '.table_img', ({ target }) => {
+            updateModal(target);
+            imgModal.show();
+        });
+
+        $('#showDescriptions').on('change', ({ target }) => { uiStore.descriptions = target.checked; });
+        $('#autoScaleImages').on('change', ({ target }) => { uiStore.autoscale = target.checked; });
+        $('#stickyNavigation').on('change', ({ target }) => { uiStore.sticky = target.checked; });
+        $('#toggle_nav_button').on('click', updateTitleSticky);
+        $('#toggle_adv_button').on('click', updateTitleSticky);
+
+        $('#settings_accordion_collapse').on('click', 'button', ({ target }) => {
+            const { axisId } = target.dataset;
+            const axis = getAxisById(axisId);
+            const shouldHide = axis.values.some(val => canShowVal(axisId, val.key));
+            document.querySelectorAll(`.form-check-input[data-axis-id="${axis.id}"]`).forEach(input => {
+                input.checked = !shouldHide;
+            });
+
+            for (const val of axis.values) {
+                dataStore.hidden[axisId][val.key] = shouldHide;
+            }
+        });
+        $('#settings_accordion_collapse').on('change', '.form-check-input', ({ target }) => {
+            const show = !target.checked;
+            const { axisId, valKey } = target.dataset;
+            dataStore.hidden[axisId][valKey] = show;
+        });
     }
-}
 
-function getAxisById(id) {
-    for (var axis of rawData.axes) {
-        if (axis.id == id) {
-            return axis;
-        }
+    function updateUI() {
+        toggleDescriptions();
+        updateScaling();
+        updateTitleSticky();
     }
-}
 
-function getNextAxis(axes, startId) {
-    var next = false;
-    for (var subAxis of axes) {
-        if (subAxis.id == startId) {
-            next = true;
-        }
-        else if (next) {
-            return subAxis;
-        }
+    function getAxisById(id) {
+        return config.axes.find(axis => axis.id === id);
     }
-    return null;
-}
 
-function getSelectedValKey(axis) {
-    for (var subVal of axis.values) {
-        if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display != 'none') {
-            return subVal.key;
+    const modalElm = document.getElementById('image_info_modal');
+    const modalImgElm = modalElm.querySelector('.popup_modal_img');
+    const modalMetaElm = modalElm.querySelector('.popup_modal_undertext');
+    const imgModal = new bootstrap.Modal(modalElm, { backdrop: true });
+    modalImgElm.onload = () => { modalImgElm.style.display = ''; };
+
+    function updateModal(img) {
+        const dataSet = img.dataset.set.split(',');
+        let metaText = '';
+        modalImgElm.style.display = 'none';
+        try {
+            metaText = 'crunchMetadata' in window ? window.crunchMetadata(config, dataSet) : '';
+        } catch (e) {
+            console.error(e);
+            metaText = e.message;
         }
+        const text = 'Image: ' + img.alt + (metaText.length > 1 ? ', parameters: \n' + metaText : '\n(parameters hidden)');
+
+        modalImgElm.src = img.src;
+        Object.entries(img.dataset).forEach(([k, v]) => { modalImgElm.dataset[k] = v; });
+        modalMetaElm.textContent = text;
     }
-    return null;
-}
 
-var popoverLastImg = null;
+    function clickRowImage(x, y) {
+        const img = document.querySelector(`#image_table img[data-row="${y}"][data-col="${x}"]`);
+        if (!img) return;
+        updateModal(img);
+        imgModal.handleUpdate();
+    }
 
-function clickRowImage(rows, x, y) {
-    $('#image_info_modal').modal('hide');
-    var columns = rows[y].getElementsByTagName('td');
-    columns[x].getElementsByTagName('img')[0].click();
-}
+    function navigateImageModal(key) {
+        if (key === 'Escape') {
+            imgModal.hide();
+            return true;
+        }
 
-window.addEventListener('keydown', function(kbevent) {
-    if ($('#image_info_modal').is(':visible')) {
-        if (kbevent.key == 'Escape') {
-            $('#image_info_modal').modal('toggle');
-            kbevent.preventDefault();
-            kbevent.stopPropagation();
+        const x = Number(modalImgElm.dataset.col);
+        const y = Number(modalImgElm.dataset.row);
+
+        switch (key) {
+        case 'ArrowLeft':
+            clickRowImage(x - 1, y);
+            break;
+        case 'ArrowRight':
+            clickRowImage(x + 1, y);
+            break;
+        case 'ArrowUp':
+            clickRowImage(x, y - 1);
+            break;
+        case 'ArrowDown':
+            clickRowImage(x, y + 1);
+            break;
+        default:
             return false;
         }
-        var tableElem = document.getElementById('image_table');
-        var rows = tableElem.getElementsByTagName('tr');
-        var matchedRow = null, matchedColumn = null;
-        var x = 0, y = 0;
-        for (var row of rows) {
-            var columns = row.getElementsByTagName('td');
-            for (var column of columns) {
-                var images = column.getElementsByTagName('img');
-                if (images.length == 1 && images[0] == popoverLastImg) {
-                    matchedRow = row;
-                    matchedColumn = column;
-                    break;
+        return true;
+    }
+
+    function getNextActiveTab(tabs) {
+        let firstTab = null;
+        let nextTab = null;
+        let foundActive = false;
+        tabs.forEach(tab => {
+            const isActive = tab.classList.contains('active');
+            if (!tab.disabled && !isActive && !firstTab) firstTab = tab;
+            if (isActive) {
+                foundActive = true;
+                return;
+            }
+            if (foundActive && !tab.disabled && !nextTab) nextTab = tab;
+        });
+
+        return nextTab || firstTab;
+    }
+
+    function selectTab(elm, key) {
+        // right and left are managed by bootstrap
+        let tab;
+        let group = elm.closest('tr');
+        switch (key) {
+        case 'ArrowUp':
+            while (group && !tab) {
+                group = group.previousElementSibling;
+                tab = group?.querySelector('.nav-link.active:not(:disabled)');
+            }
+            break;
+        case 'ArrowDown':
+            while (group && !tab) {
+                group = group.nextElementSibling;
+                tab = group?.querySelector('.nav-link.active:not(:disabled)');
+            }
+            break;
+        default:
+            return false;
+        }
+        if (tab) tab.focus();
+        return true;
+    }
+
+    window.addEventListener('keydown', (kbevent) => {
+        let hasTriggered = false;
+        const elem = document.activeElement;
+        if (elem.classList.contains('nav-link')) {
+            hasTriggered = selectTab(elem, kbevent.key);
+        }
+
+        if (imgModal._isShown) {
+            hasTriggered = navigateImageModal(kbevent.key);
+        }
+
+        if (hasTriggered) {
+            kbevent.preventDefault();
+            kbevent.stopPropagation();
+        }
+    }, true);
+
+    function escapeHtml(text) {
+        return text
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function canShowVal(id, key) {
+        return !dataStore.hidden[id][key];
+    }
+
+    function getXAxisContent(xAxisId, yAxisId, xAxisValues, yValKey, x2AxisId, x2val, y2AxisId, y2val) {
+        const dataSet = [];
+        let index = 0;
+        for (const subAxis of config.axes) {
+            if (subAxis.id === xAxisId) {
+                index = dataSet.length;
+                dataSet.push(0);
+            } else if (subAxis.id === yAxisId) {
+                dataSet.push(yValKey);
+            } else if (subAxis.id === x2AxisId) {
+                dataSet.push(x2val.key);
+            } else if (subAxis.id === y2AxisId) {
+                dataSet.push(y2val.key);
+            } else {
+                dataSet.push(dataStore.params[subAxis.id]);
+            }
+        }
+        const newContent = [];
+        for (const xVal of xAxisValues) {
+            dataSet[index] = xVal.key;
+            const actualUrl = dataSet.join('/') + '.' + config.ext;
+            const metadata = window.crunchMetadata(config, dataSet, true);
+            const img = new Image(metadata.width, metadata.height);
+            img.classList.add('table_img');
+            img.src = actualUrl;
+            img.alt = actualUrl;
+            img.loading = 'lazy';
+            img.dataset.set = dataSet.join(',');
+            img.onerror = setImgPlaceholder;
+            newContent.push(img);
+        }
+        return newContent;
+    }
+
+    function setImgPlaceholder(evt) {
+        const img = evt.target;
+        img.onerror = undefined;
+        img.src = './placeholder.png';
+    }
+
+    function optDescribe(isFirst, title, extraVal) {
+        const label = document.createDocumentFragment();
+        const titleTxt = document.createTextNode(title);
+        const br = document.createElement('br');
+        if (extraVal) {
+            if (isFirst) {
+                const span = document.createElement('span');
+                span.title = escapeHtml(extraVal.description);
+                span.style.fontWeight = 'bold';
+                span.textContent = extraVal.title;
+                label.appendChild(span);
+            }
+            label.appendChild(br);
+        }
+        label.appendChild(titleTxt);
+        return label;
+    }
+
+    function updateTable(state, prevState) {
+        updateHiddenTabs(); // TODO: move under updateUI
+        if (prevState) {
+            const needUpdateAxes = Object.keys(state.axes).some(coord => {
+                return state.axes[coord] !== prevState.axes[coord];
+            });
+
+            const selectedAxis = Object.values(state.axes).filter(id => id !== 'none');
+            const needUpdateParam = Object.keys(state.params).some(id => {
+                return state.params[id] !== prevState.params[id] && !selectedAxis.includes(id);
+            });
+            // TODO: hide col or row instead of redraw
+            const needUpdateHidden = selectedAxis.some(id => {
+                return Object.keys(state.hidden[id]).some(key => {
+                    return state.hidden[id][key] !== prevState.hidden[id][key];
+                });
+            });
+            console.log('Need update table:', needUpdateAxes || needUpdateParam || needUpdateHidden);
+            if (!needUpdateAxes && !needUpdateParam && !needUpdateHidden) return;
+        }
+
+        const { x, y, x2, y2 } = dataStore.axes;
+        console.log('Do fill table, x=' + x + ', y=' + y + ', x2=' + x2 + ', y2=' + y2);
+
+        const xAxis = getAxisById(x);
+        const yAxis = getAxisById(y);
+        const x2Axis = x2 === 'none' || x2 === x || x2 === y ? {} : getAxisById(x2);
+        const y2Axis = y2 === 'none' || y2 === x2 || y2 === x || y2 === y ? {} : getAxisById(y2);
+        const table = document.getElementById('image_table');
+        let superFirst = true;
+
+        const xAxisValues = xAxis.values.filter(val => canShowVal(xAxis.id, val.key));
+        const yAxisValues = yAxis.values.filter(val => canShowVal(yAxis.id, val.key));
+        const x2AxisValues = x2Axis.values?.filter(val => canShowVal(x2Axis.id, val.key)) || [null];
+        const y2AxisValues = y2Axis.values?.filter(val => canShowVal(y2Axis.id, val.key)) || [null];
+        const nbColumn = x2AxisValues.length * xAxisValues.length;
+
+        table.innerHTML = '';
+        const header = document.createElement('thead');
+        header.id = 'image_table_header';
+        header.classList.add('sticky_top');
+        header.appendChild(document.createElement('th'));
+
+        for (const x2val of x2AxisValues) {
+            let x2first = true;
+            for (const val of xAxisValues) {
+                const th = document.createElement('th');
+                if (!superFirst) th.classList.add('superaxis_second');
+                th.title = escapeHtml(val.description);
+                th.style.width = `${Math.floor(90 / nbColumn)}vw`;
+                th.appendChild(optDescribe(x2first, val.title, x2val));
+                header.appendChild(th);
+                x2first = false;
+            }
+            superFirst = !superFirst;
+        }
+        table.appendChild(header);
+
+        const body = document.createElement('tbody');
+        superFirst = true;
+        for (const y2val of y2AxisValues) {
+            let y2first = true;
+            for (const val of yAxisValues) {
+                const row = document.createElement('tr');
+                const label = document.createElement('td');
+                label.classList.add('axis_label_td');
+                if (!superFirst) label.classList.add('superaxis_second');
+                label.title = escapeHtml(val.description);
+                label.appendChild(optDescribe(y2first, val.title, y2val));
+                row.appendChild(label);
+                y2first = false;
+                let col = 1;
+                for (const x2val of x2AxisValues) {
+                    getXAxisContent(x, y, xAxisValues, val.key, x2Axis.id, x2val, y2Axis.id, y2val).forEach(img => {
+                        const content = document.createElement('td');
+                        img.dataset.row = body.childElementCount + 1;
+                        img.dataset.col = col++;
+                        content.appendChild(img);
+                        row.appendChild(content);
+                    });
                 }
-                x++;
+                body.appendChild(row);
+                if (x === y) break;
             }
-            if (matchedRow != null) {
-                break;
-            }
-            x = 0;
-            y++;
+            superFirst = !superFirst;
         }
-        if (matchedRow == null) {
-            return;
-        }
-        if (kbevent.key == 'ArrowLeft') {
-            if (x > 1) {
-                x--;
-                clickRowImage(rows, x, y);
-            }
-        }
-        else if (kbevent.key == 'ArrowRight') {
-            x++;
-            var columns = matchedRow.getElementsByTagName('td');
-            if (columns.length > x) {
-                clickRowImage(rows, x, y);
-            }
-        }
-        else if (kbevent.key == 'ArrowUp') {
-            if (y > 1) {
-                y--;
-                clickRowImage(rows, x, y);
-            }
-        }
-        else if (kbevent.key == 'ArrowDown') {
-            y++;
-            if (rows.length > y) {
-                clickRowImage(rows, x, y);
-            }
-        }
-        else {
-            return;
-        }
-        kbevent.preventDefault();
-        kbevent.stopPropagation();
-        return false;
+        table.appendChild(body);
     }
-    var elem = document.activeElement;
-    if (!elem.id.startsWith('clicktab_')) {
-        return;
-    }
-    var axisId = elem.id.substring('clicktab_'.length);
-    var splitIndex = axisId.indexOf('__');
-    axisId = axisId.substring(0, splitIndex);
-    var axis = getAxisById(axisId);
-    if (kbevent.key == 'ArrowLeft') {
-        var tabPage = document.getElementById('tablist_' + axis.id);
-        var tabs = tabPage.getElementsByClassName('nav-link');
-        var newTab = clickTabAfterActiveTab([].slice.call(tabs).reverse());
-        newTab.focus();
-    }
-    else if (kbevent.key == 'ArrowRight') {
-        var tabPage = document.getElementById('tablist_' + axis.id);
-        var tabs = tabPage.getElementsByClassName('nav-link');
-        var newTab = clickTabAfterActiveTab(tabs);
-        newTab.focus();
-    }
-    else if (kbevent.key == 'ArrowUp') {
-        var next = getNextAxis(rawData.axes.slice().reverse(), axisId);
-        if (next != null) {
-            var selectedKey = getSelectedValKey(next);
-            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
-            swapToTab.focus();
-        }
-    }
-    else if (kbevent.key == 'ArrowDown') {
-        var next = getNextAxis(rawData.axes, axisId);
-        if (next != null) {
-            var selectedKey = getSelectedValKey(next);
-            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
-            swapToTab.focus();
-        }
-    }
-    else {
-        return;
-    }
-    kbevent.preventDefault();
-    kbevent.stopPropagation();
-    return false;
-}, true);
 
-function escapeHtml(text) {
-    return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-}
-
-function unescapeHtml(text) {
-    return text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#039;', "'").replaceAll('&amp;', '&');
-}
-
-function canShowVal(axis, val) {
-    return document.getElementById(`showval_${axis}__${val}`).checked;
-}
-
-function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
-    var url = '';
-    for (var subAxis of rawData.axes) {
-        if (subAxis.id == x) {
-            url += '/{X}';
-        }
-        else if (subAxis.id == y) {
-            url += '/' + val.key;
-        }
-        else if (x2Axis != null && subAxis.id == x2Axis.id) {
-            url += '/' + x2val.key;
-        }
-        else if (y2Axis != null && subAxis.id == y2Axis.id) {
-            url += '/' + y2val.key;
-        }
-        else {
-            url += '/' + getSelectedValKey(subAxis);
-        }
+    function updateScaling() {
+        const autoscale = uiStore.autoscale;
+        document.getElementById('image_table').classList.toggle('scale', autoscale);
     }
-    var newContent = '';
-    for (var xVal of xAxis.values) {
-        if (!canShowVal(xAxis.id, xVal.key)) {
-            continue;
-        }
-        var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
-        newContent += `<td><img class="table_img" id="autogen_img_${escapeHtml(actualUrl).replace(' ', '%20')}" onclick="doPopupFor(this)" src="${actualUrl}" /></td>`;
-    }
-    return newContent;
-}
 
-function optDescribe(isFirst, val) {
-    return isFirst && val != null ? '<span title="' + escapeHtml(val.description) + '"><b>' + val.title + '</b></span><br>' : (val != null ? '<br>' : '');
-}
-
-function fillTable() {
-    var x = getCurrentSelectedAxis('x');
-    var y = getCurrentSelectedAxis('y');
-    var x2 = getCurrentSelectedAxis('x2');
-    var y2 = getCurrentSelectedAxis('y2');
-    console.log('Do fill table, x=' + x + ', y=' + y + ', x2=' + x2 + ', y2=' + y2);
-    var xAxis = getAxisById(x);
-    var yAxis = getAxisById(y);
-    var x2Axis = x2 == 'None' || x2 == x || x2 == y ? null : getAxisById(x2);
-    var y2Axis = y2 == 'None' || y2 == x2 || y2 == x || y2 == y ? null : getAxisById(y2);
-    var table = document.getElementById('image_table');
-    var newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
-    var superFirst = true;
-    for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
-        if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
-            continue;
-        }
-        var x2first = true;
-        for (var val of xAxis.values) {
-            if (!canShowVal(xAxis.id, val.key)) {
-                continue;
+    function toggleDescriptions() {
+        const show = uiStore.descriptions;
+        for (const cName of ['tab-content', 'axis_table_cell']) {
+            for (const elem of document.getElementsByClassName(cName)) {
+                elem.classList.toggle('tab_hidden', !show);
             }
-            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', "&quot;")}">${optDescribe(x2first, x2val)}${val.title}</th>`;
-            x2first = false;
         }
-        superFirst = !superFirst;
     }
-    newContent += '</tr>';
-    superFirst = true;
-    for (var y2val of (y2Axis == null ? [null] : y2Axis.values)) {
-        if (y2val != null && !canShowVal(y2Axis.id, y2val.key)) {
-            continue;
+
+    function updateHiddenTabs() {
+        const hidden = dataStore.hidden;
+        const selectedAxis = Object.values(dataStore.axes).filter(id => id !== 'none');
+        document.querySelectorAll('#sel_table .nav-link').forEach(tab => {
+            const { axisId, valKey } = tab.dataset;
+            tab.classList.toggle('tab_hidden', !!hidden[axisId][valKey]);
+            tab.disabled = hidden[axisId][valKey] || selectedAxis.includes(axisId);
+        });
+    }
+
+    let anyRangeActive = false;
+
+    function enableRange(id) {
+        const range = document.getElementById('range_tablist_' + id);
+        const label = document.getElementById('label_range_tablist_' + id);
+        range.oninput = () => {
+            anyRangeActive = true;
+            label.innerText = (range.value / 2) + ' seconds';
+        };
+        const tabs = document.querySelectorAll(`.nav-link[data-axis-id="${id}"]`);
+        return {
+            range,
+            counter: 0,
+            tabs
+        };
+    }
+
+    function startAutoScroll() {
+        const rangeSet = [];
+        for (const axis of config.axes) {
+            rangeSet.push(enableRange(axis.id));
         }
-        var y2first = true;
-        for (var val of yAxis.values) {
-            if (!canShowVal(yAxis.id, val.key)) {
-                continue;
+        let lastUpdate = 0;
+        function autoScroll(timestamp) {
+            if (!anyRangeActive || timestamp - lastUpdate < 500) {
+                window.requestAnimationFrame(autoScroll);
+                return;
             }
-            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}${val.title}</td>`;
-            y2first = false;
-            for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
-                if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
+
+            for (const data of rangeSet) {
+                if (data.range.value <= 0) {
                     continue;
                 }
-                newContent += getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val);
+                data.counter += 1;
+
+                if (data.counter > data.range.value) {
+                    data.counter = 0;
+                    const tab = getNextActiveTab(data.tabs);
+                    if (tab) tab.click();
+                }
             }
-            newContent += '</tr>';
-            if (x == y) {
-                break;
+            lastUpdate = timestamp;
+            window.requestAnimationFrame(autoScroll);
+        }
+        window.requestAnimationFrame(autoScroll);
+    }
+
+    function updateTitleStickyDirect(topBar) {
+        // client rect is dynamically animated, so, uh, just hack it for now.
+        setTimeout(() => {
+            const height = Math.round(topBar.getBoundingClientRect().height);
+            const header = document.getElementById('image_table_header');
+            if (header.style.top === (height + 'px')) {
+                return;
             }
+            header.style.top = height + 'px';
+            updateTitleStickyDirect(topBar);
+        }, 50);
+    }
+
+    function updateTitleSticky() {
+        const topBar = document.getElementById('top_nav_bar');
+        topBar.classList.toggle('sticky_top', uiStore.sticky);
+        const imgTable = document.getElementById('image_table_header');
+        if (!imgTable) return;
+        if (!uiStore.sticky) {
+            imgTable.style.top = '';
+            return;
         }
-        superFirst = !superFirst;
+        // TODO: Actually smooth attachment.
+        updateTitleStickyDirect(topBar);
     }
-    table.innerHTML = newContent;
-    updateScaling();
-}
 
-function getCurrentSelectedAxis(axisPrefix) {
-    var id = document.querySelector(`input[name="${axisPrefix}_axis_selector"]:checked`).id;
-    var index = id.indexOf('_');
-    return id.substring(index + 1);
-}
-
-function updateScaling() {
-    var percent;
-    if (document.getElementById('autoScaleImages').checked) {
-        var x = getCurrentSelectedAxis('x');
-        var xAxis = getAxisById(x);
-        var count = xAxis.values.length;
-        var x2 = getCurrentSelectedAxis('x2');
-        if (x2 != 'none') {
-            var x2Axis = getAxisById(x2);
-            count *= x2Axis.values.length;
-        }
-        percent = (90 / count) + 'vw';
-    }
-    else {
-        percent = '';
-    }
-    for (var image of document.getElementById('image_table').getElementsByClassName('table_img')) {
-        image.style.width = percent;
-    }
-    updateTitleSticky();
-}
-
-function toggleDescriptions() {
-    var show = document.getElementById('showDescriptions').checked;
-    for (var cName of ['tabval_subdiv', 'axis_table_cell']) {
-        for (var elem of document.getElementsByClassName(cName)) {
-            if (show) {
-                elem.classList.remove('tab_hidden');
-            }
-            else {
-                elem.classList.add('tab_hidden');
-            }
-        }
-    }
-}
-
-function toggleShowAllAxis(axisId) {
-    var axis = getAxisById(axisId);
-    var any = false;
-    for (var val of axis.values) {
-        any = canShowVal(axisId, val.key);
-        if (any) {
-            break;
-        }
-    }
-    for (var val of axis.values) {
-        document.getElementById('showval_' + axisId + '__' + val.key).checked = !any;
-        var element = document.getElementById('clicktab_' + axisId + '__' + val.key);
-        element.classList.remove('tab_hidden'); // Remove either way to guarantee no duplication
-        if (any) {
-            element.classList.add('tab_hidden');
-        }
-    }
-    fillTable();
-}
-
-function toggleShowVal(axis, val) {
-    var show = canShowVal(axis, val);
-    var element = document.getElementById('clicktab_' + axis + '__' + val);
-    if (show) {
-        element.classList.remove('tab_hidden');
-    }
-    else {
-        element.classList.add('tab_hidden');
-    }
-    fillTable();
-}
-
-var anyRangeActive = false;
-
-const timer = ms => new Promise(res => setTimeout(res, ms));
-
-function enableRange(id) {
-    var range = document.getElementById('range_tablist_' + id);
-    var label = document.getElementById('label_range_tablist_' + id);
-    range.oninput = function() {
-        anyRangeActive = true;
-        label.innerText = (range.value/2) + ' seconds';
-    }
-    var data = {};
-    data.range = range;
-    data.counter = 0;
-    data.id = id;
-    data.tabPage = document.getElementById('tablist_' + id);
-    data.tabs = data.tabPage.getElementsByClassName('nav-link');
-    return data;
-}
-
-function clickTabAfterActiveTab(tabs) {
-    var next = false;
-    for (var tab of tabs) {
-        if (tab.classList.contains('active')) {
-            next = true;
-        }
-        else if (tab.classList.contains('tab_hidden')) {
-            // Skip past
-        }
-        else if (next) {
-            tab.click();
-            return tab;
-        }
-    }
-    if (next) { // Click the first non-hidden
-        for (var tab of tabs) {
-            if (tab.classList.contains('tab_hidden')) {
-                // Skip past
-            }
-            else {
-                tab.click();
-                return tab;
-            }
-        }
-    }
-    return null;
-}
-
-async function startAutoScroll() {
-    var rangeSet = [];
-    for (var axis of rawData.axes) {
-        rangeSet.push(enableRange(axis.id));
-    }
-    while (true) {
-        await timer(500);
-        if (!anyRangeActive) {
-            continue;
-        }
-        for (var data of rangeSet) {
-            if (data.range.value <= 0) {
-                continue;
-            }
-            data.counter++;
-            if (data.counter < data.range.value) {
-                continue;
-            }
-            data.counter = 0;
-            clickTabAfterActiveTab(data.tabs);
-        }
-    }
-}
-
-function genParamQuote(text) {
-    // Referenced to match generation_parameters_copypaste.py - quote(text)
-    if (!text.includes(',')) {
-        return text;
-    }
-    return '"' + text.toString().replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '"';
-}
-
-function formatMet(name, val, bad) {
-    if (val == null) {
-        return '';
-    }
-    val = val.toString();
-    if (bad !== undefined && val == bad) {
-        return '';
-    }
-    return name + ': ' + genParamQuote(val) + ', '
-}
-
-function crunchMetadata(url) {
-    if (!('metadata' in rawData)) {
-        return {};
-    }
-    initialData = structuredClone(rawData.metadata);
-    var index = 0;
-    for (var part of url.substring(0, url.indexOf('.')).split('/')) {
-        var axis = rawData.axes[index++];
-        var actualVal = null;
-        for (var val of axis.values) {
-            if (val.key == part) {
-                actualVal = val;
-                break;
-            }
-        }
-        if (actualVal == null) {
-            return { 'error': `metadata parsing failed for part ${index}: ${part}` };
-        }
-        for (var [key, value] of Object.entries(actualVal.params)) {
-            key = key.replaceAll(' ', '');
-            if (typeof(crunchParamHook) === 'undefined' || !crunchParamHook(initialData, key, value)) {
-                initialData[key] = value;
-            }
-        }
-    }
-    return initialData;
-}
-
-function doPopupFor(img) {
-    popoverLastImg = img;
-    var modalElem = document.getElementById('image_info_modal');
-    var url = img.id.substring('autogen_img_'.length);
-    var metaText = crunchMetadata(unescapeHtml(url));
-    metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaText) : formatMetadata(metaText);
-    var params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
-    var text = 'Image: ' + url + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
-    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${unescapeHtml(url)}"><br><div class="popup_modal_undertext">${text}</div>`;
-    $('#image_info_modal').modal('toggle');
-}
-
-function updateTitleStickyDirect() {
-    var height = Math.round(document.getElementById('top_nav_bar').getBoundingClientRect().height);
-    var header = document.getElementById('image_table_header');
-    if (header.style.top != height + 'px') { // This check is to reduce the odds of the browser yelling at us
-        header.style.top = height + 'px';
-    }
-}
-
-function updateTitleSticky() {
-    var topBar = document.getElementById('top_nav_bar');
-    if (!topBar.classList.contains('sticky_top')) {
-        document.getElementById('image_table_header').style.top = '0';
-        return;
-    }
-    // client rect is dynamically animated, so, uh, just hack it for now.
-    // TODO: Actually smooth attachment.
-    var rate = 50;
-    for (var time = 0; time <= 500; time += rate) {
-        setTimeout(updateTitleStickyDirect, time);
-    }
-}
-
-function toggleTopSticky() {
-    var topBar = document.getElementById('top_nav_bar');
-    if (topBar.classList.contains('sticky_top')) {
-        topBar.classList.remove('sticky_top');
-    }
-    else {
-        topBar.classList.add('sticky_top');
-    }
-    updateTitleSticky();
-}
-
-loadData();
+    loadData();
+    startAutoScroll();
+    createListeners();
+})(window.rawData);

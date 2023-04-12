@@ -1,0 +1,135 @@
+
+.table {
+    --bs-table-striped-bg: #303030;
+    --bs-table-bg: #202020;
+}
+hr {
+    box-sizing: content-box;
+    padding: 1rem 0;
+    margin: 0;
+    height: 1px;
+    border: 0;
+    background-color: var(--bs-body-color);
+    background-clip: content-box;
+}
+.sel_table tr td {
+    border: 1px solid black;
+    padding-right: 16px;
+    padding-left: 16px;
+}
+.sel_table {
+    min-width: 60em;
+    width: 100%;
+}
+.emptytab {
+    width: 0px;
+}
+.axis_table_cell {
+    max-width: calc(min(40em, max(10em, 100vw - 40em)));
+    max-height: 8em;
+    overflow: auto;
+}
+.tabval_subdiv {
+    min-width: calc(100vw - 5em - min(40em, max(10em, 100vw - 40em)));
+    max-height: 8em;
+    overflow: auto;
+}
+table tr td, table tr th, table thead th {
+    vertical-align: top;
+    border: 1px solid black;
+}
+thead {
+    background-color: #202020;
+}
+.popup_modal_background {
+    font-family: monospace, monospace;
+    background-color: rgb(50, 50, 50, 0.7);
+    text-align: center;
+}
+.popup_modal_img {
+    height: 100%;
+    height: -webkit-fill-available;
+    position: relative;
+    margin: auto;
+}
+.modal-footer {
+    height: 15vh;
+    overflow-x: auto;
+}
+.popup_modal_undertext {
+    background-color: #404060;
+    overflow-wrap: break-word;
+    white-space: pre-line;
+    padding: 0 2em;
+}
+.advanced_settings_section {
+    max-width: calc(max(1000px, 60em));
+    text-align: left;
+    margin: auto;
+}
+.timer_range {
+    vertical-align: bottom;
+}
+.tab_hidden {
+    display: none;
+}
+.nav-link:focus {
+    background-color: #909050 !important;
+}
+.axis_label_td {
+    left: 0px;
+    background-color: #202020;
+    background-clip: padding-box;
+}
+.superaxis_second {
+    background-color: #303030;
+}
+#axis_selectors {
+    text-align: right;
+    margin: auto;
+    width: fit-content;
+}
+.sticky_top {
+    position: sticky;
+    top: 0;
+}
+.accordion-button {
+    padding: 0.5rem;
+}
+#image_table.scale .table_img {
+    width: 100%;
+    height: auto;
+}
+#image_table.scale .axis_label_td {
+    word-break: break-all;
+}
+.spinner-grow {
+    --bs-spinner-animation-speed: 1000ms
+}
+#img-loader {
+    position: absolute;
+    transform: translate(calc(100vw/2), 20px);
+    top: 20em;
+}
+/* missing syle (bug) from darkly */
+.nav-pills {
+    --bs-nav-pills-border-width: 1px;
+    --bs-nav-pills-link-hover-border-color: #444;
+    --bs-nav-pills-link-active-border-color: #444;
+}
+.nav-pills .nav-link {
+    border: var(--bs-nav-pills-border-width) solid transparent;
+}
+.nav-pills .nav-link:hover, .nav-pills .nav-link:focus {
+    isolation: isolate;
+    border-color: var(--bs-nav-pills-link-hover-border-color);
+}
+.nav-pills .nav-link.disabled, .nav-pills .nav-link:disabled {
+    color: var(--bs-nav-link-disabled-color);
+    background-color: transparent;
+    border-color: transparent;
+}
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    border-color: var(--bs-nav-pills-link-active-border-color);
+}

@@ -254,7 +254,7 @@ if importlib.util.find_spec("gridgencore") is not None:
         p.some_setting_here = v
     # dry: bool, type: str, apply: callable, min: float = None, max: float = None, clean: callable = None
     gridgencore.registerMode("mySettingNameHere", GridSettingMode(True, "text", apply))
-    # for apply if the param is a 'p' field, you can use gridgencore.applyField("fieldname")
+    # for apply if the param is a 'p' field, you can use gridgencore.apply_field("fieldname")
 ```
 
 --------------

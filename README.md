@@ -86,6 +86,7 @@ Current overall project status (as of Feb 2023): **Works well, actively maintain
     - Repeat for as many axes as you want. When you configure axis #4, it will automatically add 4 more rows of axes to fill in. Leave any extras empty.
     - Click your main `Generate` button and wait for it to finish.
     - When it's done, click the button labeled `Page will be at (Click me) outputs/...` to view the full page.
+    - Note that a `config.yml` is saved in the output directory, which you can copy to your `assets` folder if you want to reuse it.
 
 --------------
 
@@ -112,6 +113,8 @@ Usage comes in three main steps:
 - The file must have key `grid`, with subkey `title` and `description` to define the file data.
     - It must also have `format` as `jpg` or `png`
     - It can optionally also have `params` to specify any default parameters.
+    - It can optionally define `show descriptions`, `autoscale`, and `sticky` as `true` or `false` to change default web-viewer settings.
+    - It can optionally define `x axis`, `y axis`, `x super axis`, and `y super axis` as axis IDs to change the default web-viewer axes.
 - The file can optionally have key `variables` with subkey/value pairs as replacements, for example `(type): waffle` - then later in a param value you can use `a picture of a (type)` to automatically fill the variable. These can be in any format you desire, as they are simple text replacements. They apply to all values, including titles, descriptions, and params (this was added for [valconius in issue #16](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/16)).
 - The file must have key `axes` to define the list of axes. This is a map-list key - meaning, add subkeys to create a list of each axis.
     - The simplest format for an axis is a setting name as the key and a comma-separated list of values inside.
@@ -289,6 +292,7 @@ if importlib.util.find_spec("gridgencore") is not None:
         - B: if your images are so big they're going off the edge, checking this option makes them smaller
         - C: if checked, you can zoom in/out of the page using your browser zoom (CTRL + Mouse Wheel) to change the UI size without affecting the image size
             - if unchecked, you can zoom in/out to change the size of the images.
+    - `Sticky navigation`: when checked, the navigation will stick to the top of the screen as you scroll down. Helps you quickly change axes while scrolling around without losing your place.
     - `Advanced Settings`: when clicked, it will open a dropdown with more advanced settings
         - ![img](github/advanced_settings_ref.png)
         - `Auto cycle every (x) seconds`: you can set these to non-zero values to the grid automatically change settings over time. For example, if you set your "Seed" option to "3 seconds", then every 3 seconds the seed will change (cycling between the options you have in order). This was suggested by [itswhateverman in issue #2](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/2).

@@ -1,13 +1,6 @@
 # This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
 
-import os
-import glob
-import yaml
-import json
-import shutil
-import math
-import re
-import pathlib
+import os, glob, yaml, json, shutil, math, re
 from copy import copy
 from PIL import Image
 
@@ -16,123 +9,123 @@ from PIL import Image
 ASSET_DIR = os.path.dirname(__file__) + "/assets"
 EXTRA_FOOTER = "..."
 EXTRA_ASSETS = []
-validModes = {}
+valid_modes = {}
 IMAGES_CACHE = None
 
 ######################### Hooks #########################
 
 # hook(SingleGridCall)
-gridCallInitHook: callable = None
-# hook(SingleGridCall, paramName: str, value: any) -> bool
-gridCallParamAddHook: callable = None
-# hook(SingleGridCall, paramName: str, dry: bool)
-gridCallApplyHook: callable = None
+grid_call_init_hook: callable = None
+# hook(SingleGridCall, param_name: str, value: any) -> bool
+grid_call_param_add_hook: callable = None
+# hook(SingleGridCall, param_name: str, dry: bool)
+grid_call_apply_hook: callable = None
 # hook(GridRunner)
-gridRunnerPreRunHook: callable = None
+grid_runner_pre_run_hook: callable = None
 # hook(GridRunner)
-gridRunnerPreDryHook: callable = None
+grid_runner_pre_dry_hook: callable = None
 # hook(GridRunner, PassThroughObject, set: list(SingleGridCall)) -> ResultObject
-gridRunnerRunPostDryHook: callable = None
+grid_runner_post_dry_hook: callable = None
 # hook(PassThroughObject) -> dict
-webDataGetBaseParamData: callable = None
+webdata_get_base_param_data: callable = None
 
 ######################### Utilities #########################
-def cleanFilePath(fn: str):
+def clean_file_path(fn: str):
     fn = fn.replace('\\', '/')
     while '//' in fn:
         fn = fn.replace('//', '/')
     return fn
 
-def listImageFiles():
+def list_image_files():
     global IMAGES_CACHE
     if IMAGES_CACHE is not None:
         return IMAGES_CACHE
-    imageDir = cleanFilePath(ASSET_DIR + "/images")
+    image_dir = clean_file_path(ASSET_DIR + "/images")
     IMAGES_CACHE = list()
-    for path, _, files in os.walk(imageDir):
+    for path, _, files in os.walk(image_dir):
         for name in files:
             _, ext = os.path.splitext(name)
             if ext in [".jpg", ".png", ".webp"]:
                 fn = path + "/" + name
-                fn = cleanFilePath(fn).replace(imageDir, '')
+                fn = clean_file_path(fn).replace(image_dir, '')
                 while fn.startswith('/'):
                     fn = fn[1:]
                 IMAGES_CACHE.append(fn)
     return IMAGES_CACHE
 
-def clearCaches():
+def clear_caches():
     global IMAGES_CACHE
     IMAGES_CACHE = None
 
-def getNameList():
-    fileList = glob.glob(ASSET_DIR + "/*.yml")
-    justFileNames = list(map(lambda f: os.path.relpath(f, ASSET_DIR), fileList))
-    return justFileNames
+def get_name_list():
+    file_list = glob.glob(ASSET_DIR + "/*.yml")
+    just_file_names = list(map(lambda f: os.path.relpath(f, ASSET_DIR), file_list))
+    return just_file_names
 
-def fixDict(d: dict):
+def fix_dict(d: dict):
     if d is None:
         return None
     if type(d) is not dict:
         raise RuntimeError(f"Value '{d}' is supposed to be submapping but isn't (it's plaintext, a list, or some other incorrect format). Did you typo the formatting?")
     return {str(k).lower(): v for k, v in d.items()}
 
-def cleanForWeb(text: str):
+def clean_for_web(text: str):
     if text is None:
         return None
     if type(text) is not str:
         raise RuntimeError(f"Value '{text}' is supposed to be text but isn't (it's a datamapping, list, or some other incorrect format). Did you typo the formatting?")
     return text.replace('"', '&quot;')
 
-def cleanId(id: str):
+def clean_id(id: str):
     return re.sub("[^a-z0-9]", "_", id.lower().strip())
 
-def cleanName(name: str):
+def clean_name(name: str):
     return str(name).lower().replace(' ', '').replace('[', '').replace(']', '').strip()
 
-def getBestInList(name: str, list: list):
+def get_best_in_list(name: str, list: list):
     backup = None
-    bestLen = 999
-    name = cleanName(name)
-    for listVal in list:
-        listValClean = cleanName(listVal)
-        if listValClean == name:
-            return listVal
-        if name in listValClean:
-            if len(listValClean) < bestLen:
-                backup = listVal
-                bestLen = len(listValClean)
+    best_len = 999
+    name = clean_name(name)
+    for list_val in list:
+        list_val_clean = clean_name(list_val)
+        if list_val_clean == name:
+            return list_val
+        if name in list_val_clean:
+            if len(list_val_clean) < best_len:
+                backup = list_val
+                best_len = len(list_val_clean)
     return backup
 
-def chooseBetterFileName(rawName: str, fullName: str):
-    partialName = os.path.splitext(os.path.basename(fullName))[0]
-    if '/' in rawName or '\\' in rawName or '.' in rawName or len(rawName) >= len(partialName):
-        return rawName
-    return partialName
+def choose_better_file_name(raw_name: str, full_name: str):
+    partial_name = os.path.splitext(os.path.basename(full_name))[0]
+    if '/' in raw_name or '\\' in raw_name or '.' in raw_name or len(raw_name) >= len(partial_name):
+        return raw_name
+    return partial_name
 
-def fixNum(num):
+def fix_num(num):
     if num is None or math.isinf(num) or math.isnan(num):
         return None
     return num
 
-def expandNumericListRanges(inList, numType):
-    outList = list()
-    for i in range(0, len(inList)):
-        rawVal = str(inList[i]).strip()
-        if rawVal in ["..", "...", "...."]:
-            if i < 2 or i + 1 >= len(inList):
-                raise RuntimeError(f"Cannot use ellipses notation at index {i}/{len(inList)} - must have at least 2 values before and 1 after.")
-            prior = outList[-1]
-            doublePrior = outList[-2]
-            after = numType(inList[i + 1])
-            step = prior - doublePrior
+def expand_numeric_list_ranges(in_list, num_type):
+    out_list = list()
+    for i in range(0, len(in_list)):
+        raw_val = str(in_list[i]).strip()
+        if raw_val in ["..", "...", "...."]:
+            if i < 2 or i + 1 >= len(in_list):
+                raise RuntimeError(f"Cannot use ellipses notation at index {i}/{len(in_list)} - must have at least 2 values before and 1 after.")
+            prior = out_list[-1]
+            double_prior = out_list[-2]
+            after = num_type(in_list[i + 1])
+            step = prior - double_prior
             if (step < 0) != ((after - prior) < 0):
                 raise RuntimeError(f"Ellipses notation failed for step {step} between {prior} and {after} - steps backwards.")
             count = int((after - prior) / step)
             for x in range(1, count):
-                outList.append(prior + x * step)
+                out_list.append(prior + x * step)
         else:
-            outList.append(numType(rawVal))
-    return outList
+            out_list.append(num_type(raw_val))
+    return out_list
 
 ######################### Value Modes #########################
 
@@ -158,70 +151,70 @@ class GridSettingMode:
 
 def registerMode(name: str, mode: GridSettingMode):
     mode.name = name
-    validModes[cleanName(name)] = mode
+    valid_modes[clean_name(name)] = mode
 
 ######################### Validation #########################
 
-def validateParams(grid, params: dict):
+def validate_params(grid, params: dict):
     for p,v in params.items():
-        params[p] = validateSingleParam(p, grid.procVariables(v))
+        params[p] = validate_single_param(p, grid.proc_variables(v))
 
-def applyField(name: str):
+def apply_field(name: str):
     def applier(p, v):
         setattr(p, name, v)
     return applier
 
-def applyFieldAsImageData(name: str):
+def apply_field_as_image_data(name: str):
     def applier(p, v):
-        fName = getBestInList(v, listImageFiles())
-        if fName is None:
+        file_name = get_best_in_list(v, list_image_files())
+        if file_name is None:
             raise RuntimeError("Invalid parameter '{p}' as '{v}': image file does not exist")
-        path = ASSET_DIR + "/images/" + fName
+        path = ASSET_DIR + "/images/" + file_name
         image = Image.open(path)
         setattr(p, name, image)
     return applier
 
-def validateSingleParam(p: str, v):
-    p = cleanName(p)
-    mode = validModes.get(p)
+def validate_single_param(p: str, v):
+    p = clean_name(p)
+    mode = valid_modes.get(p)
     if mode is None:
         raise RuntimeError(f"Invalid grid parameter '{p}': unknown mode")
-    modeType = mode.type
-    if modeType == "integer":
-        vInt = int(v)
-        if vInt is None:
+    mode_type = mode.type
+    if mode_type == "integer":
+        v_int = int(v)
+        if v_int is None:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
         min = mode.min
         max = mode.max
-        if min is not None and vInt < min:
+        if min is not None and v_int < min:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
-        if max is not None and vInt > max:
+        if max is not None and v_int > max:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-        v = vInt
-    elif modeType == "decimal":
-        vFloat = float(v)
-        if vFloat is None:
+        v = v_int
+    elif mode_type == "decimal":
+        v_float = float(v)
+        if v_float is None:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
         min = mode.min
         max = mode.max
-        if min is not None and vFloat < min:
+        if min is not None and v_float < min:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
-        if max is not None and vFloat > max:
+        if max is not None and v_float > max:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
-        v = vFloat
-    elif modeType == "boolean":
-        vClean = str(v).lower().strip()
-        if vClean == "true":
+        v = v_float
+    elif mode_type == "boolean":
+        v_clean = str(v).lower().strip()
+        if v_clean == "true":
             v = True
-        elif vClean == "false":
+        elif v_clean == "false":
             v = False
         else:
             raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
-    elif modeType == "text" and mode.valid_list is not None:
-        validList = mode.valid_list()
-        v = getBestInList(cleanName(v), validList)
+    elif mode_type == "text" and mode.valid_list is not None:
+        valid_list = mode.valid_list()
+        v = get_best_in_list(clean_name(v), valid_list)
         if v is None:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': not matched to any entry in list {list(validList)}")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': not matched to any entry in list {list(valid_list)}")
     if mode.clean is not None:
         return mode.clean(p, v)
     return v
@@ -231,7 +224,7 @@ def validateSingleParam(p: str, v):
 class AxisValue:
     def __init__(self, axis, grid, key: str, val):
         self.axis = axis
-        self.key = cleanId(str(key))
+        self.key = clean_id(str(key))
         if any(x.key == self.key for x in axis.values):
             self.key += f"__{len(axis.values)}"
         self.params = list()
@@ -239,23 +232,23 @@ class AxisValue:
             halves = val.split('=', maxsplit=1)
             if len(halves) != 2:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': not expected format")
-            halves[0] = grid.procVariables(halves[0])
-            halves[1] = grid.procVariables(halves[1])
-            halves[1] = validateSingleParam(halves[0], halves[1])
+            halves[0] = grid.proc_variables(halves[0])
+            halves[1] = grid.proc_variables(halves[1])
+            halves[1] = validate_single_param(halves[0], halves[1])
             self.title = halves[1]
-            self.params = { cleanName(halves[0]): halves[1] }
+            self.params = { clean_name(halves[0]): halves[1] }
             self.description = None
             self.skip = False
             self.show = True
         else:
-            self.title = grid.procVariables(val.get("title"))
-            self.description = grid.procVariables(val.get("description"))
-            self.skip = (str(grid.procVariables(val.get("skip")))).lower() == "true"
-            self.params = fixDict(val.get("params"))
-            self.show = (str(grid.procVariables(val.get("show")))).lower() != "false"
+            self.title = grid.proc_variables(val.get("title"))
+            self.description = grid.proc_variables(val.get("description"))
+            self.skip = (str(grid.proc_variables(val.get("skip")))).lower() == "true"
+            self.params = fix_dict(val.get("params"))
+            self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
-            validateParams(grid, self.params)
+            validate_params(grid, self.params)
     
     def __str__(self):
         return f"(title={self.title}, description={self.description}, params={self.params})"
@@ -263,23 +256,23 @@ class AxisValue:
         return self.__str__()
 
 class Axis:
-    def buildFromListStr(self, id, grid, listStr):
-        isSplitByDoublePipe = "||" in listStr
-        valueList = listStr.split("||" if isSplitByDoublePipe else ",")
-        self.mode_name = cleanName(str(id))
-        self.mode = validModes.get(self.mode_name)
+    def build_from_list_str(self, id, grid, list_str):
+        is_split_by_double_pipe = "||" in list_str
+        values_list = list_str.split("||" if is_split_by_double_pipe else ",")
+        self.mode_name = clean_name(str(id))
+        self.mode = valid_modes.get(self.mode_name)
         if self.mode is None:
             raise RuntimeError(f"Invalid axis mode '{self.mode}' from '{id}': unknown mode")
         if self.mode.type == "integer":
-            valueList = expandNumericListRanges(valueList, int)
+            values_list = expand_numeric_list_ranges(values_list, int)
         elif self.mode.type == "decimal":
-            valueList = expandNumericListRanges(valueList, float)
+            values_list = expand_numeric_list_ranges(values_list, float)
         index = 0
-        for val in valueList:
+        for val in values_list:
             try:
                 val = str(val).strip()
                 index += 1
-                if isSplitByDoublePipe and val == "" and index == len(valueList):
+                if is_split_by_double_pipe and val == "" and index == len(values_list):
                     continue
                 self.values.append(AxisValue(self, grid, str(index), f"{id}={val}"))
             except Exception as e:
@@ -288,34 +281,34 @@ class Axis:
     def __init__(self, grid, id: str, obj):
         self.raw_id = id
         self.values = list()
-        self.id = cleanId(str(id))
+        self.id = clean_id(str(id))
         if any(x.id == self.id for x in grid.axes):
             self.id += f"__{len(grid.axes)}"
         if isinstance(obj, str):
             self.title = id
             self.default = None
             self.description = ""
-            self.buildFromListStr(id, grid, obj)
+            self.build_from_list_str(id, grid, obj)
         else:
-            self.title = grid.procVariables(obj.get("title"))
-            self.default = grid.procVariables(obj.get("default"))
+            self.title = grid.proc_variables(obj.get("title"))
+            self.default = grid.proc_variables(obj.get("default"))
             if self.title is None:
                 raise RuntimeError("missing title")
-            self.description = grid.procVariables(obj.get("description"))
-            valuesObj = obj.get("values")
-            if valuesObj is None:
+            self.description = grid.proc_variables(obj.get("description"))
+            values_obj = obj.get("values")
+            if values_obj is None:
                 raise RuntimeError("missing values")
-            elif isinstance(valuesObj, str):
-                self.buildFromListStr(id, grid, valuesObj)
+            elif isinstance(values_obj, str):
+                self.build_from_list_str(id, grid, values_obj)
             else:
-                for key, val in valuesObj.items():
+                for key, val in values_obj.items():
                     try:
                         self.values.append(AxisValue(self, grid, key, val))
                     except Exception as e:
                         raise RuntimeError(f"value '{key}' errored: {e}")
 
 class GridFileHelper:
-    def procVariables(self, text):
+    def proc_variables(self, text):
         if text is None:
             return None
         text = str(text)
@@ -324,46 +317,46 @@ class GridFileHelper:
         return text
     
     def read_grid_direct(self, key: str):
-        return self.gridObj.get(key)
+        return self.grid_obj.get(key)
     
     def read_str_from_grid(self, key: str):
-        return self.procVariables(self.read_grid_direct(key))
+        return self.proc_variables(self.read_grid_direct(key))
 
-    def parseYaml(self, yamlContent: dict, grid_file: str):
+    def parse_yaml(self, yaml_content: dict, grid_file: str):
         self.variables = dict()
         self.axes = list()
-        yamlContent = fixDict(yamlContent)
-        varsObj = fixDict(yamlContent.get("variables"))
-        if varsObj is not None:
-            for key, val in varsObj.items():
+        yaml_content = fix_dict(yaml_content)
+        vars_obj = fix_dict(yaml_content.get("variables"))
+        if vars_obj is not None:
+            for key, val in vars_obj.items():
                 self.variables[str(key).lower()] = str(val)
-        self.gridObj = fixDict(yamlContent.get("grid"))
-        if self.gridObj is None:
+        self.grid_obj = fix_dict(yaml_content.get("grid"))
+        if self.grid_obj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'grid' root key")
         self.title = self.read_str_from_grid("title")
         self.description = self.read_str_from_grid("description")
         self.author = self.read_str_from_grid("author")
         self.format = self.read_str_from_grid("format")
         if self.title is None or self.description is None or self.author is None or self.format is None:
-            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {self.gridObj}")
-        self.params = fixDict(self.gridObj.get("params"))
+            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {self.grid_obj}")
+        self.params = fix_dict(self.grid_obj.get("params"))
         if self.params is not None:
-            validateParams(self, self.params)
-        axesObj = fixDict(yamlContent.get("axes"))
-        if axesObj is None:
+            validate_params(self, self.params)
+        axes_obj = fix_dict(yaml_content.get("axes"))
+        if axes_obj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'axes' root key")
-        for id, axisObj in axesObj.items():
+        for id, axis_obj in axes_obj.items():
             try:
-                self.axes.append(Axis(self, id, axisObj if isinstance(axisObj, str) else fixDict(axisObj)))
+                self.axes.append(Axis(self, id, axis_obj if isinstance(axis_obj, str) else fix_dict(axis_obj)))
             except Exception as e:
                 raise RuntimeError(f"Invalid axis '{id}': errored: {e}")
-        totalCount = 1
+        total_count = 1
         for axis in self.axes:
-            totalCount *= len(axis.values)
-        if totalCount <= 0:
-            raise RuntimeError(f"Invalid file {grid_file}: something went wrong ... is an axis empty? total count is {totalCount} for {len(self.axes)} axes")
-        cleanDesc = self.description.replace('\n', ' ')
-        print(f"Loaded grid file, title '{self.title}', description '{cleanDesc}', with {len(self.axes)} axes... combines to {totalCount} total images")
+            total_count *= len(axis.values)
+        if total_count <= 0:
+            raise RuntimeError(f"Invalid file {grid_file}: something went wrong ... is an axis empty? total count is {total_count} for {len(self.axes)} axes")
+        clean_desc = self.description.replace('\n', ' ')
+        print(f"Loaded grid file, title '{self.title}', description '{clean_desc}', with {len(self.axes)} axes... combines to {total_count} total images")
         return self
 
 ######################### Actual Execution Logic #########################
@@ -375,96 +368,96 @@ class SingleGridCall:
         for val in values:
             if val.skip:
                 self.skip = True
-        if gridCallInitHook is not None:
-            gridCallInitHook(self)
+        if grid_call_init_hook is not None:
+            grid_call_init_hook(self)
 
-    def flattenParams(self, grid: GridFileHelper):
+    def flatten_params(self, grid: GridFileHelper):
         self.params = grid.params.copy() if grid.params is not None else dict()
         for val in self.values:
             for p, v in val.params.items():
-                if gridCallParamAddHook is None or not gridCallParamAddHook(self, p, v):
+                if grid_call_param_add_hook is None or not grid_call_param_add_hook(self, p, v):
                     self.params[p] = v
 
-    def applyTo(self, p, dry: bool):
+    def apply_to(self, p, dry: bool):
         for name, val in self.params.items():
-            mode = validModes[cleanName(name)]
+            mode = valid_modes[clean_name(name)]
             if not dry or mode.dry:
                 mode.apply(p, val)
-        if gridCallApplyHook is not None:
-            gridCallApplyHook(self, p, dry)
+        if grid_call_apply_hook is not None:
+            grid_call_apply_hook(self, p, dry)
 
 class GridRunner:
-    def __init__(self, grid: GridFileHelper, doOverwrite: bool, basePath: str, p, fast_skip: bool):
+    def __init__(self, grid: GridFileHelper, do_overwrite: bool, base_path: str, p, fast_skip: bool):
         self.grid = grid
-        self.totalRun = 0
-        self.totalSkip = 0
-        self.totalSteps = 0
-        self.doOverwrite = doOverwrite
-        self.basePath = basePath
+        self.total_run = 0
+        self.total_skip = 0
+        self.total_steps = 0
+        self.do_overwrite = do_overwrite
+        self.base_path = base_path
         self.fast_skip = fast_skip
         self.p = p
 
-    def buildValueSetList(self, axisList: list):
+    def build_value_set_list(self, axis_list: list):
         result = list()
-        if len(axisList) == 0:
+        if len(axis_list) == 0:
             return result
-        curAxis = axisList[0]
-        if len(axisList) == 1:
-            for val in curAxis.values:
+        cur_axis = axis_list[0]
+        if len(axis_list) == 1:
+            for val in cur_axis.values:
                 if not val.skip or not self.fast_skip:
-                    newList = list()
-                    newList.append(val)
-                    result.append(SingleGridCall(newList))
+                    new_list = list()
+                    new_list.append(val)
+                    result.append(SingleGridCall(new_list))
             return result
-        nextAxisList = axisList[1::]
-        for obj in self.buildValueSetList(nextAxisList):
-            for val in curAxis.values:
+        next_axis_list = axis_list[1::]
+        for obj in self.build_value_set_list(next_axis_list):
+            for val in cur_axis.values:
                 if not val.skip or not self.fast_skip:
-                    newList = obj.values.copy()
-                    newList.append(val)
-                    result.append(SingleGridCall(newList))
+                    new_list = obj.values.copy()
+                    new_list.append(val)
+                    result.append(SingleGridCall(new_list))
         return result
 
     def preprocess(self):
-        self.valueSets = self.buildValueSetList(list(reversed(self.grid.axes)))
-        print(f'Have {len(self.valueSets)} unique value sets, will go into {self.basePath}')
-        for set in self.valueSets:
-            set.filepath = self.basePath + '/' + '/'.join(list(map(lambda v: cleanName(v.key), set.values)))
+        self.value_sets = self.build_value_set_list(list(reversed(self.grid.axes)))
+        print(f'Have {len(self.value_sets)} unique value sets, will go into {self.base_path}')
+        for set in self.value_sets:
+            set.filepath = self.base_path + '/' + '/'.join(list(map(lambda v: clean_name(v.key), set.values)))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
-            set.flattenParams(self.grid)
-            set.doSkip = set.skip or (not self.doOverwrite and os.path.exists(set.filepath + "." + self.grid.format))
-            if set.doSkip:
-                self.totalSkip += 1
+            set.flatten_params(self.grid)
+            set.do_skip = set.skip or (not self.do_overwrite and os.path.exists(set.filepath + "." + self.grid.format))
+            if set.do_skip:
+                self.total_skip += 1
             else:
-                self.totalRun += 1
-                stepCount = set.params.get("steps")
-                self.totalSteps += int(stepCount) if stepCount is not None else self.p.steps
-        print(f"Skipped {self.totalSkip} files, will run {self.totalRun} files, for {self.totalSteps} total steps")
+                self.total_run += 1
+                step_count = set.params.get("steps")
+                self.total_steps += int(step_count) if step_count is not None else self.p.steps
+        print(f"Skipped {self.total_skip} files, will run {self.total_run} files, for {self.total_steps} total steps")
 
     def run(self, dry: bool):
-        if gridRunnerPreRunHook is not None:
-            gridRunnerPreRunHook(self)
+        if grid_runner_pre_run_hook is not None:
+            grid_runner_pre_run_hook(self)
         iteration = 0
         last = None
-        for set in self.valueSets:
-            if set.doSkip:
+        for set in self.value_sets:
+            if set.do_skip:
                 continue
             iteration += 1
             if not dry:
-                print(f'On {iteration}/{self.totalRun} ... Set: {set.data}, file {set.filepath}')
+                print(f'On {iteration}/{self.total_run} ... Set: {set.data}, file {set.filepath}')
             p = copy(self.p)
-            if gridRunnerPreDryHook is not None:
-                gridRunnerPreDryHook(self)
-            set.applyTo(p, dry)
+            if grid_runner_pre_dry_hook is not None:
+                grid_runner_pre_dry_hook(self)
+            set.apply_to(p, dry)
             if dry:
                 continue
-            last = gridRunnerRunPostDryHook(self, p, set)
+            last = grid_runner_post_dry_hook(self, p, set)
         return last
 
 ######################### Web Data Builders #########################
 
 class WebDataBuilder():
-    def buildJson(grid: GridFileHelper, publish_gen_metadata: bool, p):
+    def build_json(grid: GridFileHelper, publish_gen_metadata: bool, p):
         def get_axis(axis: str):
             id = grid.read_str_from_grid(axis)
             if id is None:
@@ -492,135 +485,137 @@ class WebDataBuilder():
             }
         }
         if publish_gen_metadata:
-            result['metadata'] = None if webDataGetBaseParamData is None else webDataGetBaseParamData(p)
+            result['metadata'] = None if webdata_get_base_param_data is None else webdata_get_base_param_data(p)
         axes = list()
         for axis in grid.axes:
-            jAxis = {
+            j_axis = {
                 'id': str(axis.id).lower(),
                 'title': axis.title,
                 'description': axis.description or ""
             }
             values = list()
             for val in axis.values:
-                jVal = {
+                j_val = {
                     'key': str(val.key).lower(),
                     'title': val.title,
                     'description': val.description or "",
                     'show': val.show
                 }
                 if publish_gen_metadata:
-                    jVal['params'] = val.params
-                values.append(jVal)
-            jAxis['values'] = values
-            axes.append(jAxis)
+                    j_val['params'] = val.params
+                values.append(j_val)
+            j_axis['values'] = values
+            axes.append(j_axis)
         result['axes'] = axes
         return json.dumps(result)
 
-    def radioButtonHtml(name, id, descrip, label):
+    def radio_button_html(name, id, descrip, label):
         return f'<input type="radio" class="btn-check" name="{name}" id="{str(id).lower()}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="{str(id).lower()}" title="{descrip}">{label}</label>\n'
 
-    def axisBar(label, content):
+    def axis_bar(label, content):
         return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'
 
-    def buildHtml(grid):
-        with open(ASSET_DIR + "/page.html", 'r') as referenceHtml:
-            html = referenceHtml.read()
-        xSelect = ""
-        ySelect = ""
-        x2Select = WebDataBuilder.radioButtonHtml('x2_axis_selector', f'x2_none', 'None', 'None')
-        y2Select = WebDataBuilder.radioButtonHtml('y2_axis_selector', f'y2_none', 'None', 'None')
+    def build_html(grid):
+        with open(ASSET_DIR + "/page.html", 'r') as reference_html:
+            html = reference_html.read()
+        x_select = ""
+        y_select = ""
+        x2Select = WebDataBuilder.radio_button_html('x2_axis_selector', f'x2_none', 'None', 'None')
+        y2Select = WebDataBuilder.radio_button_html('y2_axis_selector', f'y2_none', 'None', 'None')
         content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
-        advancedSettings = ''
+        advanced_settings = ''
         primary = True
         for axis in grid.axes:
             try:
-                axisDescrip = cleanForWeb(axis.description or '')
-                trClass = "primary" if primary else "secondary"
-                content += f'<tr class="{trClass}">\n<td>\n<h4>{axis.title}</h4>\n'
-                advancedSettings += f'\n<h4>{axis.title}</h4><div class="timer_box">Auto cycle every <input style="width:30em;" autocomplete="off" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>\nShow value: '
-                axisClass = "axis_table_cell"
-                if len(axisDescrip.strip()) == 0:
-                    axisClass += " emptytab"
-                content += f'<div class="{axisClass}">{axisDescrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
+                axis_descrip = clean_for_web(axis.description or '')
+                tr_class = "primary" if primary else "secondary"
+                content += f'<tr class="{tr_class}">\n<td>\n<h4>{axis.title}</h4>\n'
+                advanced_settings += f'\n<h4>{axis.title}</h4><div class="timer_box">Auto cycle every <input style="width:30em;" autocomplete="off" type="range" min="0" max="360" value="0" class="form-range timer_range" id="range_tablist_{axis.id}"><label class="form-check-label" for="range_tablist_{axis.id}" id="label_range_tablist_{axis.id}">0 seconds</label></div>\nShow value: '
+                axis_class = "axis_table_cell"
+                if len(axis_descrip.strip()) == 0:
+                    axis_class += " emptytab"
+                content += f'<div class="{axis_class}">{axis_descrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
-                isFirst = axis.default is None
+                is_first = axis.default is None
                 for val in axis.values:
                     if axis.default is not None:
-                        isFirst = str(axis.default) == str(val.key)
-                    selected = "true" if isFirst else "false"
-                    active = " active" if isFirst else ""
-                    isFirst = False
-                    descrip = cleanForWeb(val.description or '')
+                        is_first = str(axis.default) == str(val.key)
+                    selected = "true" if is_first else "false"
+                    active = " active" if is_first else ""
+                    is_first = False
+                    descrip = clean_for_web(val.description or '')
                     content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{val.title}: {descrip}">{val.title}</a></li>\n'
-                    advancedSettings += f'&nbsp;<input class="form-check-input" type="checkbox" autocomplete="off" id="showval_{axis.id}__{val.key}" checked="true" onchange="javascript:toggleShowVal(\'{axis.id}\', \'{val.key}\')"> <label class="form-check-label" for="showval_{axis.id}__{val.key}" title="Uncheck this to hide \'{val.title}\' from the page.">{val.title}</label>'
-                advancedSettings += f'&nbsp;&nbsp;<button class="submit" onclick="javascript:toggleShowAllAxis(\'{axis.id}\')">Toggle All</button>'
+                    advanced_settings += f'&nbsp;<input class="form-check-input" type="checkbox" autocomplete="off" id="showval_{axis.id}__{val.key}" checked="true" onchange="javascript:toggleShowVal(\'{axis.id}\', \'{val.key}\')"> <label class="form-check-label" for="showval_{axis.id}__{val.key}" title="Uncheck this to hide \'{val.title}\' from the page.">{val.title}</label>'
+                advanced_settings += f'&nbsp;&nbsp;<button class="submit" onclick="javascript:toggleShowAllAxis(\'{axis.id}\')">Toggle All</button>'
                 content += '</ul>\n<div class="tab-content">\n'
-                isFirst = axis.default is None
+                is_first = axis.default is None
                 for val in axis.values:
                     if axis.default is not None:
-                        isFirst = str(axis.default) == str(val.key)
-                    active = " active show" if isFirst else ""
-                    isFirst = False
-                    descrip = cleanForWeb(val.description or '')
+                        is_first = str(axis.default) == str(val.key)
+                    active = " active show" if is_first else ""
+                    is_first = False
+                    descrip = clean_for_web(val.description or '')
                     if len(descrip.strip()) == 0:
                         active += " emptytab"
                     content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel"><div class="tabval_subdiv">{descrip}</div></div>\n'
             except Exception as e:
                 raise RuntimeError(f"Failed to build HTML for axis '{axis.id}': {e}")
             content += '</div></td></tr>\n'
-            xSelect += WebDataBuilder.radioButtonHtml('x_axis_selector', f'x_{axis.id}', axisDescrip, axis.title)
-            ySelect += WebDataBuilder.radioButtonHtml('y_axis_selector', f'y_{axis.id}', axisDescrip, axis.title)
-            x2Select += WebDataBuilder.radioButtonHtml('x2_axis_selector', f'x2_{axis.id}', axisDescrip, axis.title)
-            y2Select += WebDataBuilder.radioButtonHtml('y2_axis_selector', f'y2_{axis.id}', axisDescrip, axis.title)
+            x_select += WebDataBuilder.radio_button_html('x_axis_selector', f'x_{axis.id}', axis_descrip, axis.title)
+            y_select += WebDataBuilder.radio_button_html('y_axis_selector', f'y_{axis.id}', axis_descrip, axis.title)
+            x2Select += WebDataBuilder.radio_button_html('x2_axis_selector', f'x2_{axis.id}', axis_descrip, axis.title)
+            y2Select += WebDataBuilder.radio_button_html('y2_axis_selector', f'y2_{axis.id}', axis_descrip, axis.title)
         content += '</table>\n<div class="axis_selectors">'
-        content += WebDataBuilder.axisBar('X Axis', xSelect)
-        content += WebDataBuilder.axisBar('Y Axis', ySelect)
-        content += WebDataBuilder.axisBar('X Super-Axis', x2Select)
-        content += WebDataBuilder.axisBar('Y Super-Axis', y2Select)
+        content += WebDataBuilder.axis_bar('X Axis', x_select)
+        content += WebDataBuilder.axis_bar('Y Axis', y_select)
+        content += WebDataBuilder.axis_bar('X Super-Axis', x2Select)
+        content += WebDataBuilder.axis_bar('Y Super-Axis', y2Select)
         content += '</div></div>\n'
-        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
+        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", clean_for_web(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advanced_settings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
         return html
 
-    def EmitWebData(path, grid, publish_gen_metadata, p, yaml_content):
+    def emit_web_data(path, grid, publish_gen_metadata, p, yaml_content):
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
-        json = WebDataBuilder.buildJson(grid, publish_gen_metadata, p)
+        json = WebDataBuilder.build_json(grid, publish_gen_metadata, p)
         with open(path + "/data.js", 'w') as f:
             f.write("rawData = " + json)
         with open(path + "/config.yml", 'w') as f:
             yaml.dump(yaml_content, f, sort_keys=False, default_flow_style=False, width=1000)
         for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
-        html = WebDataBuilder.buildHtml(grid)
+        html = WebDataBuilder.build_html(grid)
         with open(path + "/index.html", 'w') as f:
             f.write(html)
         print(f"Web file is now at {path}/index.html")
 
 ######################### Main Runner Function #########################
 
-def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFolderName: str = None, doOverwrite: bool = False, fastSkip: bool = False, generatePage: bool = True, publishGenMetadata: bool = True, dryRun: bool = False, manualPairs: list = None):
+def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, output_folder_name: str = None, do_overwrite: bool = False,
+               fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None):
     grid = GridFileHelper()
-    yamlContent = None
-    if manualPairs is None:
-        fullInputPath = ASSET_DIR + "/" + inputFile
-        if not os.path.exists(fullInputPath):
-            raise RuntimeError(f"Non-existent file '{inputFile}'")
+    yaml_content = None
+    if manual_pairs is None:
+        full_input_path = ASSET_DIR + "/" + input_file
+        if not os.path.exists(full_input_path):
+            raise RuntimeError(f"Non-existent file '{input_file}'")
         # Parse and verify
-        with open(fullInputPath, 'r') as yamlContentText:
+        with open(full_input_path, 'r') as yaml_content_text:
             try:
-                yamlContent = yaml.safe_load(yamlContentText)
+                yaml_content = yaml.safe_load(yaml_content_text)
             except yaml.YAMLError as exc:
-                raise RuntimeError(f"Invalid YAML in file '{inputFile}': {exc}")
-        grid.parseYaml(yamlContent, inputFile)
+                raise RuntimeError(f"Invalid YAML in file '{input_file}': {exc}")
+        grid.parse_yaml(yaml_content, input_file)
     else:
-        grid.title = outputFolderName
+        grid.title = output_folder_name
         grid.description = ""
         grid.variables = dict()
         grid.author = "Unspecified"
         grid.format = "png"
         grid.axes = list()
         grid.params = None
-        yamlContent = {
+        grid.grid_obj = {}
+        yaml_content = {
             'grid': {
                 'title': grid.title,
                 'description': grid.description,
@@ -629,27 +624,27 @@ def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFold
             },
             'axes': {}
         }
-        for i in range(0, int(len(manualPairs) / 2)):
-            key = manualPairs[i * 2]
+        for i in range(0, int(len(manual_pairs) / 2)):
+            key = manual_pairs[i * 2]
             if isinstance(key, str) and key != "":
                 try:
-                    val = manualPairs[i * 2 + 1]
+                    val = manual_pairs[i * 2 + 1]
                     grid.axes.append(Axis(grid, key, val))
                     yaml_key = key
-                    while yaml_key in yamlContent['axes']:
+                    while yaml_key in yaml_content['axes']:
                         yaml_key += ' '
-                    yamlContent['axes'][yaml_key] = val
+                    yaml_content['axes'][yaml_key] = val
                 except Exception as e:
                     raise RuntimeError(f"Invalid axis {(i + 1)} '{key}': errored: {e}")
     # Now start using it
-    if outputFolderName.strip() == "":
-        outputFolderName = inputFile.replace(".yml", "")
-    folder = outputFolderBase + "/" + outputFolderName
-    runner = GridRunner(grid, doOverwrite, folder, passThroughObj, fastSkip)
+    if output_folder_name.strip() == "":
+        output_folder_name = input_file.replace(".yml", "")
+    folder = output_folder_base + "/" + output_folder_name
+    runner = GridRunner(grid, do_overwrite, folder, pass_through_obj, fast_skip)
     runner.preprocess()
-    if generatePage:
-        WebDataBuilder.EmitWebData(folder, grid, publishGenMetadata, passThroughObj, yamlContent)
-    result = runner.run(dryRun)
-    if dryRun:
+    if generate_page:
+        WebDataBuilder.emit_web_data(folder, grid, publish_gen_metadata, pass_through_obj, yaml_content)
+    result = runner.run(dry_run)
+    if dry_run:
         print("Infinite Grid dry run succeeded without error")
     return result

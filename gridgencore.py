@@ -483,6 +483,29 @@ class WebDataBuilder():
             axes.append(jAxis)
         result['axes'] = axes
         return json.dumps(result)
+    
+    def buildYaml(grid):
+        result = {}
+        main = {}
+        main['title'] = grid.title
+        main['description'] = grid.description or ""
+        main['format'] = grid.format
+        main['author'] = grid.author
+        result['grid'] = main
+        axes = {}
+        for axis in grid.axes:
+            jAxis = {}
+            jAxis['title'] = axis.title
+            id = re.sub('__[\d]+$', '', str(axis.id)).replace('_', ' ')
+            dups = sum(x == id for x in axes.keys())
+            if dups > 0:
+                id += (" " * len(dups)) # hack to allow multiples of same id, like for `prompt replace`
+                jAxis['title'] += " " + dups
+            values = list(map(lambda val: str(val.title), axis.values))
+            jAxis['values'] = ' || '.join(values)
+            axes[id] = jAxis
+        result['axes'] = axes
+        return result
 
     def radioButtonHtml(name, id, descrip, label):
         return f'<input type="radio" class="btn-check" name="{name}" id="{str(id).lower()}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="{str(id).lower()}" title="{descrip}">{label}</label>\n'
@@ -551,12 +574,16 @@ class WebDataBuilder():
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
         return html
 
-    def EmitWebData(path, grid, publish_gen_metadata, p):
+    def EmitWebData(path, grid, publish_gen_metadata, p, yamlContent):
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.buildJson(grid, publish_gen_metadata, p)
         with open(path + "/data.js", 'w') as f:
             f.write("rawData = " + json)
+        if yamlContent is None:
+            yamlContent = WebDataBuilder.buildYaml(grid)
+        with open(path + "/config.yml", 'w') as f:
+            yaml.dump(yamlContent, f, sort_keys=False, default_flow_style=False, width=1000)
         for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
         html = WebDataBuilder.buildHtml(grid)
@@ -568,6 +595,7 @@ class WebDataBuilder():
 
 def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFolderName: str = None, doOverwrite: bool = False, fastSkip: bool = False, generatePage: bool = True, publishGenMetadata: bool = True, dryRun: bool = False, manualPairs: list = None):
     grid = GridFileHelper()
+    yamlContent = None
     if manualPairs is None:
         fullInputPath = ASSET_DIR + "/" + inputFile
         if not os.path.exists(fullInputPath):
@@ -601,7 +629,7 @@ def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFold
     runner = GridRunner(grid, doOverwrite, folder, passThroughObj, fastSkip)
     runner.preprocess()
     if generatePage:
-        WebDataBuilder.EmitWebData(folder, grid, publishGenMetadata, passThroughObj)
+        WebDataBuilder.EmitWebData(folder, grid, publishGenMetadata, passThroughObj, yamlContent)
     result = runner.run(dryRun)
     if dryRun:
         print("Infinite Grid dry run succeeded without error")

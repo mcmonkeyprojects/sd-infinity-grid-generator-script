@@ -286,6 +286,7 @@ class Axis:
                 raise RuntimeError(f"value '{val}' errored: {e}")
 
     def __init__(self, grid, id: str, obj):
+        self.raw_id = id
         self.values = list()
         self.id = cleanId(str(id))
         if any(x.id == self.id for x in grid.axes):
@@ -321,6 +322,12 @@ class GridFileHelper:
         for key, val in self.variables.items():
             text = text.replace(key, val)
         return text
+    
+    def read_grid_direct(self, key: str):
+        return self.gridObj.get(key)
+    
+    def read_str_from_grid(self, key: str):
+        return self.procVariables(self.read_grid_direct(key))
 
     def parseYaml(self, yamlContent: dict, grid_file: str):
         self.variables = dict()
@@ -330,16 +337,16 @@ class GridFileHelper:
         if varsObj is not None:
             for key, val in varsObj.items():
                 self.variables[str(key).lower()] = str(val)
-        gridObj = fixDict(yamlContent.get("grid"))
-        if gridObj is None:
+        self.gridObj = fixDict(yamlContent.get("grid"))
+        if self.gridObj is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'grid' root key")
-        self.title = self.procVariables(gridObj.get("title"))
-        self.description = self.procVariables(gridObj.get("description"))
-        self.author = self.procVariables(gridObj.get("author"))
-        self.format = self.procVariables(gridObj.get("format"))
+        self.title = self.read_str_from_grid("title")
+        self.description = self.read_str_from_grid("description")
+        self.author = self.read_str_from_grid("author")
+        self.format = self.read_str_from_grid("format")
         if self.title is None or self.description is None or self.author is None or self.format is None:
-            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {gridObj}")
-        self.params = fixDict(gridObj.get("params"))
+            raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {self.gridObj}")
+        self.params = fixDict(self.gridObj.get("params"))
         if self.params is not None:
             validateParams(self, self.params)
         axesObj = fixDict(yamlContent.get("axes"))
@@ -457,11 +464,32 @@ class GridRunner:
 ######################### Web Data Builders #########################
 
 class WebDataBuilder():
-    def buildJson(grid, publish_gen_metadata, p):
+    def buildJson(grid: GridFileHelper, publish_gen_metadata: bool, p):
+        def get_axis(axis: str):
+            id = grid.read_str_from_grid(axis)
+            if id is None:
+                return ''
+            id = str(id).lower()
+            if id == 'none':
+                return 'none'
+            possible = [x.id for x in grid.axes if x.raw_id == id]
+            if len(possible) == 0:
+                raise RuntimeError(f"Cannot find axis '{id}' for axis default '{axis}'... valid: {[x.raw_id for x in grid.axes]}")
+            return possible[0]
+        show_descrip = grid.read_grid_direct('show descriptions')
         result = {
             'title': grid.title,
             'description': grid.description,
-            'ext': grid.format
+            'ext': grid.format,
+            'defaults': {
+                'show_descriptions': True if show_descrip is None else show_descrip,
+                'autoscale': grid.read_grid_direct('autoscale') or False,
+                'sticky': grid.read_grid_direct('sticky') or False,
+                'x': get_axis('x axis'),
+                'y': get_axis('y axis'),
+                'x2': get_axis('x super axis'),
+                'y2': get_axis('y super axis')
+            }
         }
         if publish_gen_metadata:
             result['metadata'] = None if webDataGetBaseParamData is None else webDataGetBaseParamData(p)

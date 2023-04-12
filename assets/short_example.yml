@@ -32,6 +32,14 @@ grid:
     # jpg makes smaller file sizes, with slightly lower quality
     # png makes bigger file sizes, at better quality
     format: jpg
+    # Optionally, also specify default choices for the webpage.
+    show descriptions: true
+    autoscale: false
+    sticky: false
+    x axis: sampler
+    y axis: steps
+    x super axis: 'None'
+    y super axis: 'None'
 
 # "axes" is the root key of the list of axes
 axes:

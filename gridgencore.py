@@ -266,12 +266,13 @@ class Axis:
     def buildFromListStr(self, id, grid, listStr):
         isSplitByDoublePipe = "||" in listStr
         valueList = listStr.split("||" if isSplitByDoublePipe else ",")
-        mode = validModes.get(cleanName(str(id)))
-        if mode is None:
-            raise RuntimeError(f"Invalid axis '{mode}': unknown mode")
-        if mode.type == "integer":
+        self.mode_name = cleanName(str(id))
+        self.mode = validModes.get(self.mode_name)
+        if self.mode is None:
+            raise RuntimeError(f"Invalid axis mode '{self.mode}' from '{id}': unknown mode")
+        if self.mode.type == "integer":
             valueList = expandNumericListRanges(valueList, int)
-        elif mode.type == "decimal":
+        elif self.mode.type == "decimal":
             valueList = expandNumericListRanges(valueList, float)
         index = 0
         for val in valueList:
@@ -457,25 +458,28 @@ class GridRunner:
 
 class WebDataBuilder():
     def buildJson(grid, publish_gen_metadata, p):
-        result = {}
-        result['title'] = grid.title
-        result['description'] = grid.description
-        result['ext'] = grid.format
+        result = {
+            'title': grid.title,
+            'description': grid.description,
+            'ext': grid.format
+        }
         if publish_gen_metadata:
             result['metadata'] = None if webDataGetBaseParamData is None else webDataGetBaseParamData(p)
         axes = list()
         for axis in grid.axes:
-            jAxis = {}
-            jAxis['id'] = str(axis.id).lower()
-            jAxis['title'] = axis.title
-            jAxis['description'] = axis.description or ""
+            jAxis = {
+                'id': str(axis.id).lower(),
+                'title': axis.title,
+                'description': axis.description or ""
+            }
             values = list()
             for val in axis.values:
-                jVal = {}
-                jVal['key'] = str(val.key).lower()
-                jVal['title'] = val.title
-                jVal['description'] = val.description or ""
-                jVal['show'] = val.show
+                jVal = {
+                    'key': str(val.key).lower(),
+                    'title': val.title,
+                    'description': val.description or "",
+                    'show': val.show
+                }
                 if publish_gen_metadata:
                     jVal['params'] = val.params
                 values.append(jVal)
@@ -483,33 +487,10 @@ class WebDataBuilder():
             axes.append(jAxis)
         result['axes'] = axes
         return json.dumps(result)
-    
-    def buildYaml(grid):
-        result = {}
-        main = {}
-        main['title'] = grid.title
-        main['description'] = grid.description or ""
-        main['format'] = grid.format
-        main['author'] = grid.author
-        result['grid'] = main
-        axes = {}
-        for axis in grid.axes:
-            jAxis = {}
-            jAxis['title'] = axis.title
-            id = re.sub('__[\d]+$', '', str(axis.id)).replace('_', ' ')
-            dups = sum(x == id for x in axes.keys())
-            if dups > 0:
-                id += (" " * len(dups)) # hack to allow multiples of same id, like for `prompt replace`
-                jAxis['title'] += " " + dups
-            values = list(map(lambda val: str(val.title), axis.values))
-            jAxis['values'] = ' || '.join(values)
-            axes[id] = jAxis
-        result['axes'] = axes
-        return result
 
     def radioButtonHtml(name, id, descrip, label):
         return f'<input type="radio" class="btn-check" name="{name}" id="{str(id).lower()}" autocomplete="off" checked=""><label class="btn btn-outline-primary" for="{str(id).lower()}" title="{descrip}">{label}</label>\n'
-    
+
     def axisBar(label, content):
         return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'
 
@@ -574,16 +555,14 @@ class WebDataBuilder():
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
         return html
 
-    def EmitWebData(path, grid, publish_gen_metadata, p, yamlContent):
+    def EmitWebData(path, grid, publish_gen_metadata, p, yaml_content):
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.buildJson(grid, publish_gen_metadata, p)
         with open(path + "/data.js", 'w') as f:
             f.write("rawData = " + json)
-        if yamlContent is None:
-            yamlContent = WebDataBuilder.buildYaml(grid)
         with open(path + "/config.yml", 'w') as f:
-            yaml.dump(yamlContent, f, sort_keys=False, default_flow_style=False, width=1000)
+            yaml.dump(yaml_content, f, sort_keys=False, default_flow_style=False, width=1000)
         for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
         html = WebDataBuilder.buildHtml(grid)
@@ -615,11 +594,25 @@ def runGridGen(passThroughObj, inputFile: str, outputFolderBase: str, outputFold
         grid.format = "png"
         grid.axes = list()
         grid.params = None
+        yamlContent = {
+            'grid': {
+                'title': grid.title,
+                'description': grid.description,
+                'format': grid.format,
+                'author': grid.author
+            },
+            'axes': {}
+        }
         for i in range(0, int(len(manualPairs) / 2)):
             key = manualPairs[i * 2]
             if isinstance(key, str) and key != "":
                 try:
-                    grid.axes.append(Axis(grid, key, manualPairs[i * 2 + 1]))
+                    val = manualPairs[i * 2 + 1]
+                    grid.axes.append(Axis(grid, key, val))
+                    yaml_key = key
+                    while yaml_key in yamlContent['axes']:
+                        yaml_key += ' '
+                    yamlContent['axes'][yaml_key] = val
                 except Exception as e:
                     raise RuntimeError(f"Invalid axis {(i + 1)} '{key}': errored: {e}")
     # Now start using it

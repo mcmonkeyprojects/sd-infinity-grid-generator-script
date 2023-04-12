@@ -27,6 +27,8 @@ function loadData() {
     }
     console.log("Loaded data for '" + rawData.title + "'");
     document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
+    document.getElementById('stickyNavigation').addEventListener('change', toggleTopSticky);
+    document.getElementById('toggle_nav_button').addEventListener('click', updateTitleSticky);
     fillTable();
     startAutoScroll();
 }
@@ -234,7 +236,7 @@ function fillTable() {
     var x2Axis = x2 == 'None' || x2 == x || x2 == y ? null : getAxisById(x2);
     var y2Axis = y2 == 'None' || y2 == x2 || y2 == x || y2 == y ? null : getAxisById(y2);
     var table = document.getElementById('image_table');
-    var newContent = '<th>';
+    var newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
     var superFirst = true;
     for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
         if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
@@ -250,7 +252,7 @@ function fillTable() {
         }
         superFirst = !superFirst;
     }
-    newContent += '</th>';
+    newContent += '</tr>';
     superFirst = true;
     for (var y2val of (y2Axis == null ? [null] : y2Axis.values)) {
         if (y2val != null && !canShowVal(y2Axis.id, y2val.key)) {
@@ -305,6 +307,7 @@ function updateScaling() {
     for (var image of document.getElementById('image_table').getElementsByClassName('table_img')) {
         image.style.width = percent;
     }
+    updateTitleSticky();
 }
 
 function toggleDescriptions() {
@@ -482,6 +485,39 @@ function doPopupFor(img) {
     var text = 'Image: ' + url + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
     modalElem.innerHTML = '<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="' + unescapeHtml(url) + '"><br><div class="popup_modal_undertext">' + text + '</div>';
     $('#image_info_modal').modal('toggle');
+}
+
+function updateTitleStickyDirect() {
+    var height = Math.round(document.getElementById('top_nav_bar').getBoundingClientRect().height);
+    var header = document.getElementById('image_table_header');
+    if (header.style.top != height + 'px') { // This check is to reduce the odds of the browser yelling at us
+        header.style.top = height + 'px';
+    }
+}
+
+function updateTitleSticky() {
+    var topBar = document.getElementById('top_nav_bar');
+    if (!topBar.classList.contains('sticky_top')) {
+        document.getElementById('image_table_header').style.top = '0';
+        return;
+    }
+    // client rect is dynamically animated, so, uh, just hack it for now.
+    // TODO: Actually smooth attachment.
+    var rate = 50;
+    for (var time = 0; time <= 500; time += rate) {
+        setTimeout(updateTitleStickyDirect, time);
+    }
+}
+
+function toggleTopSticky() {
+    var topBar = document.getElementById('top_nav_bar');
+    if (topBar.classList.contains('sticky_top')) {
+        topBar.classList.remove('sticky_top');
+    }
+    else {
+        topBar.classList.add('sticky_top');
+    }
+    updateTitleSticky();
 }
 
 loadData();

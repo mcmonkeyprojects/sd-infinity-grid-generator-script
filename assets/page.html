@@ -83,7 +83,6 @@
         background-color: #909050 !important;
     }
     .axis_label_td {
-        position: sticky;
         left: 0px;
         background-color: #202020;
         background-clip: padding-box;
@@ -96,6 +95,13 @@
         margin: auto;
         width: fit-content;
     }
+    .sticky_top {
+        position: sticky;
+        top: 0;
+    }
+    .accordion-button {
+        padding: 0.5rem;
+    }
     </style>
     <script src="jquery.min.js"></script>
 </head>
@@ -105,22 +111,44 @@
         <h4>{DESCRIPTION}</h4>
         <noscript>This page requires JavaScript to work. Don't worry, it's all local to the current page, and open source on GitHub.</noscript>
         <hr>
-        <div class="accordion advanced_settings_section" id="settings_according">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="setting_according_heading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#settings_according_collapse" aria-expanded="false" aria-controls="settings_according_collapse">Advanced Settings</button>
-                </h2>
-                <div id="settings_according_collapse" class="accordion-collapse collapse" aria-labelledby="setting_according_heading" data-bs-parent="#settings_according">
-                    <div class="accordion-body">
-                        {ADVANCED_SETTINGS}
+        <div id="top_nav_bar">
+            <div class="accordion navigation_accordion" id="navigation_accordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="navigation_accordion_heading">
+                        <button class="accordion-button" type="button" id="toggle_nav_button" data-bs-toggle="collapse" data-bs-target="#navigation_accordion_collapse" aria-expanded="true" aria-controls="navigation_accordion_collapse">Navigation</button>
+                    </h2>
+                    <div id="navigation_accordion_collapse" class="accordion-collapse collapse show" aria-labelledby="navigation_accordion_heading" data-bs-parent="navigation_accordion">
+                        <div class="accordion-body">
+                            <div>
+                                <div class="accordion advanced_settings_section" id="settings_accordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="setting_accordion_heading">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#settings_accordion_collapse" aria-expanded="false" aria-controls="settings_accordion_collapse">Advanced Settings</button>
+                                        </h2>
+                                        <div id="settings_accordion_collapse" class="accordion-collapse collapse" aria-labelledby="setting_accordion_heading" data-bs-parent="#settings_accordion">
+                                            <div class="accordion-body">
+                                                {ADVANCED_SETTINGS}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            {CONTENT}
+                            <center>
+                                <input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" autocomplete="off" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
+                                &emsp;&emsp;<input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label>
+                                &emsp;&emsp;<input class="form-check-input" type="checkbox" autocomplete="off" value="" id="stickyNavigation"> <label class="form-check-label" for="stickyNavigation">Sticky navigation</label>
+                            </center>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <br><input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" autocomplete="off" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
+        <div style="margin: auto; width: fit-content;">
+            <table id="image_table"></table>
+        </div>
     </center>
-    <br>
-    {CONTENT}
     <div class="modal modal-fullscreen popup_modal_background" id="image_info_modal"></div>
     <br><div style="width:256px;height:512px;"></div> <!-- Spacer to reduce screen-jumping if images load while you're scrolled down -->
     <footer>

@@ -550,8 +550,6 @@ class WebDataBuilder():
         content += WebDataBuilder.axisBar('X Super-Axis', x2Select)
         content += WebDataBuilder.axisBar('Y Super-Axis', y2Select)
         content += '</div></div>\n'
-        content += '<div><center><input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label></center></div>'
-        content += '<div style="margin: auto; width: fit-content;"><table id="image_table"></table></div>\n'
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", cleanForWeb(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advancedSettings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
         return html
 

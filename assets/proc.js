@@ -336,12 +336,7 @@ function toggleDescriptions() {
     const show = document.getElementById('showDescriptions').checked;
     for (const cName of ['tabval_subdiv', 'axis_table_cell']) {
         for (const elem of document.getElementsByClassName(cName)) {
-            if (show) {
-                elem.classList.remove('tab_hidden');
-            }
-            else {
-                elem.classList.add('tab_hidden');
-            }
+            elem.classList.toggle('tab_hidden', !show);
         }
     }
 }
@@ -349,20 +344,13 @@ function toggleDescriptions() {
 // Public function
 function toggleShowAllAxis(axisId) {
     const axis = getAxisById(axisId);
-    let any = false;
+    const hide = axis.values.some(val => {
+        return canShowVal(axisId, val.key);
+    });
     for (const val of axis.values) {
-        any = canShowVal(axisId, val.key);
-        if (any) {
-            break;
-        }
-    }
-    for (const val of axis.values) {
-        document.getElementById('showval_' + axisId + '__' + val.key).checked = !any;
+        document.getElementById('showval_' + axisId + '__' + val.key).checked = !hide;
         const element = document.getElementById('clicktab_' + axisId + '__' + val.key);
-        element.classList.remove('tab_hidden'); // Remove either way to guarantee no duplication
-        if (any) {
-            element.classList.add('tab_hidden');
-        }
+        element.classList.toggle('tab_hidden', hide);
     }
     fillTable();
 }
@@ -371,12 +359,7 @@ function toggleShowAllAxis(axisId) {
 function toggleShowVal(axis, val) {
     const show = canShowVal(axis, val);
     const element = document.getElementById('clicktab_' + axis + '__' + val);
-    if (show) {
-        element.classList.remove('tab_hidden');
-    }
-    else {
-        element.classList.add('tab_hidden');
-    }
+    element.classList.toggle('tab_hidden', !show);
     fillTable();
 }
 
@@ -480,12 +463,7 @@ function updateTitleSticky() {
 
 function toggleTopSticky() {
     const topBar = document.getElementById('top_nav_bar');
-    if (topBar.classList.contains('sticky_top')) {
-        topBar.classList.remove('sticky_top');
-    }
-    else {
-        topBar.classList.add('sticky_top');
-    }
+    topBar.classList.toggle('sticky_top');
     updateTitleSticky();
 }
 

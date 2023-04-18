@@ -147,13 +147,13 @@ window.addEventListener('keydown', (kbevent) => {
         return;
     }
     let axisId = elem.id.substring('clicktab_'.length);
-    const splitIndex = axisId.indexOf('__');
+    const splitIndex = axisId.lastIndexOf('__');
     axisId = axisId.substring(0, splitIndex);
     const axis = getAxisById(axisId);
     if (kbevent.key === 'ArrowLeft') {
         const tabPage = document.getElementById('tablist_' + axis.id);
         const tabs = tabPage.getElementsByClassName('nav-link');
-        const newTab = clickTabAfterActiveTab([].slice.call(tabs).reverse());
+        const newTab = clickTabAfterActiveTab(Array.from(tabs).reverse());
         newTab.focus();
     }
     else if (kbevent.key === 'ArrowRight') {
@@ -163,7 +163,7 @@ window.addEventListener('keydown', (kbevent) => {
         newTab.focus();
     }
     else if (kbevent.key === 'ArrowUp') {
-        const next = getNextAxis(rawData.axes.slice().reverse(), axisId);
+        const next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
         if (next != null) {
             const selectedKey = getSelectedValKey(next);
             const swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
@@ -382,8 +382,6 @@ function toggleShowVal(axis, val) {
 
 let anyRangeActive = false;
 
-const timer = ms => new Promise(res => setTimeout(res, ms));
-
 function enableRange(id) {
     const range = document.getElementById('range_tablist_' + id);
     const label = document.getElementById('label_range_tablist_' + id);
@@ -391,65 +389,59 @@ function enableRange(id) {
         anyRangeActive = true;
         label.innerText = (range.value / 2) + ' seconds';
     };
-    const data = {};
-    data.range = range;
-    data.counter = 0;
-    data.id = id;
-    data.tabPage = document.getElementById('tablist_' + id);
-    data.tabs = data.tabPage.getElementsByClassName('nav-link');
-    return data;
+    const tabPage = document.getElementById('tablist_' + id);
+    return {
+        range,
+        counter: 0,
+        tabs: tabPage.getElementsByClassName('nav-link')
+    };
 }
 
 function clickTabAfterActiveTab(tabs) {
-    let next = false;
-    for (const tab of tabs) {
-        if (tab.classList.contains('active')) {
-            next = true;
+    let firstTab = null;
+    let foundActive = false;
+    const nextTab = Array.from(tabs).find(tab => {
+        const isActive = tab.classList.contains('active');
+        const isHidden = tab.classList.contains('tab_hidden');
+        if (!isHidden && !isActive && !firstTab) firstTab = tab;
+        if (isActive) {
+            foundActive = true;
+            return false;
         }
-        else if (tab.classList.contains('tab_hidden')) {
-            // Skip past
-        }
-        else if (next) {
-            tab.click();
-            return tab;
-        }
-    }
-    if (next) { // Click the first non-hidden
-        for (const tab of tabs) {
-            if (tab.classList.contains('tab_hidden')) {
-                // Skip past
-            }
-            else {
-                tab.click();
-                return tab;
-            }
-        }
-    }
-    return null;
+        return (foundActive && !isHidden);
+    }) || firstTab;
+
+    if (nextTab) nextTab.click();
+    return nextTab;
 }
 
-async function startAutoScroll() {
+function startAutoScroll() {
     const rangeSet = [];
     for (const axis of rawData.axes) {
         rangeSet.push(enableRange(axis.id));
     }
-    while (true) {
-        await timer(500);
-        if (!anyRangeActive) {
-            continue;
+    let lastUpdate = 0;
+    function autoScroll(timestamp) {
+        if (!anyRangeActive || timestamp - lastUpdate < 500) {
+            window.requestAnimationFrame(autoScroll);
+            return;
         }
+
         for (const data of rangeSet) {
             if (data.range.value <= 0) {
                 continue;
             }
-            data.counter++;
-            if (data.counter < data.range.value) {
-                continue;
+            data.counter += 1;
+
+            if (data.counter > data.range.value) {
+                data.counter = 0;
+                clickTabAfterActiveTab(data.tabs);
             }
-            data.counter = 0;
-            clickTabAfterActiveTab(data.tabs);
         }
+        lastUpdate = timestamp;
+        window.requestAnimationFrame(autoScroll);
     }
+    window.requestAnimationFrame(autoScroll);
 }
 
 // Public function

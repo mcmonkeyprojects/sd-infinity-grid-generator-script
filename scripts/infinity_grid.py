@@ -84,6 +84,13 @@ def apply_restore_faces(p, v):
     if restorer is not None:
         opts.face_restoration_model = restorer
 
+def prompt_replace_parse_list(in_list):
+    if not any(('=' in x) for x in in_list):
+        first_val = in_list[0]
+        for x in range(0, len(in_list)):
+            in_list[x] = f"{first_val}={in_list[x]}"
+    return in_list
+
 def apply_prompt_replace(p, v):
     val = v.split('=', maxsplit=1)
     if len(val) != 2:
@@ -129,7 +136,7 @@ def try_init():
     registerMode("Height", GridSettingMode(dry=True, type="integer", apply=apply_field("height")))
     registerMode("Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("prompt")))
     registerMode("Negative Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("negative_prompt")))
-    registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace))
+    registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
     registerMode("Var Seed", GridSettingMode(dry=True, type="integer", apply=apply_field("subseed")))
     registerMode("Var Strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("subseed_strength")))
     registerMode("ClipSkip", GridSettingMode(dry=False, type="integer", min=1, max=12, apply=apply_clip_skip))

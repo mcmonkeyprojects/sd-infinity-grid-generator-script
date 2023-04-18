@@ -137,10 +137,11 @@ class GridSettingMode:
     'apply' is a function to call taking (passthroughObject, value)
     'min' is for integer/decimal type, optional minimum value
     'max' is for integer/decimal type, optional maximum value
-    'clean' is an optional function to call that takes (passthroughObject, value) and returns a cleaned copy of the value, or raises an error if invalid
     'valid_list' is for text type, an optional lambda that returns a list of valid values
+    'clean' is an optional function to call that takes (passthroughObject, value) and returns a cleaned copy of the value, or raises an error if invalid
+    'parse_list' is an optional function to call that takes a List and returns a List, to apply any special pre-processing for list-format inputs.
     """
-    def __init__(self, dry: bool, type: str, apply: callable, min: float = None, max: float = None, valid_list: callable = None, clean: callable = None):
+    def __init__(self, dry: bool, type: str, apply: callable, min: float = None, max: float = None, valid_list: callable = None, clean: callable = None, parse_list: callable = None):
         self.dry = dry
         self.type = type
         self.apply = apply
@@ -148,6 +149,7 @@ class GridSettingMode:
         self.max = max
         self.clean = clean
         self.valid_list = valid_list
+        self.parse_list = parse_list
 
 def registerMode(name: str, mode: GridSettingMode):
     mode.name = name
@@ -268,6 +270,8 @@ class Axis:
         elif self.mode.type == "decimal":
             values_list = expand_numeric_list_ranges(values_list, float)
         index = 0
+        if self.mode.parse_list is not None:
+            values_list = self.mode.parse_list(values_list)
         for val in values_list:
             try:
                 val = str(val).strip()

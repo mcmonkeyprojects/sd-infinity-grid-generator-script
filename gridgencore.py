@@ -3,12 +3,15 @@
 import os, glob, yaml, json, shutil, math, re
 from copy import copy
 from PIL import Image
+from git import Repo
 
 ######################### Core Variables #########################
 
 ASSET_DIR = os.path.dirname(__file__) + "/assets"
+DATA_FILE = "data.js"
 EXTRA_FOOTER = "..."
 EXTRA_ASSETS = []
+VERSION = None
 valid_modes = {}
 IMAGES_CACHE = None
 
@@ -35,6 +38,14 @@ def clean_file_path(fn: str):
     while '//' in fn:
         fn = fn.replace('//', '/')
     return fn
+
+def get_version():
+    global VERSION
+    if VERSION is not None:
+        return VERSION
+    repo = Repo(os.path.dirname(__file__))
+    VERSION = repo.head.commit.hexsha[:8]
+    return VERSION
 
 def list_image_files():
     global IMAGES_CACHE
@@ -578,14 +589,14 @@ class WebDataBuilder():
         content += WebDataBuilder.axis_bar('X Super-Axis', x2Select)
         content += WebDataBuilder.axis_bar('Y Super-Axis', y2Select)
         content += '</div></div>\n'
-        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", clean_for_web(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advanced_settings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
+        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", clean_for_web(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advanced_settings).replace("{DATA_FILE}", DATA_FILE).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER).replace("{VERSION}", get_version())
         return html
 
     def emit_web_data(path, grid, publish_gen_metadata, p, yaml_content):
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.build_json(grid, publish_gen_metadata, p)
-        with open(path + "/data.js", 'w') as f:
+        with open(path + "/" + DATA_FILE, 'w') as f:
             f.write("rawData = " + json)
         with open(path + "/config.yml", 'w') as f:
             yaml.dump(yaml_content, f, sort_keys=False, default_flow_style=False, width=1000)

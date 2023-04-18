@@ -109,8 +109,7 @@ function crunchMetadata(parts) {
             return `Error metadata parsing failed for part ${index}: ${part}`;
         }
         for (const [key, value] of Object.entries(actualVal.params)) {
-            key = key.replaceAll(' ', '');
-            crunchParamHook(initialData, key, value);
+            crunchParamHook(initialData, key.replaceAll(' ', ''), value);
         }
     }
     return formatMetadata(initialData);

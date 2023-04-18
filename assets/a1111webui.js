@@ -2,13 +2,35 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
-function formatMetadata(valSet) {
-    var count = Object.keys(valSet).length;
-    if (count == 0) {
+'use strict';
+
+function genParamQuote(text) {
+    // Referenced to match generation_parameters_copypaste.py - quote(text)
+    if (!text.includes(',')) {
+        return text;
+    }
+    return '"' + text.toString().replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '"';
+}
+
+function formatMet(name, val, bad) {
+    if (val == null) {
         return '';
     }
-    else if (count == 1) {
-        return valSet['error'];
+    val = val.toString();
+    if (bad !== undefined && val === bad) {
+        return '';
+    }
+    return name + ': ' + genParamQuote(val) + ', ';
+}
+
+
+function formatMetadata(valSet) {
+    var count = Object.keys(valSet).length;
+    if (count === 0) {
+        return '';
+    }
+    else if (count === 1) {
+        return valSet['error'] || '';
     }
     // Referenced to match processing.py - create_infotext(p)
     var negative = valSet['negativeprompt'];
@@ -40,9 +62,9 @@ function formatMetadata(valSet) {
         + formatMet('Sigma T-Min', valSet['sigmatmin'], '0')
         + formatMet('Sigma T-Max', valSet['sigmatmax'], '1')
         + formatMet('Sigma Noise', valSet['sigmanoise'], '1')
-        + (valSet['restorefaces'] == 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '')
+        + (valSet['restorefaces'] === 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '')
         ;
-    lastData = '';
+    var lastData = '';
     for (const [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {
             lastData += `${key}: ${value}, `;
@@ -59,13 +81,39 @@ function formatMetadata(valSet) {
 }
 
 function crunchParamHook(data, key, value) {
-    if (key == 'promptreplace') {
-        var replacers = value.split('=', 2);
-        var match = replacers[0].trim();
-        var replace = replacers[1].trim();
-        data['prompt'] = data['prompt'].replaceAll(match, replace);
-        data['negativeprompt'] = data['negativeprompt'].replaceAll(match, replace);
-        return true;
+    if (key !== 'promptreplace') {
+        data[key] = value;
+        return;
     }
-    return false;
+    var replacers = value.split('=', 2);
+    var match = replacers[0].trim();
+    var replace = replacers[1].trim();
+    data['prompt'] = data['prompt'].replaceAll(match, replace);
+    data['negativeprompt'] = data['negativeprompt'].replaceAll(match, replace);
+}
+
+function crunchMetadata(url) {
+    if (!('metadata' in rawData)) {
+        return '';
+    }
+    var initialData = structuredClone(rawData.metadata);
+    var index = 0;
+    for (var part of url.substring(0, url.indexOf('.')).split('/')) {
+        var axis = rawData.axes[index++];
+        var actualVal = null;
+        for (var val of axis.values) {
+            if (val.key === part) {
+                actualVal = val;
+                break;
+            }
+        }
+        if (actualVal == null) {
+            return `Error metadata parsing failed for part ${index}: ${part}`;
+        }
+        for (var [key, value] of Object.entries(actualVal.params)) {
+            key = key.replaceAll(' ', '');
+            crunchParamHook(initialData, key, value);
+        }
+    }
+    return formatMetadata(initialData);
 }

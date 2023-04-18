@@ -2,6 +2,8 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
+'use strict';
+
 function loadData() {
     document.getElementById('x_' + rawData.axes[0].id).click();
     document.getElementById('x2_none').click();
@@ -35,7 +37,7 @@ function loadData() {
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
     for (var axis of ['x', 'y', 'x2', 'y2']) {
-        if (rawData.defaults[axis] != '') {
+        if (rawData.defaults[axis] !== '') {
             console.log('find ' + axis + '_' + rawData.defaults[axis]);
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
@@ -44,7 +46,7 @@ function loadData() {
 
 function getAxisById(id) {
     for (var axis of rawData.axes) {
-        if (axis.id == id) {
+        if (axis.id === id) {
             return axis;
         }
     }
@@ -53,7 +55,7 @@ function getAxisById(id) {
 function getNextAxis(axes, startId) {
     var next = false;
     for (var subAxis of axes) {
-        if (subAxis.id == startId) {
+        if (subAxis.id === startId) {
             next = true;
         }
         else if (next) {
@@ -65,7 +67,7 @@ function getNextAxis(axes, startId) {
 
 function getSelectedValKey(axis) {
     for (var subVal of axis.values) {
-        if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display != 'none') {
+        if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display !== 'none') {
             return subVal.key;
         }
     }
@@ -82,7 +84,7 @@ function clickRowImage(rows, x, y) {
 
 window.addEventListener('keydown', function(kbevent) {
     if ($('#image_info_modal').is(':visible')) {
-        if (kbevent.key == 'Escape') {
+        if (kbevent.key === 'Escape') {
             $('#image_info_modal').modal('toggle');
             kbevent.preventDefault();
             kbevent.stopPropagation();
@@ -96,7 +98,7 @@ window.addEventListener('keydown', function(kbevent) {
             var columns = row.getElementsByTagName('td');
             for (var column of columns) {
                 var images = column.getElementsByTagName('img');
-                if (images.length == 1 && images[0] == popoverLastImg) {
+                if (images.length === 1 && images[0] === popoverLastImg) {
                     matchedRow = row;
                     matchedColumn = column;
                     break;
@@ -112,26 +114,26 @@ window.addEventListener('keydown', function(kbevent) {
         if (matchedRow == null) {
             return;
         }
-        if (kbevent.key == 'ArrowLeft') {
+        if (kbevent.key === 'ArrowLeft') {
             if (x > 1) {
                 x--;
                 clickRowImage(rows, x, y);
             }
         }
-        else if (kbevent.key == 'ArrowRight') {
+        else if (kbevent.key === 'ArrowRight') {
             x++;
             var columns = matchedRow.getElementsByTagName('td');
             if (columns.length > x) {
                 clickRowImage(rows, x, y);
             }
         }
-        else if (kbevent.key == 'ArrowUp') {
+        else if (kbevent.key === 'ArrowUp') {
             if (y > 1) {
                 y--;
                 clickRowImage(rows, x, y);
             }
         }
-        else if (kbevent.key == 'ArrowDown') {
+        else if (kbevent.key === 'ArrowDown') {
             y++;
             if (rows.length > y) {
                 clickRowImage(rows, x, y);
@@ -152,19 +154,19 @@ window.addEventListener('keydown', function(kbevent) {
     var splitIndex = axisId.indexOf('__');
     axisId = axisId.substring(0, splitIndex);
     var axis = getAxisById(axisId);
-    if (kbevent.key == 'ArrowLeft') {
+    if (kbevent.key === 'ArrowLeft') {
         var tabPage = document.getElementById('tablist_' + axis.id);
         var tabs = tabPage.getElementsByClassName('nav-link');
         var newTab = clickTabAfterActiveTab([].slice.call(tabs).reverse());
         newTab.focus();
     }
-    else if (kbevent.key == 'ArrowRight') {
+    else if (kbevent.key === 'ArrowRight') {
         var tabPage = document.getElementById('tablist_' + axis.id);
         var tabs = tabPage.getElementsByClassName('nav-link');
         var newTab = clickTabAfterActiveTab(tabs);
         newTab.focus();
     }
-    else if (kbevent.key == 'ArrowUp') {
+    else if (kbevent.key === 'ArrowUp') {
         var next = getNextAxis(rawData.axes.slice().reverse(), axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
@@ -172,7 +174,7 @@ window.addEventListener('keydown', function(kbevent) {
             swapToTab.focus();
         }
     }
-    else if (kbevent.key == 'ArrowDown') {
+    else if (kbevent.key === 'ArrowDown') {
         var next = getNextAxis(rawData.axes, axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
@@ -203,16 +205,16 @@ function canShowVal(axis, val) {
 function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
     var url = '';
     for (var subAxis of rawData.axes) {
-        if (subAxis.id == x) {
+        if (subAxis.id === x) {
             url += '/{X}';
         }
-        else if (subAxis.id == y) {
+        else if (subAxis.id === y) {
             url += '/' + val.key;
         }
-        else if (x2Axis != null && subAxis.id == x2Axis.id) {
+        else if (x2Axis != null && subAxis.id === x2Axis.id) {
             url += '/' + x2val.key;
         }
-        else if (y2Axis != null && subAxis.id == y2Axis.id) {
+        else if (y2Axis != null && subAxis.id === y2Axis.id) {
             url += '/' + y2val.key;
         }
         else {
@@ -242,8 +244,8 @@ function fillTable() {
     console.log('Do fill table, x=' + x + ', y=' + y + ', x2=' + x2 + ', y2=' + y2);
     var xAxis = getAxisById(x);
     var yAxis = getAxisById(y);
-    var x2Axis = x2 == 'None' || x2 == x || x2 == y ? null : getAxisById(x2);
-    var y2Axis = y2 == 'None' || y2 == x2 || y2 == x || y2 == y ? null : getAxisById(y2);
+    var x2Axis = x2 === 'None' || x2 === x || x2 === y ? null : getAxisById(x2);
+    var y2Axis = y2 === 'None' || y2 === x2 || y2 === x || y2 === y ? null : getAxisById(y2);
     var table = document.getElementById('image_table');
     var newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
     var superFirst = true;
@@ -281,7 +283,7 @@ function fillTable() {
                 newContent += getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val);
             }
             newContent += '</tr>';
-            if (x == y) {
+            if (x === y) {
                 break;
             }
         }
@@ -304,7 +306,7 @@ function updateScaling() {
         var xAxis = getAxisById(x);
         var count = xAxis.values.length;
         var x2 = getCurrentSelectedAxis('x2');
-        if (x2 != 'none') {
+        if (x2 !== 'none') {
             var x2Axis = getAxisById(x2);
             count *= x2Axis.values.length;
         }
@@ -375,7 +377,7 @@ function enableRange(id) {
     range.oninput = function() {
         anyRangeActive = true;
         label.innerText = (range.value/2) + ' seconds';
-    }
+    };
     var data = {};
     data.range = range;
     data.counter = 0;
@@ -437,59 +439,11 @@ async function startAutoScroll() {
     }
 }
 
-function genParamQuote(text) {
-    // Referenced to match generation_parameters_copypaste.py - quote(text)
-    if (!text.includes(',')) {
-        return text;
-    }
-    return '"' + text.toString().replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '"';
-}
-
-function formatMet(name, val, bad) {
-    if (val == null) {
-        return '';
-    }
-    val = val.toString();
-    if (bad !== undefined && val == bad) {
-        return '';
-    }
-    return name + ': ' + genParamQuote(val) + ', '
-}
-
-function crunchMetadata(url) {
-    if (!('metadata' in rawData)) {
-        return {};
-    }
-    initialData = structuredClone(rawData.metadata);
-    var index = 0;
-    for (var part of url.substring(0, url.indexOf('.')).split('/')) {
-        var axis = rawData.axes[index++];
-        var actualVal = null;
-        for (var val of axis.values) {
-            if (val.key == part) {
-                actualVal = val;
-                break;
-            }
-        }
-        if (actualVal == null) {
-            return { 'error': `metadata parsing failed for part ${index}: ${part}` };
-        }
-        for (var [key, value] of Object.entries(actualVal.params)) {
-            key = key.replaceAll(' ', '');
-            if (typeof(crunchParamHook) === 'undefined' || !crunchParamHook(initialData, key, value)) {
-                initialData[key] = value;
-            }
-        }
-    }
-    return initialData;
-}
-
 function doPopupFor(img) {
     popoverLastImg = img;
     var modalElem = document.getElementById('image_info_modal');
     var url = img.id.substring('autogen_img_'.length);
-    var metaText = crunchMetadata(unescapeHtml(url));
-    metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaText) : formatMetadata(metaText);
+    var metaText = window.crunchMetadata(unescapeHtml(url));
     var params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
     var text = 'Image: ' + url + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
     modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${unescapeHtml(url)}"><br><div class="popup_modal_undertext">${text}</div>`;
@@ -499,7 +453,7 @@ function doPopupFor(img) {
 function updateTitleStickyDirect() {
     var height = Math.round(document.getElementById('top_nav_bar').getBoundingClientRect().height);
     var header = document.getElementById('image_table_header');
-    if (header.style.top != height + 'px') { // This check is to reduce the odds of the browser yelling at us
+    if (header.style.top !== height + 'px') { // This check is to reduce the odds of the browser yelling at us
         header.style.top = height + 'px';
     }
 }

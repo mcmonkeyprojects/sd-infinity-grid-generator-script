@@ -92,21 +92,19 @@ function crunchParamHook(data, key, value) {
     data['negativeprompt'] = data['negativeprompt'].replaceAll(match, replace);
 }
 
-function crunchMetadata(url) {
+// Public function
+function crunchMetadata(parts) {
     if (!('metadata' in rawData)) {
         return '';
     }
+    if (parts.length !== rawData.axes.length) {
+        return `metadata parsing failed. Wrong data length. ${parts.length} vs ${rawData.axes.length}`;
+    }
     var initialData = structuredClone(rawData.metadata);
-    var index = 0;
-    for (var part of url.substring(0, url.indexOf('.')).split('/')) {
-        var axis = rawData.axes[index++];
-        var actualVal = null;
-        for (var val of axis.values) {
-            if (val.key === part) {
-                actualVal = val;
-                break;
-            }
-        }
+    for (var index = 0; index < parts.length; index++) {
+        var part = parts[index];
+        var axis = rawData.axes[index];
+        var actualVal = axis.values.find(val => val.key === part);
         if (actualVal == null) {
             return `Error metadata parsing failed for part ${index}: ${part}`;
         }

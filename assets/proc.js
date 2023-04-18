@@ -82,7 +82,7 @@ function clickRowImage(rows, x, y) {
     columns[x].getElementsByTagName('img')[0].click();
 }
 
-window.addEventListener('keydown', function(kbevent) {
+window.addEventListener('keydown', function (kbevent) {
     if ($('#image_info_modal').is(':visible')) {
         if (kbevent.key === 'Escape') {
             $('#image_info_modal').modal('toggle');
@@ -92,7 +92,7 @@ window.addEventListener('keydown', function(kbevent) {
         }
         var tableElem = document.getElementById('image_table');
         var rows = tableElem.getElementsByTagName('tr');
-        var matchedRow = null, matchedColumn = null;
+        var matchedRow = null;
         var x = 0, y = 0;
         for (var row of rows) {
             var columns = row.getElementsByTagName('td');
@@ -100,7 +100,6 @@ window.addEventListener('keydown', function(kbevent) {
                 var images = column.getElementsByTagName('img');
                 if (images.length === 1 && images[0] === popoverLastImg) {
                     matchedRow = row;
-                    matchedColumn = column;
                     break;
                 }
                 x++;
@@ -203,33 +202,41 @@ function canShowVal(axis, val) {
 }
 
 function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
-    var url = '';
+    var imgPath = [];
+    var index = 0;
     for (var subAxis of rawData.axes) {
         if (subAxis.id === x) {
-            url += '/{X}';
+            index = imgPath.length;
+            imgPath.push(null);
         }
         else if (subAxis.id === y) {
-            url += '/' + val.key;
+            imgPath.push(val.key);
         }
         else if (x2Axis != null && subAxis.id === x2Axis.id) {
-            url += '/' + x2val.key;
+            imgPath.push(x2val.key);
         }
         else if (y2Axis != null && subAxis.id === y2Axis.id) {
-            url += '/' + y2val.key;
+            imgPath.push(y2val.key);
         }
         else {
-            url += '/' + getSelectedValKey(subAxis);
+            imgPath.push(getSelectedValKey(subAxis));
         }
     }
     var newContent = '';
     for (var xVal of xAxis.values) {
-        if (!canShowVal(xAxis.id, xVal.key)) {
-            continue;
+        if (canShowVal(xAxis.id, xVal.key)) {
+            imgPath[index] = xVal.key;
+            var actualUrl = imgPath.join('/') + '.' + rawData.ext;
+            newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join(','))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         }
-        var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
-        newContent += `<td><img class="table_img" id="autogen_img_${escapeHtml(actualUrl).replace(' ', '%20')}" onclick="doPopupFor(this)" src="${actualUrl}" /></td>`;
     }
     return newContent;
+}
+
+// Public function
+function setImgPlaceholder(img) {
+    img.onerror = undefined;
+    img.src = './placeholder.png';
 }
 
 function optDescribe(isFirst, val) {
@@ -321,6 +328,7 @@ function updateScaling() {
     updateTitleSticky();
 }
 
+// Public function
 function toggleDescriptions() {
     var show = document.getElementById('showDescriptions').checked;
     for (var cName of ['tabval_subdiv', 'axis_table_cell']) {
@@ -335,6 +343,7 @@ function toggleDescriptions() {
     }
 }
 
+// Public function
 function toggleShowAllAxis(axisId) {
     var axis = getAxisById(axisId);
     var any = false;
@@ -355,6 +364,7 @@ function toggleShowAllAxis(axisId) {
     fillTable();
 }
 
+// Public function
 function toggleShowVal(axis, val) {
     var show = canShowVal(axis, val);
     var element = document.getElementById('clicktab_' + axis + '__' + val);
@@ -439,14 +449,15 @@ async function startAutoScroll() {
     }
 }
 
+// Public function
 function doPopupFor(img) {
     popoverLastImg = img;
+    var imgPath = unescapeHtml(img.dataset.imgPath).split(',');
     var modalElem = document.getElementById('image_info_modal');
-    var url = img.id.substring('autogen_img_'.length);
-    var metaText = window.crunchMetadata(unescapeHtml(url));
+    var metaText = window.crunchMetadata(imgPath);
     var params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
-    var text = 'Image: ' + url + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
-    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${unescapeHtml(url)}"><br><div class="popup_modal_undertext">${text}</div>`;
+    var text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
+    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;
     $('#image_info_modal').modal('toggle');
 }
 

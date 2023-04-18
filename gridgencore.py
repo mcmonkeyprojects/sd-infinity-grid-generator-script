@@ -79,6 +79,9 @@ def clean_for_web(text: str):
 def clean_id(id: str):
     return re.sub("[^a-z0-9]", "_", id.lower().strip())
 
+def clean_mode(id: str):
+    return re.sub("[^a-z]", "", id.lower().strip())
+
 def clean_name(name: str):
     return str(name).lower().replace(' ', '').replace('[', '').replace(']', '').strip()
 
@@ -177,7 +180,7 @@ def apply_field_as_image_data(name: str):
     return applier
 
 def validate_single_param(p: str, v):
-    p = clean_name(p)
+    p = clean_mode(p)
     mode = valid_modes.get(p)
     if mode is None:
         raise RuntimeError(f"Invalid grid parameter '{p}': unknown mode")
@@ -238,7 +241,7 @@ class AxisValue:
             halves[1] = grid.proc_variables(halves[1])
             halves[1] = validate_single_param(halves[0], halves[1])
             self.title = halves[1]
-            self.params = { clean_name(halves[0]): halves[1] }
+            self.params = { clean_mode(halves[0]): halves[1] }
             self.description = None
             self.skip = False
             self.show = True
@@ -262,7 +265,7 @@ class Axis:
         is_split_by_double_pipe = "||" in list_str
         values_list = list_str.split("||" if is_split_by_double_pipe else ",")
         self.mode_name = clean_name(str(id))
-        self.mode = valid_modes.get(self.mode_name)
+        self.mode = valid_modes.get(clean_mode(self.mode_name))
         if self.mode is None:
             raise RuntimeError(f"Invalid axis mode '{self.mode}' from '{id}': unknown mode")
         if self.mode.type == "integer":
@@ -384,7 +387,7 @@ class SingleGridCall:
 
     def apply_to(self, p, dry: bool):
         for name, val in self.params.items():
-            mode = valid_modes[clean_name(name)]
+            mode = valid_modes[clean_mode(name)]
             if not dry or mode.dry:
                 mode.apply(p, val)
         if grid_call_apply_hook is not None:
@@ -635,8 +638,10 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
                     val = manual_pairs[i * 2 + 1]
                     grid.axes.append(Axis(grid, key, val))
                     yaml_key = key
+                    duplicates = 1
                     while yaml_key in yaml_content['axes']:
-                        yaml_key += ' '
+                        duplicates += 1
+                        yaml_key = f"{key} {duplicates}"
                     yaml_content['axes'][yaml_key] = val
                 except Exception as e:
                     raise RuntimeError(f"Invalid axis {(i + 1)} '{key}': errored: {e}")

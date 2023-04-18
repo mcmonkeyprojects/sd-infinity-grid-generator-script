@@ -21,7 +21,7 @@ from modules.processing import process_images, Processed
 from modules.shared import opts
 from PIL import Image
 import gridgencore as core
-from gridgencore import clean_name, get_best_in_list, choose_better_file_name, GridSettingMode, fix_num, apply_field, registerMode
+from gridgencore import clean_name, clean_mode, get_best_in_list, choose_better_file_name, GridSettingMode, fix_num, apply_field, registerMode
 
 ######################### Constants #########################
 refresh_symbol = '\U0001f504'  # 🔄
@@ -204,7 +204,7 @@ def a1111_grid_call_init_hook(grid_call):
     grid_call.replacements = list()
 
 def a1111_grid_call_param_add_hook(grid_call, p, v):
-    if clean_name(p) == "promptreplace":
+    if clean_mode(p) == "promptreplace":
         grid_call.replacements.append(v)
         return True
     return False
@@ -343,7 +343,7 @@ class Script(scripts.Script):
                                         fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
                                         def fill_axis(mode_name):
                                             core.clear_caches()
-                                            mode = core.valid_modes.get(clean_name(mode_name))
+                                            mode = core.valid_modes.get(clean_mode(mode_name))
                                             if mode is None:
                                                 return gr.update()
                                             elif mode.type == "boolean":
@@ -353,7 +353,7 @@ class Script(scripts.Script):
                                             raise RuntimeError(f"Can't fill axis for {mode_name}")
                                         fill_row_button.click(fn=fill_axis, inputs=[row_mode], outputs=[row_value])
                                         def on_axis_change(mode_name, out_file):
-                                            mode = core.valid_modes.get(clean_name(mode_name))
+                                            mode = core.valid_modes.get(clean_mode(mode_name))
                                             button_update = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
                                             out_file_update = gr.Textbox.update() if out_file != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}")
                                             return [button_update, out_file_update]

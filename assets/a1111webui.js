@@ -23,22 +23,21 @@ function formatMet(name, val, bad) {
     return name + ': ' + genParamQuote(val) + ', ';
 }
 
-
 function formatMetadata(valSet) {
-    var count = Object.keys(valSet).length;
+    const count = Object.keys(valSet).length;
     if (count === 0) {
         return '';
     }
-    else if (count === 1) {
+    if (count === 1) {
         return valSet['error'] || '';
     }
     // Referenced to match processing.py - create_infotext(p)
-    var negative = valSet['negativeprompt'];
-    if (negative.length > 0) {
-        negative = '\nNegative prompt: ' + negative;
+    let negative = '';
+    if (valSet['negativeprompt']) {
+        negative = '\nNegative prompt: ' + valSet['negativeprompt'];
     }
     const handled = ['steps', 'sampler', 'cfgscale', 'seed', 'restorefaces', 'width', 'height', 'model', 'varseed', 'varstrength', 'denoising', 'eta', 'clipskip', 'vae', 'sigmachurn', 'sigmatmin', 'sigmatmax', 'sigmanoise', 'prompt', 'negativeprompt'];
-    var keyData = formatMet('Steps', valSet['steps'])
+    let keyData = formatMet('Steps', valSet['steps'])
         + formatMet('Sampler', valSet['sampler'])
         + formatMet('CFG scale', valSet['cfgscale'])
         + formatMet('Seed', valSet['seed'])
@@ -55,16 +54,21 @@ function formatMetadata(valSet) {
         + formatMet('Eta', valSet['eta'])
         + formatMet('Clip skip', valSet['clipskip'], '1')
         // ENSD
-        ;
+        + '';
         // Not part of normal gen-params
-    var extraData = formatMet('VAE', valSet['vae'])
+    keyData = keyData.substring(0, keyData.length - 2);
+
+    let extraData = formatMet('VAE', valSet['vae'])
         + formatMet('Sigma Churn', valSet['sigmachurn'], '0')
         + formatMet('Sigma T-Min', valSet['sigmatmin'], '0')
         + formatMet('Sigma T-Max', valSet['sigmatmax'], '1')
         + formatMet('Sigma Noise', valSet['sigmanoise'], '1')
-        + (valSet['restorefaces'] === 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '')
-        ;
-    var lastData = '';
+        + (valSet['restorefaces'] === 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
+    if (extraData.length > 2) {
+        extraData = extraData.substring(0, extraData.length - 2);
+    }
+
+    let lastData = '';
     for (const [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {
             lastData += `${key}: ${value}, `;
@@ -72,10 +76,6 @@ function formatMetadata(valSet) {
     }
     if (lastData.length > 2) {
         lastData = '\n(Other): ' + lastData.substring(0, lastData.length - 2);
-    }
-    keyData = keyData.substring(0, keyData.length - 2);
-    if (extraData.length > 2) {
-        extraData = extraData.substring(0, extraData.length - 2);
     }
     return valSet['prompt'] + negative + '\n' + keyData + '\n' + extraData + lastData;
 }
@@ -85,9 +85,9 @@ function crunchParamHook(data, key, value) {
         data[key] = value;
         return;
     }
-    var replacers = value.split('=', 2);
-    var match = replacers[0].trim();
-    var replace = replacers[1].trim();
+    const replacers = value.split('=', 2);
+    const match = replacers[0].trim();
+    const replace = replacers[1].trim();
     data['prompt'] = data['prompt'].replaceAll(match, replace);
     data['negativeprompt'] = data['negativeprompt'].replaceAll(match, replace);
 }
@@ -100,15 +100,15 @@ function crunchMetadata(parts) {
     if (parts.length !== rawData.axes.length) {
         return `metadata parsing failed. Wrong data length. ${parts.length} vs ${rawData.axes.length}`;
     }
-    var initialData = structuredClone(rawData.metadata);
-    for (var index = 0; index < parts.length; index++) {
-        var part = parts[index];
-        var axis = rawData.axes[index];
-        var actualVal = axis.values.find(val => val.key === part);
+    const initialData = structuredClone(rawData.metadata);
+    for (let index = 0; index < parts.length; index++) {
+        const part = parts[index];
+        const axis = rawData.axes[index];
+        const actualVal = axis.values.find(val => val.key === part);
         if (actualVal == null) {
             return `Error metadata parsing failed for part ${index}: ${part}`;
         }
-        for (var [key, value] of Object.entries(actualVal.params)) {
+        for (const [key, value] of Object.entries(actualVal.params)) {
             key = key.replaceAll(' ', '');
             crunchParamHook(initialData, key, value);
         }

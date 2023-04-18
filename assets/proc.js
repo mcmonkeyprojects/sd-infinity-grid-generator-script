@@ -31,6 +31,7 @@ function loadData() {
     document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
     document.getElementById('stickyNavigation').addEventListener('change', toggleTopSticky);
     document.getElementById('toggle_nav_button').addEventListener('click', updateTitleSticky);
+    document.getElementById('toggle_adv_button').addEventListener('click', updateTitleSticky);
     fillTable();
     startAutoScroll();
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
@@ -339,6 +340,7 @@ function toggleDescriptions() {
             elem.classList.toggle('tab_hidden', !show);
         }
     }
+    updateTitleSticky();
 }
 
 // Public function
@@ -439,26 +441,28 @@ function doPopupFor(img) {
     $('#image_info_modal').modal('toggle');
 }
 
-function updateTitleStickyDirect() {
-    const height = Math.round(document.getElementById('top_nav_bar').getBoundingClientRect().height);
-    const header = document.getElementById('image_table_header');
-    if (header.style.top !== height + 'px') { // This check is to reduce the odds of the browser yelling at us
+function updateTitleStickyDirect(topBar) {
+    // client rect is dynamically animated, so, uh, just hack it for now.
+    // could listen to `transitionend` or bootstrap events, but would create an artifact
+    setTimeout(() => {
+        const height = Math.round(topBar.getBoundingClientRect().height);
+        const header = document.getElementById('image_table_header');
+        if (header.style.top === (height + 'px')) {
+            return;
+        }
         header.style.top = height + 'px';
-    }
+        updateTitleStickyDirect(topBar);
+    }, 50);
 }
 
 function updateTitleSticky() {
     const topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
-        document.getElementById('image_table_header').style.top = '0';
+        document.getElementById('image_table_header').style.top = ''; // default to CSS
         return;
     }
-    // client rect is dynamically animated, so, uh, just hack it for now.
     // TODO: Actually smooth attachment.
-    const rate = 50;
-    for (let time = 0; time <= 500; time += rate) {
-        setTimeout(updateTitleStickyDirect, time);
-    }
+    updateTitleStickyDirect(topBar);
 }
 
 function toggleTopSticky() {

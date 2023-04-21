@@ -444,25 +444,25 @@ function doPopupFor(img) {
 function updateTitleStickyDirect(topBar) {
     // client rect is dynamically animated, so, uh, just hack it for now.
     // could listen to `transitionend` or bootstrap events, but would create an artifact
-    setTimeout(() => {
-        const height = Math.round(topBar.getBoundingClientRect().height);
-        const header = document.getElementById('image_table_header');
-        if (header.style.top === (height + 'px')) {
-            return;
-        }
-        header.style.top = height + 'px';
-        updateTitleStickyDirect(topBar);
-    }, 50);
+    const height = Math.round(topBar.getBoundingClientRect().height);
+    const header = document.getElementById('image_table_header');
+    if (header.style.top === (height + 'px')) {
+        return;
+    }
+    header.style.top = height + 'px';
 }
 
+let stickyUpdateID = 0;
 function updateTitleSticky() {
     const topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
         document.getElementById('image_table_header').style.top = ''; // default to CSS
         return;
     }
-    // TODO: Actually smooth attachment.
-    updateTitleStickyDirect(topBar);
+
+    // cancel previous update if any, preventing spam clicking
+    clearInterval(stickyUpdateID);
+    stickyUpdateID = setInterval(updateTitleStickyDirect, 50, topBar);
 }
 
 function toggleTopSticky() {

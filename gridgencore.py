@@ -42,8 +42,11 @@ def get_version():
     global VERSION
     if VERSION is not None:
         return VERSION
-    repo = Repo(os.path.dirname(__file__))
-    VERSION = repo.head.commit.hexsha[:8]
+    try:
+        repo = Repo(os.path.dirname(__file__))
+        VERSION = repo.head.commit.hexsha[:8]
+    except Exception:
+        VERSION = "Unknown"
     return VERSION
 
 def list_image_files():

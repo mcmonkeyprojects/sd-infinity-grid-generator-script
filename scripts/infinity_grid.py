@@ -355,7 +355,7 @@ class Script(scripts.Script):
                                         def on_axis_change(mode_name, out_file):
                                             mode = core.valid_modes.get(clean_mode(mode_name))
                                             button_update = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
-                                            out_file_update = gr.Textbox.update() if out_file != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}")
+                                            out_file_update = gr.Textbox.update() if out_file != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}")
                                             return [button_update, out_file_update]
                                         row_mode.change(fn=on_axis_change, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path])
                                         manual_axes += list([row_mode, row_value])

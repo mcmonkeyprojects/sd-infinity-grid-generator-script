@@ -12,8 +12,7 @@
 ##################
 
 import gradio as gr
-import os
-import numpy
+import os, numpy, threading
 from copy import copy
 from datetime import datetime
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, ui_components
@@ -253,7 +252,12 @@ def a1111_grid_runner_post_dry_hook(grid_runner: core.GridRunner, p, set):
         img = img.resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
     processed.images[result_index] = img
     info = processing.create_infotext(p, [p.prompt], [p.seed], [p.subseed], [])
-    images.save_image(img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=grid_runner.grid.format, p=p, prompt=p.prompt, seed=processed.seed)
+    ext = grid_runner.grid.format
+    prompt = p.prompt
+    seed = processed.seed
+    def save_offthread():
+        images.save_image(img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=ext, p=p, prompt=prompt, seed=seed)
+    threading.Thread(target=save_offthread).start()
     opts.CLIP_stop_at_last_layers = grid_runner.temp.old_clip_skip
     opts.code_former_weight = grid_runner.temp.old_codeformer_weight
     opts.face_restoration_model = grid_runner.temp.old_face_restorer

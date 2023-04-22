@@ -338,7 +338,7 @@ class Script(scripts.Script):
                                 for i in range(0, 4):
                                     with gr.Row():
                                         axis_count += 1
-                                        row_mode = gr.Dropdown(value="", label=f"Axis {axis_count} Mode", choices=[""] + [x.name for x in core.valid_modes.values()])
+                                        row_mode = gr.Dropdown(value="", label=f"Axis {axis_count} Mode", choices=[" "] + [x.name for x in core.valid_modes.values()])
                                         row_value = gr.Textbox(label=f"Axis {axis_count} Value", lines=1)
                                         fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
                                         def fill_axis(mode_name):
@@ -366,7 +366,7 @@ class Script(scripts.Script):
             group_obj = sets[group + 1][0]
             next_rows = sets[group + 1][1]
             def make_vis(prior, r1, r2, r3, r4):
-                return gr.Group.update(visible=prior+r1+r2+r3+r4 != "")
+                return gr.Group.update(visible=(prior+r1+r2+r3+r4).strip() != "")
             row_mode.change(fn=make_vis, inputs=[row_mode] + next_rows, outputs=[group_obj])
         gr.HTML('<span style="opacity:0.5;">(More input rows will be automatically added after you select modes above.)</span>')
         grid_file.change(

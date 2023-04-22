@@ -633,7 +633,7 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
         }
         for i in range(0, int(len(manual_pairs) / 2)):
             key = manual_pairs[i * 2]
-            if isinstance(key, str) and key != "":
+            if isinstance(key, str) and key.strip() != "":
                 try:
                     val = manual_pairs[i * 2 + 1]
                     grid.axes.append(Axis(grid, key, val))

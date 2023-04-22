@@ -224,7 +224,7 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
         }
         imgPath[index] = xVal.key;
         var actualUrl = imgPath.join('/') + '.' + rawData.ext;
-        newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join(','))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join('/'))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
     }
     return newContent;
 }
@@ -392,6 +392,8 @@ function clickTabAfterActiveTab(tabs) {
     return nextTab;
 }
 
+const timer = ms => new Promise(res => setTimeout(res, ms));
+
 async function startAutoScroll() {
     var rangeSet = [];
     for (var axis of rawData.axes) {
@@ -440,7 +442,7 @@ function crunchMetadata(parts) {
 
 function doPopupFor(img) {
     popoverLastImg = img;
-    var imgPath = unescapeHtml(img.dataset.imgPath).split(',');
+    var imgPath = unescapeHtml(img.dataset.imgPath).split('/');
     var modalElem = document.getElementById('image_info_modal');
     var metaData = crunchMetadata(imgPath);
     var metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);

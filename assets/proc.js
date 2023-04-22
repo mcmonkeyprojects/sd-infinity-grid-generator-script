@@ -456,28 +456,26 @@ function doPopupFor(img) {
     $('#image_info_modal').modal('toggle');
 }
 
-function updateTitleStickyDirect(topBar) {
-    // client rect is dynamically animated, so, uh, just hack it for now.
-    // could listen to `transitionend` or bootstrap events, but would create an artifact
-    var height = Math.round(topBar.getBoundingClientRect().height);
+function updateTitleStickyDirect() {
+    var height = Math.round(document.getElementById('top_nav_bar').getBoundingClientRect().height);
     var header = document.getElementById('image_table_header');
-    if (header.style.top == (height + 'px')) {
-        return;
+    if (header.style.top != height + 'px') { // This check is to reduce the odds of the browser yelling at us
+        header.style.top = height + 'px';
     }
-    header.style.top = height + 'px';
 }
 
-var stickyUpdateID = 0;
 function updateTitleSticky() {
     var topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
-        document.getElementById('image_table_header').style.top = ''; // default to CSS
+        document.getElementById('image_table_header').style.top = '0';
         return;
     }
-
-    // cancel previous update if any, preventing spam clicking
-    clearInterval(stickyUpdateID);
-    stickyUpdateID = setInterval(updateTitleStickyDirect, 50, topBar);
+    // client rect is dynamically animated, so, uh, just hack it for now.
+    // TODO: Actually smooth attachment.
+    var rate = 50;
+    for (var time = 0; time <= 500; time += rate) {
+        setTimeout(updateTitleStickyDirect, time);
+    }
 }
 
 function toggleTopSticky() {

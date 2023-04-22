@@ -15,7 +15,7 @@ function formatMet(name, val, bad) {
         return '';
     }
     val = val.toString();
-    if (bad !== undefined && val === bad) {
+    if (bad != undefined && val == bad) {
         return '';
     }
     return name + ': ' + genParamQuote(val) + ', ';
@@ -23,10 +23,10 @@ function formatMet(name, val, bad) {
 
 function formatMetadata(valSet) {
     var count = Object.keys(valSet).length;
-    if (count === 0) {
+    if (count == 0) {
         return '';
     }
-    else if (count === 1) {
+    else if (count == 1) {
         return valSet['error'];
     }
     // Referenced to match processing.py - create_infotext(p)
@@ -59,7 +59,7 @@ function formatMetadata(valSet) {
         + formatMet('Sigma T-Min', valSet['sigmatmin'], '0')
         + formatMet('Sigma T-Max', valSet['sigmatmax'], '1')
         + formatMet('Sigma Noise', valSet['sigmanoise'], '1')
-        + (valSet['restorefaces'] === 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
+        + (valSet['restorefaces'] == 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
     var lastData = '';
     for (var [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {

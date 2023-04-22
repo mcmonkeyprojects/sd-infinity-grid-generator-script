@@ -26,7 +26,7 @@ function formatMetadata(valSet) {
     if (count === 0) {
         return '';
     }
-    if (count === 1) {
+    else if (count === 1) {
         return valSet['error'];
     }
     // Referenced to match processing.py - create_infotext(p)
@@ -34,7 +34,7 @@ function formatMetadata(valSet) {
     if (negative.length > 0) {
         negative = '\nNegative prompt: ' + negative;
     }
-    var handled = ['steps', 'sampler', 'cfgscale', 'seed', 'restorefaces', 'width', 'height', 'model', 'varseed', 'varstrength', 'denoising', 'eta', 'clipskip', 'vae', 'sigmachurn', 'sigmatmin', 'sigmatmax', 'sigmanoise', 'prompt', 'negativeprompt'];
+    const handled = ['steps', 'sampler', 'cfgscale', 'seed', 'restorefaces', 'width', 'height', 'model', 'varseed', 'varstrength', 'denoising', 'eta', 'clipskip', 'vae', 'sigmachurn', 'sigmatmin', 'sigmatmax', 'sigmanoise', 'prompt', 'negativeprompt'];
     var keyData = formatMet('Steps', valSet['steps'])
         + formatMet('Sampler', valSet['sampler'])
         + formatMet('CFG scale', valSet['cfgscale'])

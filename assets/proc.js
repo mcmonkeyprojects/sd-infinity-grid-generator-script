@@ -77,7 +77,7 @@ function clickRowImage(rows, x, y) {
     columns[x].getElementsByTagName('img')[0].click();
 }
 
-window.addEventListener('keydown', (kbevent) => {
+window.addEventListener('keydown', function(kbevent) {
     if ($('#image_info_modal').is(':visible')) {
         if (kbevent.key === 'Escape') {
             $('#image_info_modal').modal('toggle');

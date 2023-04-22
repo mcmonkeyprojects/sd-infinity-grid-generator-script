@@ -232,6 +232,10 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
 function setImgPlaceholder(img) {
     img.onerror = undefined;
     img.src = 'placeholder.png';
+    if (rawData.min_width) {
+        img.width = rawData.min_width;
+        img.height = rawData.min_height;
+    }
 }
 
 function optDescribe(isFirst, val) {

@@ -200,25 +200,34 @@ def try_init():
 
 ######################### Actual Execution Logic #########################
 
-def a1111_grid_call_init_hook(grid_call):
+def a1111_grid_call_init_hook(grid_call: core.SingleGridCall):
     grid_call.replacements = list()
 
-def a1111_grid_call_param_add_hook(grid_call, p, v):
-    if clean_mode(p) == "promptreplace":
-        grid_call.replacements.append(v)
+def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, value):
+    if grid_call.grid.min_width is None:
+        grid_call.grid.min_width = grid_call.grid.initial_p.width
+    if grid_call.grid.min_height is None:
+        grid_call.grid.min_height = grid_call.grid.initial_p.height
+    cleaned = clean_mode(param)
+    if cleaned == "promptreplace":
+        grid_call.replacements.append(value)
         return True
+    elif cleaned in ["width", "outwidth"]:
+        grid_call.grid.min_width = min(grid_call.grid.min_width or 99999, int(value))
+    elif cleaned in ["height", "outheight"]:
+        grid_call.grid.min_height = min(grid_call.grid.min_height or 99999, int(value))
     return False
 
-def a1111_grid_call_apply_hook(grid_call, p, dry):
+def a1111_grid_call_apply_hook(grid_call: core.SingleGridCall, param: str, dry: bool):
     for replace in grid_call.replacements:
-        apply_prompt_replace(p, replace)
+        apply_prompt_replace(param, replace)
     
-def a1111_grid_runner_pre_run_hook(grid_runner):
+def a1111_grid_runner_pre_run_hook(grid_runner: core.GridRunner):
     shared.total_tqdm.updateTotal(grid_runner.total_steps)
 
 class TempHolder: pass
 
-def a1111_grid_runner_pre_dry_hook(grid_runner):
+def a1111_grid_runner_pre_dry_hook(grid_runner: core.GridRunner):
     grid_runner.temp = TempHolder()
     grid_runner.temp.old_clip_skip = opts.CLIP_stop_at_last_layers
     grid_runner.temp.old_codeformer_weight = opts.code_former_weight
@@ -227,7 +236,7 @@ def a1111_grid_runner_pre_dry_hook(grid_runner):
     grid_runner.temp.old_vae = opts.sd_vae
     grid_runner.temp.old_model = opts.sd_model_checkpoint
 
-def a1111_grid_runner_post_dry_hook(grid_runner, p, set):
+def a1111_grid_runner_post_dry_hook(grid_runner: core.GridRunner, p, set):
     p.seed = processing.get_fixed_seed(p.seed)
     p.subseed = processing.get_fixed_seed(p.subseed)
     processed = process_images(p)

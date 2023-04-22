@@ -392,6 +392,7 @@ class SingleGridCall:
             grid_call_init_hook(self)
 
     def flatten_params(self, grid: GridFileHelper):
+        self.grid = grid
         self.params = grid.params.copy() if grid.params is not None else dict()
         for val in self.values:
             for p, v in val.params.items():
@@ -416,6 +417,9 @@ class GridRunner:
         self.base_path = base_path
         self.fast_skip = fast_skip
         self.p = p
+        grid.min_width = None
+        grid.min_height = None
+        grid.initial_p = p
 
     def build_value_set_list(self, axis_list: list):
         result = list()
@@ -494,6 +498,8 @@ class WebDataBuilder():
             'title': grid.title,
             'description': grid.description,
             'ext': grid.format,
+            'min_width': grid.min_width,
+            'min_height': grid.min_height,
             'defaults': {
                 'show_descriptions': True if show_descrip is None else show_descrip,
                 'autoscale': grid.read_grid_direct('autoscale') or False,

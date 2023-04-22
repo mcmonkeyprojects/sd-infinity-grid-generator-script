@@ -62,7 +62,7 @@ function formatMetadata(valSet) {
         + (valSet['restorefaces'] == 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
     var lastData = '';
     for (const [key, value] of Object.entries(valSet)) {
-        if (!handled.includes(key)) {
+        if (!handled.includes(key) && value != null) {
             lastData += `${key}: ${value}, `;
         }
     }

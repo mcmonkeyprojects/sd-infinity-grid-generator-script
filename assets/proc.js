@@ -29,6 +29,7 @@ function loadData() {
     document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
     document.getElementById('stickyNavigation').addEventListener('change', toggleTopSticky);
     document.getElementById('toggle_nav_button').addEventListener('click', updateTitleSticky);
+    document.getElementById('toggle_adv_button').addEventListener('click', updateTitleSticky);
     fillTable();
     startAutoScroll();
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
@@ -43,11 +44,7 @@ function loadData() {
 }
 
 function getAxisById(id) {
-    for (var axis of rawData.axes) {
-        if (axis.id == id) {
-            return axis;
-        }
-    }
+    return rawData.axes.find(axis => axis.id == id);
 }
 
 function getNextAxis(axes, startId) {
@@ -90,7 +87,7 @@ window.addEventListener('keydown', function(kbevent) {
         }
         var tableElem = document.getElementById('image_table');
         var rows = tableElem.getElementsByTagName('tr');
-        var matchedRow = null, matchedColumn = null;
+        var matchedRow = null;
         var x = 0, y = 0;
         for (var row of rows) {
             var columns = row.getElementsByTagName('td');
@@ -98,7 +95,6 @@ window.addEventListener('keydown', function(kbevent) {
                 var images = column.getElementsByTagName('img');
                 if (images.length == 1 && images[0] == popoverLastImg) {
                     matchedRow = row;
-                    matchedColumn = column;
                     break;
                 }
                 x++;
@@ -149,13 +145,13 @@ window.addEventListener('keydown', function(kbevent) {
         return;
     }
     var axisId = elem.id.substring('clicktab_'.length);
-    var splitIndex = axisId.indexOf('__');
+    var splitIndex = axisId.lastIndexOf('__');
     axisId = axisId.substring(0, splitIndex);
     var axis = getAxisById(axisId);
     if (kbevent.key == 'ArrowLeft') {
         var tabPage = document.getElementById('tablist_' + axis.id);
         var tabs = tabPage.getElementsByClassName('nav-link');
-        var newTab = clickTabAfterActiveTab([].slice.call(tabs).reverse());
+        var newTab = clickTabAfterActiveTab(Array.from(tabs).reverse());
         newTab.focus();
     }
     else if (kbevent.key == 'ArrowRight') {
@@ -165,7 +161,7 @@ window.addEventListener('keydown', function(kbevent) {
         newTab.focus();
     }
     else if (kbevent.key == 'ArrowUp') {
-        var next = getNextAxis(rawData.axes.slice().reverse(), axisId);
+        var next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
             var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
@@ -201,22 +197,24 @@ function canShowVal(axis, val) {
 }
 
 function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
-    var url = '';
+    var imgPath = [];
+    var index = 0;
     for (var subAxis of rawData.axes) {
         if (subAxis.id == x) {
-            url += '/{X}';
+            index = imgPath.length;
+            imgPath.push(null);
         }
         else if (subAxis.id == y) {
-            url += '/' + val.key;
+            imgPath.push(val.key);
         }
         else if (x2Axis != null && subAxis.id == x2Axis.id) {
-            url += '/' + x2val.key;
+            imgPath.push(x2val.key);
         }
         else if (y2Axis != null && subAxis.id == y2Axis.id) {
-            url += '/' + y2val.key;
+            imgPath.push(y2val.key);
         }
         else {
-            url += '/' + getSelectedValKey(subAxis);
+            imgPath.push(getSelectedValKey(subAxis));
         }
     }
     var newContent = '';
@@ -224,10 +222,16 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
         if (!canShowVal(xAxis.id, xVal.key)) {
             continue;
         }
-        var actualUrl = url.replace('{X}', xVal.key).substring(1) + '.' + rawData.ext;
-        newContent += `<td><img class="table_img" id="autogen_img_${escapeHtml(actualUrl).replace(' ', '%20')}" onclick="doPopupFor(this)" src="${actualUrl}" /></td>`;
+        imgPath[index] = xVal.key;
+        var actualUrl = imgPath.join('/') + '.' + rawData.ext;
+        newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join('/'))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
     }
     return newContent;
+}
+
+function setImgPlaceholder(img) {
+    img.onerror = undefined;
+    img.src = './placeholder.png';
 }
 
 function optDescribe(isFirst, val) {
@@ -256,7 +260,7 @@ function fillTable() {
             if (!canShowVal(xAxis.id, val.key)) {
                 continue;
             }
-            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', "&quot;")}">${optDescribe(x2first, x2val)}${val.title}</th>`;
+            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}${val.title}</th>`;
             x2first = false;
         }
         superFirst = !superFirst;
@@ -323,32 +327,21 @@ function toggleDescriptions() {
     var show = document.getElementById('showDescriptions').checked;
     for (var cName of ['tabval_subdiv', 'axis_table_cell']) {
         for (var elem of document.getElementsByClassName(cName)) {
-            if (show) {
-                elem.classList.remove('tab_hidden');
-            }
-            else {
-                elem.classList.add('tab_hidden');
-            }
+            elem.classList.toggle('tab_hidden', !show);
         }
     }
+    updateTitleSticky();
 }
 
 function toggleShowAllAxis(axisId) {
     var axis = getAxisById(axisId);
-    var any = false;
+    var hide = axis.values.some(val => {
+        return canShowVal(axisId, val.key);
+    });
     for (var val of axis.values) {
-        any = canShowVal(axisId, val.key);
-        if (any) {
-            break;
-        }
-    }
-    for (var val of axis.values) {
-        document.getElementById('showval_' + axisId + '__' + val.key).checked = !any;
+        document.getElementById('showval_' + axisId + '__' + val.key).checked = !hide;
         var element = document.getElementById('clicktab_' + axisId + '__' + val.key);
-        element.classList.remove('tab_hidden'); // Remove either way to guarantee no duplication
-        if (any) {
-            element.classList.add('tab_hidden');
-        }
+        element.classList.toggle('tab_hidden', hide);
     }
     fillTable();
 }
@@ -356,62 +349,50 @@ function toggleShowAllAxis(axisId) {
 function toggleShowVal(axis, val) {
     var show = canShowVal(axis, val);
     var element = document.getElementById('clicktab_' + axis + '__' + val);
-    if (show) {
-        element.classList.remove('tab_hidden');
-    }
-    else {
-        element.classList.add('tab_hidden');
-    }
+    element.classList.toggle('tab_hidden', !show);
     fillTable();
 }
 
 var anyRangeActive = false;
-
-const timer = ms => new Promise(res => setTimeout(res, ms));
 
 function enableRange(id) {
     var range = document.getElementById('range_tablist_' + id);
     var label = document.getElementById('label_range_tablist_' + id);
     range.oninput = function() {
         anyRangeActive = true;
-        label.innerText = (range.value/2) + ' seconds';
-    }
-    var data = {};
-    data.range = range;
-    data.counter = 0;
-    data.id = id;
-    data.tabPage = document.getElementById('tablist_' + id);
-    data.tabs = data.tabPage.getElementsByClassName('nav-link');
-    return data;
+        label.innerText = (range.value / 2) + ' seconds';
+    };
+    var tabPage = document.getElementById('tablist_' + id);
+    return {
+        range,
+        counter: 0,
+        tabs: tabPage.getElementsByClassName('nav-link')
+    };
 }
 
 function clickTabAfterActiveTab(tabs) {
-    var next = false;
-    for (var tab of tabs) {
-        if (tab.classList.contains('active')) {
-            next = true;
+    var firstTab = null;
+    var foundActive = false;
+    var nextTab = Array.from(tabs).find(tab => {
+        var isActive = tab.classList.contains('active');
+        var isHidden = tab.classList.contains('tab_hidden');
+        if (!isHidden && !isActive && !firstTab) {
+            firstTab = tab;
         }
-        else if (tab.classList.contains('tab_hidden')) {
-            // Skip past
+        if (isActive) {
+            foundActive = true;
+            return false;
         }
-        else if (next) {
-            tab.click();
-            return tab;
-        }
+        return (foundActive && !isHidden);
+    }) || firstTab;
+
+    if (nextTab) {
+        nextTab.click();
     }
-    if (next) { // Click the first non-hidden
-        for (var tab of tabs) {
-            if (tab.classList.contains('tab_hidden')) {
-                // Skip past
-            }
-            else {
-                tab.click();
-                return tab;
-            }
-        }
-    }
-    return null;
+    return nextTab;
 }
+
+const timer = ms => new Promise(res => setTimeout(res, ms));
 
 async function startAutoScroll() {
     var rangeSet = [];
@@ -437,46 +418,21 @@ async function startAutoScroll() {
     }
 }
 
-function genParamQuote(text) {
-    // Referenced to match generation_parameters_copypaste.py - quote(text)
-    if (!text.includes(',')) {
-        return text;
-    }
-    return '"' + text.toString().replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '"';
-}
-
-function formatMet(name, val, bad) {
-    if (val == null) {
-        return '';
-    }
-    val = val.toString();
-    if (bad !== undefined && val == bad) {
-        return '';
-    }
-    return name + ': ' + genParamQuote(val) + ', '
-}
-
-function crunchMetadata(url) {
+function crunchMetadata(parts) {
     if (!('metadata' in rawData)) {
         return {};
     }
-    initialData = structuredClone(rawData.metadata);
-    var index = 0;
-    for (var part of url.substring(0, url.indexOf('.')).split('/')) {
-        var axis = rawData.axes[index++];
-        var actualVal = null;
-        for (var val of axis.values) {
-            if (val.key == part) {
-                actualVal = val;
-                break;
-            }
-        }
+    var initialData = structuredClone(rawData.metadata);
+    for (var index = 0; index < parts.length; index++) {
+        var part = parts[index];
+        var axis = rawData.axes[index];
+        var actualVal = axis.values.find(val => val.key == part);
         if (actualVal == null) {
             return { 'error': `metadata parsing failed for part ${index}: ${part}` };
         }
         for (var [key, value] of Object.entries(actualVal.params)) {
             key = key.replaceAll(' ', '');
-            if (typeof(crunchParamHook) === 'undefined' || !crunchParamHook(initialData, key, value)) {
+            if (typeof(crunchParamHook) == 'undefined' || !crunchParamHook(initialData, key, value)) {
                 initialData[key] = value;
             }
         }
@@ -486,46 +442,43 @@ function crunchMetadata(url) {
 
 function doPopupFor(img) {
     popoverLastImg = img;
+    var imgPath = unescapeHtml(img.dataset.imgPath).split('/');
     var modalElem = document.getElementById('image_info_modal');
-    var url = img.id.substring('autogen_img_'.length);
-    var metaText = crunchMetadata(unescapeHtml(url));
-    metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaText) : formatMetadata(metaText);
+    var metaData = crunchMetadata(imgPath);
+    var metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
     var params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
-    var text = 'Image: ' + url + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
-    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${unescapeHtml(url)}"><br><div class="popup_modal_undertext">${text}</div>`;
+    var text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
+    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;
     $('#image_info_modal').modal('toggle');
 }
 
-function updateTitleStickyDirect() {
-    var height = Math.round(document.getElementById('top_nav_bar').getBoundingClientRect().height);
+function updateTitleStickyDirect(topBar) {
+    // client rect is dynamically animated, so, uh, just hack it for now.
+    // could listen to `transitionend` or bootstrap events, but would create an artifact
+    var height = Math.round(topBar.getBoundingClientRect().height);
     var header = document.getElementById('image_table_header');
-    if (header.style.top != height + 'px') { // This check is to reduce the odds of the browser yelling at us
-        header.style.top = height + 'px';
+    if (header.style.top == (height + 'px')) {
+        return;
     }
+    header.style.top = height + 'px';
 }
 
+var stickyUpdateID = 0;
 function updateTitleSticky() {
     var topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
-        document.getElementById('image_table_header').style.top = '0';
+        document.getElementById('image_table_header').style.top = ''; // default to CSS
         return;
     }
-    // client rect is dynamically animated, so, uh, just hack it for now.
-    // TODO: Actually smooth attachment.
-    var rate = 50;
-    for (var time = 0; time <= 500; time += rate) {
-        setTimeout(updateTitleStickyDirect, time);
-    }
+
+    // cancel previous update if any, preventing spam clicking
+    clearInterval(stickyUpdateID);
+    stickyUpdateID = setInterval(updateTitleStickyDirect, 50, topBar);
 }
 
 function toggleTopSticky() {
     var topBar = document.getElementById('top_nav_bar');
-    if (topBar.classList.contains('sticky_top')) {
-        topBar.classList.remove('sticky_top');
-    }
-    else {
-        topBar.classList.add('sticky_top');
-    }
+    topBar.classList.toggle('sticky_top');
     updateTitleSticky();
 }
 

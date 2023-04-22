@@ -3,12 +3,14 @@
 import os, glob, yaml, json, shutil, math, re
 from copy import copy
 from PIL import Image
+from git import Repo
 
 ######################### Core Variables #########################
 
 ASSET_DIR = os.path.dirname(__file__) + "/assets"
 EXTRA_FOOTER = "..."
 EXTRA_ASSETS = []
+VERSION = None
 valid_modes = {}
 IMAGES_CACHE = None
 
@@ -35,6 +37,14 @@ def clean_file_path(fn: str):
     while '//' in fn:
         fn = fn.replace('//', '/')
     return fn
+
+def get_version():
+    global VERSION
+    if VERSION is not None:
+        return VERSION
+    repo = Repo(os.path.dirname(__file__))
+    VERSION = repo.head.commit.hexsha[:8]
+    return VERSION
 
 def list_image_files():
     global IMAGES_CACHE
@@ -578,7 +588,7 @@ class WebDataBuilder():
         content += WebDataBuilder.axis_bar('X Super-Axis', x2Select)
         content += WebDataBuilder.axis_bar('Y Super-Axis', y2Select)
         content += '</div></div>\n'
-        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", clean_for_web(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advanced_settings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER)
+        html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", clean_for_web(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advanced_settings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER).replace("{VERSION}", get_version())
         return html
 
     def emit_web_data(path, grid, publish_gen_metadata, p, yaml_content):
@@ -589,7 +599,7 @@ class WebDataBuilder():
             f.write("rawData = " + json)
         with open(path + "/config.yml", 'w') as f:
             yaml.dump(yaml_content, f, sort_keys=False, default_flow_style=False, width=1000)
-        for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js"] + EXTRA_ASSETS:
+        for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
         html = WebDataBuilder.build_html(grid)
         with open(path + "/index.html", 'w') as f:

@@ -3,106 +3,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="bootstrap.min.css" media="screen">
+    <link rel="stylesheet" href="styles.css?vary={VERSION}" media="screen">
     <title>{TITLE}</title>
     <meta name="description" content="{CLEAN_DESCRIPTION}" />
-    <style>
-    .sel_table tr td
-    {
-        border: 1px solid black;
-        padding-right: 16px;
-        padding-left: 16px;
-    }
-    .sel_table
-    {
-        min-width: 60em;
-        width: 100%;
-    }
-    .secondary
-    {
-        background-color: #202020;
-    }
-    .emptytab
-    {
-        width: 0px;
-    }
-    .primary
-    {
-        background-color: #303030;
-    }
-    .axis_table_cell
-    {
-        width: calc(min(40em, max(10em, 100vw - 40em)));
-        max-height: 8em;
-        overflow: auto;
-    }
-    .tabval_subdiv
-    {
-        min-width: calc(100vw - 5em - min(40em, max(10em, 100vw - 40em)));
-        max-height: 8em;
-        overflow: auto;
-    }
-    table tr td, table tr th {
-        vertical-align: top;
-        border: 1px solid black;
-    }
-    th {
-        position: sticky;
-        top: -1px;
-        background-color: #202020;
-        background-clip: padding-box;
-    }
-    .popup_modal_background {
-        font-family: monospace, monospace;
-        background-color: rgb(50, 50, 50, 0.7);
-        text-align: center;
-    }
-    .popup_modal_img {
-        height: calc(min(100vw, 100vh - 8em));
-        position: relative;
-        margin: auto;
-    }
-    .popup_modal_undertext {
-        background-color: #404060;
-        overflow-wrap: break-word;
-    }
-    .modal_inner_div {
-        width: calc(min(100vw, 100vh - 8em));
-        margin: auto;
-    }
-    .advanced_settings_section {
-        max-width: calc(max(1000px, 60em));
-        text-align: left;
-    }
-    .timer_range {
-        vertical-align: bottom;
-    }
-    .tab_hidden {
-        display: none;
-    }
-    .nav-link:focus {
-        background-color: #909050 !important;
-    }
-    .axis_label_td {
-        left: 0px;
-        background-color: #202020;
-        background-clip: padding-box;
-    }
-    .superaxis_second {
-        background-color: #303030;
-    }
-    .axis_selectors {
-        text-align: right;
-        margin: auto;
-        width: fit-content;
-    }
-    .sticky_top {
-        position: sticky;
-        top: 0;
-    }
-    .accordion-button {
-        padding: 0.5rem;
-    }
-    </style>
     <script src="jquery.min.js"></script>
 </head>
 <body>
@@ -123,7 +26,7 @@
                                 <div class="accordion advanced_settings_section" id="settings_accordion">
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="setting_accordion_heading">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#settings_accordion_collapse" aria-expanded="false" aria-controls="settings_accordion_collapse">Advanced Settings</button>
+                                            <button class="accordion-button collapsed" id="toggle_adv_button" type="button" data-bs-toggle="collapse" data-bs-target="#settings_accordion_collapse" aria-expanded="false" aria-controls="settings_accordion_collapse">Advanced Settings</button>
                                         </h2>
                                         <div id="settings_accordion_collapse" class="accordion-collapse collapse" aria-labelledby="setting_accordion_heading" data-bs-parent="#settings_accordion">
                                             <div class="accordion-body">
@@ -163,7 +66,7 @@
             <br><div style="width:256px;height:512px;"></div>
         </center>
     </footer>
-    <script src="data.js?vary=10"></script>
-    <script src="proc.js?vary=10"></script>
     <script src="bootstrap.bundle.min.js"></script>
+    <script src="data.js?vary={VERSION}"></script>
+    <script src="proc.js?vary={VERSION}"></script>
 </body>

@@ -2,6 +2,25 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
+function genParamQuote(text) {
+    // Referenced to match generation_parameters_copypaste.py - quote(text)
+    if (!text.includes(',')) {
+        return text;
+    }
+    return '"' + text.toString().replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '"';
+}
+
+function formatMet(name, val, bad) {
+    if (val == null) {
+        return '';
+    }
+    val = val.toString();
+    if (bad != undefined && val == bad) {
+        return '';
+    }
+    return name + ': ' + genParamQuote(val) + ', ';
+}
+
 function formatMetadata(valSet) {
     var count = Object.keys(valSet).length;
     if (count == 0) {
@@ -40,9 +59,8 @@ function formatMetadata(valSet) {
         + formatMet('Sigma T-Min', valSet['sigmatmin'], '0')
         + formatMet('Sigma T-Max', valSet['sigmatmax'], '1')
         + formatMet('Sigma Noise', valSet['sigmanoise'], '1')
-        + (valSet['restorefaces'] == 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '')
-        ;
-    lastData = '';
+        + (valSet['restorefaces'] == 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
+    var lastData = '';
     for (const [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {
             lastData += `${key}: ${value}, `;

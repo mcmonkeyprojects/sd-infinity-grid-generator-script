@@ -264,7 +264,7 @@ function fillTable() {
             if (!canShowVal(xAxis.id, val.key)) {
                 continue;
             }
-            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}${val.title}</th>`;
+            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}<b>${val.title}</b></th>`;
             x2first = false;
         }
         superFirst = !superFirst;
@@ -280,7 +280,7 @@ function fillTable() {
             if (!canShowVal(yAxis.id, val.key)) {
                 continue;
             }
-            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}${val.title}</td>`;
+            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}<b>${val.title}</b></td>`;
             y2first = false;
             for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
                 if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
@@ -484,6 +484,144 @@ function toggleTopSticky() {
     var topBar = document.getElementById('top_nav_bar');
     topBar.classList.toggle('sticky_top');
     updateTitleSticky();
+}
+
+function makeImage() {
+    // Preprocess data
+    var imageTable = document.getElementById('image_table');
+    var rows = Array.from(imageTable.getElementsByTagName('tr')).filter(e => e.getElementsByTagName('img').length > 0);
+    var header = document.getElementById('image_table_header');
+    var headers = Array.from(header.getElementsByTagName('th')).slice(1);
+    var widest_width = 0;
+    var total_height = 0;
+    var columns = 0;
+    var rowData = [];
+    var pad_x = 64, pad_y = 64;
+    for (var row of rows) {
+        var images = Array.from(row.getElementsByTagName('img'));
+        var real_images = images.filter(i => i.src != 'placeholder.png');
+        widest_width = Math.max(widest_width, ...real_images.map(i => i.naturalWidth));
+        var height = Math.max(...real_images.map(i => i.naturalHeight));
+        var y = pad_y + total_height;
+        total_height += height + 1;
+        columns = Math.max(columns, images.length);
+        var label = row.getElementsByClassName('axis_label_td')[0];
+        rowData.push({ row, images, real_images, height, label, y });
+    }
+    console.log(`Will create image at ${widest_width * columns} x ${total_height} pixels`);
+    var holder = document.getElementById('save_image_helper');
+    for (var oldImage of holder.getElementsByTagName('img')) {
+        oldImage.remove();
+    }
+    document.getElementById('save_image_info').style.display = 'block';
+    // Temporary canvas to measure what padding we need
+    var canvas = new OffscreenCanvas(256, 256);
+    var ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.font = '16px sans';
+    ctx.textBaseline = 'top';
+    for (var row of rowData) {
+        var blocks = row.label.getElementsByTagName('b');
+        pad_x = Math.max(pad_x, ctx.measureText(blocks[0].textContent).width);
+        if (blocks.length == 2) {
+            pad_x = Math.max(pad_x, ctx.measureText(blocks[1].textContent).width);
+        }
+    }
+    pad_x += 5;
+    canvas = document.createElement('canvas');
+    canvas.width = (widest_width + 1) * columns + pad_x;
+    canvas.height = total_height + pad_y;
+    ctx = canvas.getContext('2d');
+    // Background
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#202020';
+    ctx.fill();
+    // Secondary color toggling
+    var doColor = false;
+    ctx.fillStyle = '#303030';
+    var grid_x = pad_x;
+    for (var part of headers) {
+        if (part.getElementsByTagName('b').length == 2) {
+            doColor = !doColor;
+        }
+        if (doColor) {
+            ctx.beginPath();
+            ctx.rect(grid_x, 0, widest_width, pad_y);
+            ctx.fill();
+        }
+        grid_x += widest_width + 1;
+    }
+    doColor = false;
+    for (var row of rowData) {
+        if (row.label.getElementsByTagName('b').length == 2) {
+            doColor = !doColor;
+        }
+        if (doColor) {
+            ctx.beginPath();
+            ctx.rect(0, row.y, pad_x, row.height);
+            ctx.fill();
+        }
+    }
+    // Grid lines
+    ctx.fillStyle = '#000000';
+    for (var row of rowData) {
+        ctx.beginPath();
+        ctx.rect(0, row.y, canvas.width, 1);
+        ctx.fill();
+    }
+    grid_x = pad_x - 1;
+    for (var i = 0; i < columns; i++) {
+        ctx.beginPath();
+        ctx.rect(grid_x, 0, 1, canvas.height);
+        ctx.fill();
+        grid_x += widest_width + 1;
+    }
+    // Text Labels
+    ctx.font = '16px sans';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    grid_x = pad_x + 5;
+    for (var part of headers) {
+        var blocks = part.getElementsByTagName('b');
+        if (blocks.length == 2) {
+            ctx.fillText(blocks[0].textContent, grid_x, 5, widest_width);
+            ctx.fillText(blocks[1].textContent, grid_x, 25, widest_width);
+        }
+        else {
+            ctx.fillText(blocks[0].textContent, grid_x, 25, widest_width);
+        }
+        grid_x += widest_width + 1;
+    }
+    for (var row of rowData) {
+        var blocks = row.label.getElementsByTagName('b');
+        if (blocks.length == 2) {
+            ctx.fillText(blocks[0].textContent, 5, row.y + 4);
+            ctx.fillText(blocks[1].textContent, 5, row.y + 25);
+        }
+        else {
+            ctx.fillText(blocks[0].textContent, 5, row.y + 25);
+        }
+    }
+    // Images
+    for (var row of rowData) {
+        var x = pad_x;
+        for (var image of row.images) {
+            if (image.src != 'placeholder.png') {
+                ctx.drawImage(image, x, row.y);
+                x += widest_width + 1;
+            }
+        }
+    }
+    var imageType = $("#makeimage_type :selected").text();
+    var data = canvas.toDataURL(`image/${imageType}`);
+    canvas.remove();
+    var img = new Image(256, 256);
+    img.src = data;
+    holder.appendChild(img);
 }
 
 loadData();

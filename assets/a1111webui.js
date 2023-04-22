@@ -61,7 +61,7 @@ function formatMetadata(valSet) {
         + formatMet('Sigma Noise', valSet['sigmanoise'], '1')
         + (valSet['restorefaces'] == 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
     var lastData = '';
-    for (var [key, value] of Object.entries(valSet)) {
+    for (const [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {
             lastData += `${key}: ${value}, `;
         }

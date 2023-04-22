@@ -88,8 +88,7 @@ window.addEventListener('keydown', function(kbevent) {
         var tableElem = document.getElementById('image_table');
         var rows = tableElem.getElementsByTagName('tr');
         var matchedRow = null;
-        var x = 0;
-        var y = 0;
+        var x = 0, y = 0;
         for (var row of rows) {
             var columns = row.getElementsByTagName('td');
             for (var column of columns) {
@@ -220,11 +219,12 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
     }
     var newContent = '';
     for (var xVal of xAxis.values) {
-        if (canShowVal(xAxis.id, xVal.key)) {
-            imgPath[index] = xVal.key;
-            var actualUrl = imgPath.join('/') + '.' + rawData.ext;
-            newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join(','))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        if (!canShowVal(xAxis.id, xVal.key)) {
+            continue;
         }
+        imgPath[index] = xVal.key;
+        var actualUrl = imgPath.join('/') + '.' + rawData.ext;
+        newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join(','))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
     }
     return newContent;
 }
@@ -257,10 +257,11 @@ function fillTable() {
         }
         var x2first = true;
         for (var val of xAxis.values) {
-            if (canShowVal(xAxis.id, val.key)) {
-                newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}${val.title}</th>`;
-                x2first = false;
+            if (!canShowVal(xAxis.id, val.key)) {
+                continue;
             }
+            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}${val.title}</th>`;
+            x2first = false;
         }
         superFirst = !superFirst;
     }
@@ -375,7 +376,9 @@ function clickTabAfterActiveTab(tabs) {
     var nextTab = Array.from(tabs).find(tab => {
         var isActive = tab.classList.contains('active');
         var isHidden = tab.classList.contains('tab_hidden');
-        if (!isHidden && !isActive && !firstTab) firstTab = tab;
+        if (!isHidden && !isActive && !firstTab) {
+            firstTab = tab;
+        }
         if (isActive) {
             foundActive = true;
             return false;
@@ -383,37 +386,34 @@ function clickTabAfterActiveTab(tabs) {
         return (foundActive && !isHidden);
     }) || firstTab;
 
-    if (nextTab) nextTab.click();
+    if (nextTab) {
+        nextTab.click();
+    }
     return nextTab;
 }
 
-function startAutoScroll() {
+async function startAutoScroll() {
     var rangeSet = [];
     for (var axis of rawData.axes) {
         rangeSet.push(enableRange(axis.id));
     }
-    var lastUpdate = 0;
-    function autoScroll(timestamp) {
-        if (!anyRangeActive || timestamp - lastUpdate < 500) {
-            window.requestAnimationFrame(autoScroll);
-            return;
+    while (true) {
+        await timer(500);
+        if (!anyRangeActive) {
+            continue;
         }
-
         for (var data of rangeSet) {
             if (data.range.value <= 0) {
                 continue;
             }
-            data.counter += 1;
-
-            if (data.counter > data.range.value) {
-                data.counter = 0;
-                clickTabAfterActiveTab(data.tabs);
+            data.counter++;
+            if (data.counter < data.range.value) {
+                continue;
             }
+            data.counter = 0;
+            clickTabAfterActiveTab(data.tabs);
         }
-        lastUpdate = timestamp;
-        window.requestAnimationFrame(autoScroll);
     }
-    window.requestAnimationFrame(autoScroll);
 }
 
 function crunchMetadata(parts) {

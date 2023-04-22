@@ -9,21 +9,21 @@ function loadData() {
     document.getElementById('x2_none').click();
     document.getElementById('y2_none').click();
     // rawData.ext/title/description
-    for (const axis of rawData.axes) {
+    for (var axis of rawData.axes) {
         // axis.id/title/description
-        for (const val of axis.values) {
+        for (var val of axis.values) {
             // val.key/title/description/show
-            const clicktab = document.getElementById('clicktab_' + axis.id + '__' + val.key);
+            var clicktab = document.getElementById('clicktab_' + axis.id + '__' + val.key);
             clicktab.addEventListener('click', fillTable);
             if (!val.show) {
                 document.getElementById('showval_' + axis.id + '__' + val.key).checked = false;
                 clicktab.classList.add('tab_hidden');
             }
         }
-        for (const prefix of ['x_', 'y_', 'x2_', 'y2_']) {
+        for (var prefix of ['x_', 'y_', 'x2_', 'y2_']) {
             document.getElementById(prefix + axis.id).addEventListener('click', fillTable);
         }
-        for (const label of ['x2_none', 'y2_none']) {
+        for (var label of ['x2_none', 'y2_none']) {
             document.getElementById(label).addEventListener('click', fillTable);
         }
     }
@@ -37,7 +37,7 @@ function loadData() {
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
-    for (const axis of ['x', 'y', 'x2', 'y2']) {
+    for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] !== '') {
             console.log('find ' + axis + '_' + rawData.defaults[axis]);
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
@@ -50,8 +50,8 @@ function getAxisById(id) {
 }
 
 function getNextAxis(axes, startId) {
-    let next = false;
-    for (const subAxis of axes) {
+    var next = false;
+    for (var subAxis of axes) {
         if (subAxis.id === startId) {
             next = true;
         }
@@ -63,7 +63,7 @@ function getNextAxis(axes, startId) {
 }
 
 function getSelectedValKey(axis) {
-    for (const subVal of axis.values) {
+    for (var subVal of axis.values) {
         if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display !== 'none') {
             return subVal.key;
         }
@@ -71,11 +71,11 @@ function getSelectedValKey(axis) {
     return null;
 }
 
-let popoverLastImg = null;
+var popoverLastImg = null;
 
 function clickRowImage(rows, x, y) {
     $('#image_info_modal').modal('hide');
-    const columns = rows[y].getElementsByTagName('td');
+    var columns = rows[y].getElementsByTagName('td');
     columns[x].getElementsByTagName('img')[0].click();
 }
 
@@ -87,15 +87,15 @@ window.addEventListener('keydown', (kbevent) => {
             kbevent.stopPropagation();
             return false;
         }
-        const tableElem = document.getElementById('image_table');
-        const rows = tableElem.getElementsByTagName('tr');
-        let matchedRow = null;
-        let x = 0;
-        let y = 0;
-        for (const row of rows) {
-            const columns = row.getElementsByTagName('td');
-            for (const column of columns) {
-                const images = column.getElementsByTagName('img');
+        var tableElem = document.getElementById('image_table');
+        var rows = tableElem.getElementsByTagName('tr');
+        var matchedRow = null;
+        var x = 0;
+        var y = 0;
+        for (var row of rows) {
+            var columns = row.getElementsByTagName('td');
+            for (var column of columns) {
+                var images = column.getElementsByTagName('img');
                 if (images.length === 1 && images[0] === popoverLastImg) {
                     matchedRow = row;
                     break;
@@ -119,7 +119,7 @@ window.addEventListener('keydown', (kbevent) => {
         }
         else if (kbevent.key === 'ArrowRight') {
             x++;
-            const columns = matchedRow.getElementsByTagName('td');
+            var columns = matchedRow.getElementsByTagName('td');
             if (columns.length > x) {
                 clickRowImage(rows, x, y);
             }
@@ -143,39 +143,39 @@ window.addEventListener('keydown', (kbevent) => {
         kbevent.stopPropagation();
         return false;
     }
-    const elem = document.activeElement;
+    var elem = document.activeElement;
     if (!elem.id.startsWith('clicktab_')) {
         return;
     }
-    let axisId = elem.id.substring('clicktab_'.length);
-    const splitIndex = axisId.lastIndexOf('__');
+    var axisId = elem.id.substring('clicktab_'.length);
+    var splitIndex = axisId.lastIndexOf('__');
     axisId = axisId.substring(0, splitIndex);
-    const axis = getAxisById(axisId);
+    var axis = getAxisById(axisId);
     if (kbevent.key === 'ArrowLeft') {
-        const tabPage = document.getElementById('tablist_' + axis.id);
-        const tabs = tabPage.getElementsByClassName('nav-link');
-        const newTab = clickTabAfterActiveTab(Array.from(tabs).reverse());
+        var tabPage = document.getElementById('tablist_' + axis.id);
+        var tabs = tabPage.getElementsByClassName('nav-link');
+        var newTab = clickTabAfterActiveTab(Array.from(tabs).reverse());
         newTab.focus();
     }
     else if (kbevent.key === 'ArrowRight') {
-        const tabPage = document.getElementById('tablist_' + axis.id);
-        const tabs = tabPage.getElementsByClassName('nav-link');
-        const newTab = clickTabAfterActiveTab(tabs);
+        var tabPage = document.getElementById('tablist_' + axis.id);
+        var tabs = tabPage.getElementsByClassName('nav-link');
+        var newTab = clickTabAfterActiveTab(tabs);
         newTab.focus();
     }
     else if (kbevent.key === 'ArrowUp') {
-        const next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
+        var next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
         if (next != null) {
-            const selectedKey = getSelectedValKey(next);
-            const swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
+            var selectedKey = getSelectedValKey(next);
+            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
             swapToTab.focus();
         }
     }
     else if (kbevent.key === 'ArrowDown') {
-        const next = getNextAxis(rawData.axes, axisId);
+        var next = getNextAxis(rawData.axes, axisId);
         if (next != null) {
-            const selectedKey = getSelectedValKey(next);
-            const swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
+            var selectedKey = getSelectedValKey(next);
+            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
             swapToTab.focus();
         }
     }
@@ -200,9 +200,9 @@ function canShowVal(axis, val) {
 }
 
 function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
-    const imgPath = [];
-    let index = 0;
-    for (const subAxis of rawData.axes) {
+    var imgPath = [];
+    var index = 0;
+    for (var subAxis of rawData.axes) {
         if (subAxis.id === x) {
             index = imgPath.length;
             imgPath.push(null);
@@ -220,11 +220,11 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
             imgPath.push(getSelectedValKey(subAxis));
         }
     }
-    let newContent = '';
-    for (const xVal of xAxis.values) {
+    var newContent = '';
+    for (var xVal of xAxis.values) {
         if (canShowVal(xAxis.id, xVal.key)) {
             imgPath[index] = xVal.key;
-            const actualUrl = imgPath.join('/') + '.' + rawData.ext;
+            var actualUrl = imgPath.join('/') + '.' + rawData.ext;
             newContent += `<td><img class="table_img" data-img-path="${escapeHtml(imgPath.join(','))}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         }
     }
@@ -241,24 +241,24 @@ function optDescribe(isFirst, val) {
 }
 
 function fillTable() {
-    const x = getCurrentSelectedAxis('x');
-    const y = getCurrentSelectedAxis('y');
-    const x2 = getCurrentSelectedAxis('x2');
-    const y2 = getCurrentSelectedAxis('y2');
+    var x = getCurrentSelectedAxis('x');
+    var y = getCurrentSelectedAxis('y');
+    var x2 = getCurrentSelectedAxis('x2');
+    var y2 = getCurrentSelectedAxis('y2');
     console.log('Do fill table, x=' + x + ', y=' + y + ', x2=' + x2 + ', y2=' + y2);
-    const xAxis = getAxisById(x);
-    const yAxis = getAxisById(y);
-    const x2Axis = x2 === 'None' || x2 === x || x2 === y ? null : getAxisById(x2);
-    const y2Axis = y2 === 'None' || y2 === x2 || y2 === x || y2 === y ? null : getAxisById(y2);
-    const table = document.getElementById('image_table');
-    let newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
-    let superFirst = true;
-    for (const x2val of (x2Axis == null ? [null] : x2Axis.values)) {
+    var xAxis = getAxisById(x);
+    var yAxis = getAxisById(y);
+    var x2Axis = x2 === 'None' || x2 === x || x2 === y ? null : getAxisById(x2);
+    var y2Axis = y2 === 'None' || y2 === x2 || y2 === x || y2 === y ? null : getAxisById(y2);
+    var table = document.getElementById('image_table');
+    var newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
+    var superFirst = true;
+    for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
         if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
             continue;
         }
-        let x2first = true;
-        for (const val of xAxis.values) {
+        var x2first = true;
+        for (var val of xAxis.values) {
             if (canShowVal(xAxis.id, val.key)) {
                 newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}${val.title}</th>`;
                 x2first = false;
@@ -268,18 +268,18 @@ function fillTable() {
     }
     newContent += '</tr>';
     superFirst = true;
-    for (const y2val of (y2Axis == null ? [null] : y2Axis.values)) {
+    for (var y2val of (y2Axis == null ? [null] : y2Axis.values)) {
         if (y2val != null && !canShowVal(y2Axis.id, y2val.key)) {
             continue;
         }
-        let y2first = true;
-        for (const val of yAxis.values) {
+        var y2first = true;
+        for (var val of yAxis.values) {
             if (!canShowVal(yAxis.id, val.key)) {
                 continue;
             }
             newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}${val.title}</td>`;
             y2first = false;
-            for (const x2val of (x2Axis == null ? [null] : x2Axis.values)) {
+            for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
                 if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
                     continue;
                 }
@@ -297,20 +297,20 @@ function fillTable() {
 }
 
 function getCurrentSelectedAxis(axisPrefix) {
-    const id = document.querySelector(`input[name="${axisPrefix}_axis_selector"]:checked`).id;
-    const index = id.indexOf('_');
+    var id = document.querySelector(`input[name="${axisPrefix}_axis_selector"]:checked`).id;
+    var index = id.indexOf('_');
     return id.substring(index + 1);
 }
 
 function updateScaling() {
-    let percent;
+    var percent;
     if (document.getElementById('autoScaleImages').checked) {
-        const x = getCurrentSelectedAxis('x');
-        const xAxis = getAxisById(x);
-        let count = xAxis.values.length;
-        const x2 = getCurrentSelectedAxis('x2');
+        var x = getCurrentSelectedAxis('x');
+        var xAxis = getAxisById(x);
+        var count = xAxis.values.length;
+        var x2 = getCurrentSelectedAxis('x2');
         if (x2 !== 'none') {
-            const x2Axis = getAxisById(x2);
+            var x2Axis = getAxisById(x2);
             count *= x2Axis.values.length;
         }
         percent = (90 / count) + 'vw';
@@ -318,16 +318,16 @@ function updateScaling() {
     else {
         percent = '';
     }
-    for (const image of document.getElementById('image_table').getElementsByClassName('table_img')) {
+    for (var image of document.getElementById('image_table').getElementsByClassName('table_img')) {
         image.style.width = percent;
     }
     updateTitleSticky();
 }
 
 function toggleDescriptions() {
-    const show = document.getElementById('showDescriptions').checked;
-    for (const cName of ['tabval_subdiv', 'axis_table_cell']) {
-        for (const elem of document.getElementsByClassName(cName)) {
+    var show = document.getElementById('showDescriptions').checked;
+    for (var cName of ['tabval_subdiv', 'axis_table_cell']) {
+        for (var elem of document.getElementsByClassName(cName)) {
             elem.classList.toggle('tab_hidden', !show);
         }
     }
@@ -335,35 +335,35 @@ function toggleDescriptions() {
 }
 
 function toggleShowAllAxis(axisId) {
-    const axis = getAxisById(axisId);
-    const hide = axis.values.some(val => {
+    var axis = getAxisById(axisId);
+    var hide = axis.values.some(val => {
         return canShowVal(axisId, val.key);
     });
-    for (const val of axis.values) {
+    for (var val of axis.values) {
         document.getElementById('showval_' + axisId + '__' + val.key).checked = !hide;
-        const element = document.getElementById('clicktab_' + axisId + '__' + val.key);
+        var element = document.getElementById('clicktab_' + axisId + '__' + val.key);
         element.classList.toggle('tab_hidden', hide);
     }
     fillTable();
 }
 
 function toggleShowVal(axis, val) {
-    const show = canShowVal(axis, val);
-    const element = document.getElementById('clicktab_' + axis + '__' + val);
+    var show = canShowVal(axis, val);
+    var element = document.getElementById('clicktab_' + axis + '__' + val);
     element.classList.toggle('tab_hidden', !show);
     fillTable();
 }
 
-let anyRangeActive = false;
+var anyRangeActive = false;
 
 function enableRange(id) {
-    const range = document.getElementById('range_tablist_' + id);
-    const label = document.getElementById('label_range_tablist_' + id);
+    var range = document.getElementById('range_tablist_' + id);
+    var label = document.getElementById('label_range_tablist_' + id);
     range.oninput = function() {
         anyRangeActive = true;
         label.innerText = (range.value / 2) + ' seconds';
     };
-    const tabPage = document.getElementById('tablist_' + id);
+    var tabPage = document.getElementById('tablist_' + id);
     return {
         range,
         counter: 0,
@@ -372,11 +372,11 @@ function enableRange(id) {
 }
 
 function clickTabAfterActiveTab(tabs) {
-    let firstTab = null;
-    let foundActive = false;
-    const nextTab = Array.from(tabs).find(tab => {
-        const isActive = tab.classList.contains('active');
-        const isHidden = tab.classList.contains('tab_hidden');
+    var firstTab = null;
+    var foundActive = false;
+    var nextTab = Array.from(tabs).find(tab => {
+        var isActive = tab.classList.contains('active');
+        var isHidden = tab.classList.contains('tab_hidden');
         if (!isHidden && !isActive && !firstTab) firstTab = tab;
         if (isActive) {
             foundActive = true;
@@ -390,18 +390,18 @@ function clickTabAfterActiveTab(tabs) {
 }
 
 function startAutoScroll() {
-    const rangeSet = [];
-    for (const axis of rawData.axes) {
+    var rangeSet = [];
+    for (var axis of rawData.axes) {
         rangeSet.push(enableRange(axis.id));
     }
-    let lastUpdate = 0;
+    var lastUpdate = 0;
     function autoScroll(timestamp) {
         if (!anyRangeActive || timestamp - lastUpdate < 500) {
             window.requestAnimationFrame(autoScroll);
             return;
         }
 
-        for (const data of rangeSet) {
+        for (var data of rangeSet) {
             if (data.range.value <= 0) {
                 continue;
             }
@@ -422,15 +422,15 @@ function crunchMetadata(parts) {
     if (!('metadata' in rawData)) {
         return {};
     }
-    let initialData = structuredClone(rawData.metadata);
-    for (let index = 0; index < parts.length; index++) {
-        let part = parts[index];
-        let axis = rawData.axes[index];
-        let actualVal = axis.values.find(val => val.key === part);
+    var initialData = structuredClone(rawData.metadata);
+    for (var index = 0; index < parts.length; index++) {
+        var part = parts[index];
+        var axis = rawData.axes[index];
+        var actualVal = axis.values.find(val => val.key === part);
         if (actualVal == null) {
             return { 'error': `metadata parsing failed for part ${index}: ${part}` };
         }
-        for (let [key, value] of Object.entries(actualVal.params)) {
+        for (var [key, value] of Object.entries(actualVal.params)) {
             key = key.replaceAll(' ', '');
             if (typeof(crunchParamHook) === 'undefined' || !crunchParamHook(initialData, key, value)) {
                 initialData[key] = value;
@@ -442,12 +442,12 @@ function crunchMetadata(parts) {
 
 function doPopupFor(img) {
     popoverLastImg = img;
-    const imgPath = unescapeHtml(img.dataset.imgPath).split(',');
-    const modalElem = document.getElementById('image_info_modal');
-    let metaData = crunchMetadata(imgPath);
-    let metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
-    const params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
-    const text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
+    var imgPath = unescapeHtml(img.dataset.imgPath).split(',');
+    var modalElem = document.getElementById('image_info_modal');
+    var metaData = crunchMetadata(imgPath);
+    var metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
+    var params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
+    var text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
     modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;
     $('#image_info_modal').modal('toggle');
 }
@@ -455,17 +455,17 @@ function doPopupFor(img) {
 function updateTitleStickyDirect(topBar) {
     // client rect is dynamically animated, so, uh, just hack it for now.
     // could listen to `transitionend` or bootstrap events, but would create an artifact
-    const height = Math.round(topBar.getBoundingClientRect().height);
-    const header = document.getElementById('image_table_header');
+    var height = Math.round(topBar.getBoundingClientRect().height);
+    var header = document.getElementById('image_table_header');
     if (header.style.top === (height + 'px')) {
         return;
     }
     header.style.top = height + 'px';
 }
 
-let stickyUpdateID = 0;
+var stickyUpdateID = 0;
 function updateTitleSticky() {
-    const topBar = document.getElementById('top_nav_bar');
+    var topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
         document.getElementById('image_table_header').style.top = ''; // default to CSS
         return;
@@ -477,7 +477,7 @@ function updateTitleSticky() {
 }
 
 function toggleTopSticky() {
-    const topBar = document.getElementById('top_nav_bar');
+    var topBar = document.getElementById('top_nav_bar');
     topBar.classList.toggle('sticky_top');
     updateTitleSticky();
 }

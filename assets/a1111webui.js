@@ -24,7 +24,7 @@ function formatMet(name, val, bad) {
 }
 
 function formatMetadata(valSet) {
-    const count = Object.keys(valSet).length;
+    var count = Object.keys(valSet).length;
     if (count === 0) {
         return '';
     }
@@ -32,12 +32,12 @@ function formatMetadata(valSet) {
         return valSet['error'];
     }
     // Referenced to match processing.py - create_infotext(p)
-    let negative = valSet['negativeprompt'];
+    var negative = valSet['negativeprompt'];
     if (negative.length > 0) {
         negative = '\nNegative prompt: ' + negative;
     }
-    const handled = ['steps', 'sampler', 'cfgscale', 'seed', 'restorefaces', 'width', 'height', 'model', 'varseed', 'varstrength', 'denoising', 'eta', 'clipskip', 'vae', 'sigmachurn', 'sigmatmin', 'sigmatmax', 'sigmanoise', 'prompt', 'negativeprompt'];
-    let keyData = formatMet('Steps', valSet['steps'])
+    var handled = ['steps', 'sampler', 'cfgscale', 'seed', 'restorefaces', 'width', 'height', 'model', 'varseed', 'varstrength', 'denoising', 'eta', 'clipskip', 'vae', 'sigmachurn', 'sigmatmin', 'sigmatmax', 'sigmanoise', 'prompt', 'negativeprompt'];
+    var keyData = formatMet('Steps', valSet['steps'])
         + formatMet('Sampler', valSet['sampler'])
         + formatMet('CFG scale', valSet['cfgscale'])
         + formatMet('Seed', valSet['seed'])
@@ -56,14 +56,14 @@ function formatMetadata(valSet) {
         // ENSD
         ;
         // Not part of normal gen-params
-    let extraData = formatMet('VAE', valSet['vae'])
+    var extraData = formatMet('VAE', valSet['vae'])
         + formatMet('Sigma Churn', valSet['sigmachurn'], '0')
         + formatMet('Sigma T-Min', valSet['sigmatmin'], '0')
         + formatMet('Sigma T-Max', valSet['sigmatmax'], '1')
         + formatMet('Sigma Noise', valSet['sigmanoise'], '1')
         + (valSet['restorefaces'] === 'CodeFormer' ? formatMet('CodeFormer Weight', valSet['codeformerweight']) : '');
-    let lastData = '';
-    for (const [key, value] of Object.entries(valSet)) {
+    var lastData = '';
+    for (var [key, value] of Object.entries(valSet)) {
         if (!handled.includes(key)) {
             lastData += `${key}: ${value}, `;
         }
@@ -80,9 +80,9 @@ function formatMetadata(valSet) {
 
 function crunchParamHook(data, key, value) {
     if (key == 'promptreplace') {
-        let replacers = value.split('=', 2);
-        let match = replacers[0].trim();
-        let replace = replacers[1].trim();
+        var replacers = value.split('=', 2);
+        var match = replacers[0].trim();
+        var replace = replacers[1].trim();
         data['prompt'] = data['prompt'].replaceAll(match, replace);
         data['negativeprompt'] = data['negativeprompt'].replaceAll(match, replace);
         return true;

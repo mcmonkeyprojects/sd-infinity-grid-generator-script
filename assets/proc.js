@@ -231,21 +231,13 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
     return newContent;
 }
 
-// Public function
 function setImgPlaceholder(img) {
     img.onerror = undefined;
     img.src = './placeholder.png';
 }
 
-function optDescribe(isFirst, title, subVal) {
-    let label = '';
-    if (subVal) {
-        if (isFirst) {
-            label += '<span title="' + escapeHtml(subVal.description) + '"><b>' + subVal.title + '</b></span>';
-        }
-        label += '<br>';
-    }
-    return label + title;
+function optDescribe(isFirst, val) {
+    return isFirst && val != null ? '<span title="' + escapeHtml(val.description) + '"><b>' + val.title + '</b></span><br>' : (val != null ? '<br>' : '');
 }
 
 function fillTable() {
@@ -268,7 +260,7 @@ function fillTable() {
         let x2first = true;
         for (const val of xAxis.values) {
             if (canShowVal(xAxis.id, val.key)) {
-                newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, val.title, x2val)}</th>`;
+                newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}${val.title}</th>`;
                 x2first = false;
             }
         }
@@ -285,7 +277,7 @@ function fillTable() {
             if (!canShowVal(yAxis.id, val.key)) {
                 continue;
             }
-            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, val.title, y2val)}</td>`;
+            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}${val.title}</td>`;
             y2first = false;
             for (const x2val of (x2Axis == null ? [null] : x2Axis.values)) {
                 if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
@@ -332,7 +324,6 @@ function updateScaling() {
     updateTitleSticky();
 }
 
-// Public function
 function toggleDescriptions() {
     const show = document.getElementById('showDescriptions').checked;
     for (const cName of ['tabval_subdiv', 'axis_table_cell']) {
@@ -343,7 +334,6 @@ function toggleDescriptions() {
     updateTitleSticky();
 }
 
-// Public function
 function toggleShowAllAxis(axisId) {
     const axis = getAxisById(axisId);
     const hide = axis.values.some(val => {
@@ -357,7 +347,6 @@ function toggleShowAllAxis(axisId) {
     fillTable();
 }
 
-// Public function
 function toggleShowVal(axis, val) {
     const show = canShowVal(axis, val);
     const element = document.getElementById('clicktab_' + axis + '__' + val);
@@ -370,7 +359,7 @@ let anyRangeActive = false;
 function enableRange(id) {
     const range = document.getElementById('range_tablist_' + id);
     const label = document.getElementById('label_range_tablist_' + id);
-    range.oninput = () => {
+    range.oninput = function() {
         anyRangeActive = true;
         label.innerText = (range.value / 2) + ' seconds';
     };
@@ -429,12 +418,34 @@ function startAutoScroll() {
     window.requestAnimationFrame(autoScroll);
 }
 
-// Public function
+function crunchMetadata(parts) {
+    if (!('metadata' in rawData)) {
+        return {};
+    }
+    let initialData = structuredClone(rawData.metadata);
+    for (let index = 0; index < parts.length; index++) {
+        let part = parts[index];
+        let axis = rawData.axes[index];
+        let actualVal = axis.values.find(val => val.key === part);
+        if (actualVal == null) {
+            return { 'error': `metadata parsing failed for part ${index}: ${part}` };
+        }
+        for (let [key, value] of Object.entries(actualVal.params)) {
+            key = key.replaceAll(' ', '');
+            if (typeof(crunchParamHook) === 'undefined' || !crunchParamHook(initialData, key, value)) {
+                initialData[key] = value;
+            }
+        }
+    }
+    return initialData;
+}
+
 function doPopupFor(img) {
     popoverLastImg = img;
     const imgPath = unescapeHtml(img.dataset.imgPath).split(',');
     const modalElem = document.getElementById('image_info_modal');
-    const metaText = window.crunchMetadata(imgPath);
+    let metaData = crunchMetadata(imgPath);
+    let metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
     const params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
     const text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
     modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;

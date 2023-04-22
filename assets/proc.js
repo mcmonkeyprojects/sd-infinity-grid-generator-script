@@ -2,8 +2,6 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
-'use strict';
-
 function loadData() {
     document.getElementById('x_' + rawData.axes[0].id).click();
     document.getElementById('x2_none').click();

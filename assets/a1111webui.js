@@ -2,8 +2,6 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
-'use strict';
-
 function genParamQuote(text) {
     // Referenced to match generation_parameters_copypaste.py - quote(text)
     if (!text.includes(',')) {

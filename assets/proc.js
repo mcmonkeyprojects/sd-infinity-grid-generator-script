@@ -30,11 +30,11 @@ function loadData() {
     document.getElementById('stickyNavigation').addEventListener('change', toggleTopSticky);
     document.getElementById('toggle_nav_button').addEventListener('click', updateTitleSticky);
     document.getElementById('toggle_adv_button').addEventListener('click', updateTitleSticky);
-    fillTable();
-    startAutoScroll();
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
+    fillTable();
+    startAutoScroll();
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             console.log('find ' + axis + '_' + rawData.defaults[axis]);

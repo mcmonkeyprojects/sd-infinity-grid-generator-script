@@ -110,6 +110,9 @@ def apply_enable_hr(p, v):
         if p.denoising_strength is None:
             p.denoising_strength = 0.75
 
+def apply_styles(p, v: str):
+    p.styles = list(v.split(','))
+
 ######################### Addons #########################
 has_inited = False
 
@@ -136,6 +139,7 @@ def try_init():
     registerMode("Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("prompt")))
     registerMode("Negative Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("negative_prompt")))
     registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
+    registerMode("Styles", GridSettingMode(dry=True, type="text", apply=apply_styles, valid_list=lambda: list(shared.prompt_styles.styles)))
     registerMode("Var Seed", GridSettingMode(dry=True, type="integer", apply=apply_field("subseed")))
     registerMode("Var Strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("subseed_strength")))
     registerMode("ClipSkip", GridSettingMode(dry=False, type="integer", min=1, max=12, apply=apply_clip_skip))

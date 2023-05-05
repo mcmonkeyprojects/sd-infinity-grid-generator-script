@@ -156,6 +156,7 @@ axes:
 | `Prompt` | Text | `a cat` | |
 | `Negative Prompt` | Text | `gross, weird, bad` | |
 | `Prompt Replace` | Text-Pair | `some_tag = new text here` | Note the `=` symbol to separate the original text with the new text. That will change a prompt of for example `my prompt with some_tag stuff` to `my prompt with new text here stuff`.<br>Unlike other modes, the PromptReplace is case-sensitive - if you use capitals in your prompt, you need capitals in your replace matcher.<br>If you want multiple replacements in one value, you can number them, like `Prompt Replace 1` and `Prompt Replace 2` and etc.<br>When building a simple list in UI, you can just do eg `cat, dog, waffle` and it will understand to replace `cat` in the base prompt first with `cat`, then `dog`, then `waffle` (ie you can skip the `=` for simple usages). |
+| `Styles` | Text | `photo`, `cartoon`, ... | Automatically includes UI styles to your prompt. Can use comma-separated list to have multiple. Note this means in the UI you can do for example `photo, cinematic ||| anime, cartoon` to compare multiple combos easily. |
 | `Seed` | Integer | `1`, `2`, `3`, ... | |
 | `Steps` | Integer | `20`, `50`, ... | |
 | `CFG Scale` | Decimal | `5`, `7.5`, `12`, ... | |

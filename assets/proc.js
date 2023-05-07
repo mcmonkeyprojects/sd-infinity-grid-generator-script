@@ -236,6 +236,7 @@ function setImgPlaceholder(img) {
         img.width = rawData.min_width;
         img.height = rawData.min_height;
     }
+    setImageScale(img, getWantedScaling());
 }
 
 function optDescribe(isFirst, val) {
@@ -305,24 +306,40 @@ function getCurrentSelectedAxis(axisPrefix) {
     return id.substring(index + 1);
 }
 
-function updateScaling() {
-    var percent;
-    if (document.getElementById('autoScaleImages').checked) {
-        var x = getCurrentSelectedAxis('x');
-        var xAxis = getAxisById(x);
-        var count = xAxis.values.length;
-        var x2 = getCurrentSelectedAxis('x2');
-        if (x2 != 'none') {
-            var x2Axis = getAxisById(x2);
-            count *= x2Axis.values.length;
-        }
-        percent = (90 / count) + 'vw';
+function getWantedScaling() {
+    if (!document.getElementById('autoScaleImages').checked) {
+        return 0;
+    }
+    var x = getCurrentSelectedAxis('x');
+    var xAxis = getAxisById(x);
+    var count = xAxis.values.length;
+    var x2 = getCurrentSelectedAxis('x2');
+    if (x2 != 'none') {
+        var x2Axis = getAxisById(x2);
+        count *= x2Axis.values.length;
+    }
+    return (90 / count);
+}
+
+function setImageScale(image, percent) {
+    if (percent == 0) {
+        image.style.width = '';
+        image.style.height = '';
     }
     else {
-        percent = '';
+        image.style.width = percent + 'vw';
+        let width = image.getAttribute('width');
+        let height = image.getAttribute('height');
+        if (width != null && height != null) { // Rescale placeholders cleanly
+            image.style.height = (percent * (parseFloat(height) / parseFloat(width))) + 'vw';
+        }
     }
+}
+
+function updateScaling() {
+    let percent = getWantedScaling();
     for (var image of document.getElementById('image_table').getElementsByClassName('table_img')) {
-        image.style.width = percent;
+        setImageScale(image, percent);
     }
     updateTitleSticky();
 }

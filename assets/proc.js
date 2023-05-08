@@ -2,7 +2,10 @@
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
  */
 
+let supressUpdate = true;
+
 function loadData() {
+    let rawHash = window.location.hash;
     document.getElementById('x_' + rawData.axes[0].id).click();
     document.getElementById('x2_none').click();
     document.getElementById('y2_none').click();
@@ -33,14 +36,16 @@ function loadData() {
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
-    fillTable();
-    startAutoScroll();
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             console.log('find ' + axis + '_' + rawData.defaults[axis]);
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }
+    applyHash(rawHash);
+    supressUpdate = false;
+    fillTable();
+    startAutoScroll();
 }
 
 function getAxisById(id) {
@@ -244,6 +249,9 @@ function optDescribe(isFirst, val) {
 }
 
 function fillTable() {
+    if (supressUpdate) {
+        return;
+    }
     var x = getCurrentSelectedAxis('x');
     var y = getCurrentSelectedAxis('y');
     var x2 = getCurrentSelectedAxis('x2');
@@ -482,6 +490,7 @@ function updateTitleStickyDirect() {
 }
 
 function updateTitleSticky() {
+    updateHash();
     var topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
         document.getElementById('image_table_header').style.top = '0';
@@ -637,6 +646,58 @@ function makeImage() {
     var img = new Image(256, 256);
     img.src = data;
     holder.appendChild(img);
+}
+
+function updateHash() {
+    var hash = `#auto-loc`;
+    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation']) {
+        hash += `,${document.getElementById(elem).checked}`;
+    }
+    for (let val of ['x', 'y', 'x2', 'y2']) {
+        hash += `,${encodeURIComponent(getCurrentSelectedAxis(val))}`;
+    }
+    for (let subAxis of rawData.axes) {
+        hash += `,${encodeURIComponent(getSelectedValKey(subAxis))}`;
+    }
+    history.pushState(null, null, hash);
+}
+
+function applyHash(hash) {
+    if (!hash) {
+        return;
+    }
+    let hashInputs = hash.substring(1).split(',');
+    let expectedLen = 1 + 3 + 4 + rawData.axes.length;
+    if (hashInputs.length != expectedLen) {
+        console.log(`Hash length mismatch: ${hashInputs.length} != ${expectedLen}, skipping value reload.`);
+        return;
+    }
+    if (hashInputs[0] != 'auto-loc') {
+        console.log(`Hash prefix mismatch: ${hashInputs[0]} != auto-loc, skipping value reload.`);
+        return;
+    }
+    let index = 1;
+    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation']) {
+        document.getElementById(elem).checked = hashInputs[index++] == 'true';
+    }
+    for (let axis of ['x', 'y', 'x2', 'y2']) {
+        let id = axis + '_' + decodeURIComponent(hashInputs[index++]);
+        let target = document.getElementById(id);
+        if (!target) {
+            console.log(`Axis element not found: ${id}, skipping value reload.`);
+            return;
+        }
+        target.click();
+    }
+    for (let subAxis of rawData.axes) {
+        let id = 'clicktab_' + subAxis.id + '__' + decodeURIComponent(hashInputs[index++]);
+        let target = document.getElementById(id);
+        if (!target) {
+            console.log(`Axis-value element not found: ${id}, skipping value reload.`);
+            return;
+        }
+        target.click();
+    }
 }
 
 loadData();

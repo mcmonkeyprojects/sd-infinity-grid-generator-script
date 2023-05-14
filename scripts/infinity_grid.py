@@ -396,7 +396,10 @@ class Script(scripts.Script):
                 return "(...)"
             out_path = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
             full_out_path = out_path + "/" + file
-            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\">(Click me) <code>{full_out_path}</code></a><br><br>"
+            notice = ""
+            if os.path.exists(full_out_path):
+                notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
+            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
         def update_page_url(file_path, selected_file):
             return gr.update(value=get_page_url_text(file_path or (selected_file.replace(".yml", "") if selected_file is not None else None)))
         output_file_path.change(fn=update_page_url, inputs=[output_file_path, grid_file], outputs=[page_will_be])

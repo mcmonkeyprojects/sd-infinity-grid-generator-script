@@ -1,6 +1,6 @@
 # This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
 
-import os, glob, yaml, json, shutil, math, re
+import os, glob, yaml, json, shutil, math, re, time
 from copy import copy
 from PIL import Image
 from git import Repo
@@ -421,6 +421,15 @@ class GridRunner:
         grid.min_width = None
         grid.min_height = None
         grid.initial_p = p
+        self.last_update = []
+
+    def update_live_file(self, new_file: str):
+        t_now = time.time()
+        self.last_update = [x for x in self.last_update if t_now - x['t'] < 20]
+        self.last_update.append({'f': new_file, 't': t_now})
+        with open(self.base_path + '/last.js', 'w') as f:
+            update_str = '", "'.join([x['f'] for x in self.last_update])
+            f.write(f'window.lastUpdated = ["{update_str}"]')
 
     def build_value_set_list(self, axis_list: list):
         result = list()
@@ -482,12 +491,13 @@ class GridRunner:
                 if e.strerror == 'The filename or extension is too long' and hasattr(e, 'winerror') and e.winerror == 206:
                     print(f"\n\n\nOS Error: {e.strerror} - see this article to fix that: https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-Windows-10-default-path-length-limitation-MAX-PATH-is-256-characters.html \n\n\n")
                 raise e
+            self.update_live_file(set.filepath + "." + self.grid.format)
         return last
 
 ######################### Web Data Builders #########################
 
 class WebDataBuilder():
-    def build_json(grid: GridFileHelper, publish_gen_metadata: bool, p):
+    def build_json(grid: GridFileHelper, publish_gen_metadata: bool, p, dry_run: bool):
         def get_axis(axis: str):
             id = grid.read_str_from_grid(axis)
             if id is None:
@@ -516,6 +526,8 @@ class WebDataBuilder():
                 'y2': get_axis('y super axis')
             }
         }
+        if not dry_run:
+            result['will_run'] = True
         if publish_gen_metadata:
             result['metadata'] = None if webdata_get_base_param_data is None else webdata_get_base_param_data(p)
         axes = list()
@@ -606,10 +618,13 @@ class WebDataBuilder():
         html = html.replace("{TITLE}", grid.title).replace("{CLEAN_DESCRIPTION}", clean_for_web(grid.description)).replace("{DESCRIPTION}", grid.description).replace("{CONTENT}", content).replace("{ADVANCED_SETTINGS}", advanced_settings).replace("{AUTHOR}", grid.author).replace("{EXTRA_FOOTER}", EXTRA_FOOTER).replace("{VERSION}", get_version())
         return html
 
-    def emit_web_data(path, grid, publish_gen_metadata, p, yaml_content):
+    def emit_web_data(path: str, grid, publish_gen_metadata: bool, p, yaml_content: dict, dry_run: bool):
         print("Building final web data...")
         os.makedirs(path, exist_ok=True)
-        json = WebDataBuilder.build_json(grid, publish_gen_metadata, p)
+        json = WebDataBuilder.build_json(grid, publish_gen_metadata, p, dry_run)
+        if not dry_run:
+            with open(path + '/last.js', 'w') as f:
+                f.write("window.lastUpdated = []")
         with open(path + "/data.js", 'w') as f:
             f.write("rawData = " + json)
         with open(path + "/config.yml", 'w') as f:
@@ -620,6 +635,7 @@ class WebDataBuilder():
         with open(path + "/index.html", 'w') as f:
             f.write(html)
         print(f"Web file is now at {path}/index.html")
+        return json
 
 ######################### Main Runner Function #########################
 
@@ -677,8 +693,13 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
     runner = GridRunner(grid, do_overwrite, folder, pass_through_obj, fast_skip)
     runner.preprocess()
     if generate_page:
-        WebDataBuilder.emit_web_data(folder, grid, publish_gen_metadata, pass_through_obj, yaml_content)
+        json = WebDataBuilder.emit_web_data(folder, grid, publish_gen_metadata, pass_through_obj, yaml_content, dry_run)
     result = runner.run(dry_run)
     if dry_run:
         print("Infinite Grid dry run succeeded without error")
+    else:
+        json = json.replace('"will_run": true, ', '')
+        with open(folder + "/data.js", 'w') as f:
+            f.write("rawData = " + json)
+        os.remove(folder + "/last.js")
     return result

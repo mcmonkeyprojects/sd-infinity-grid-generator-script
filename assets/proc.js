@@ -46,6 +46,9 @@ function loadData() {
     supressUpdate = false;
     fillTable();
     startAutoScroll();
+    if (rawData.will_run) {
+        setTimeout(checkForUpdates, 5000);
+    }
 }
 
 function getAxisById(id) {
@@ -236,6 +239,7 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
 
 function setImgPlaceholder(img) {
     img.onerror = undefined;
+    img.dataset.errored_src = img.src;
     img.src = 'placeholder.png';
     if (rawData.min_width) {
         img.width = rawData.min_width;
@@ -698,6 +702,39 @@ function applyHash(hash) {
         }
         target.click();
     }
+}
+
+let lastUpdateObj = null;
+let updateCheckCount = 0;
+let updatesWithoutData = 0;
+
+function checkForUpdates() {
+    if (!window.lastUpdated) {
+        if (updatesWithoutData++ > 2) {
+            console.log('Update-checker has no more updates.');
+            return;
+        }
+    }
+    else {
+        console.log(`Update-checker found ${window.lastUpdated.length} updates.`);
+        for (let url of window.lastUpdated) {
+            for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
+                if (img.dataset.errored_src.endsWith(url)) {
+                    let target = img.dataset.errored_src;
+                    img.dataset.errored_src = null;
+                    img.src = target;
+                }
+            }
+        }
+        window.lastUpdated = null;
+    }
+    if (lastUpdateObj != null) {
+        lastUpdateObj.remove();
+    }
+    lastUpdateObj = document.createElement('script');
+    lastUpdateObj.src = `last.js?vary=${updateCheckCount++}`;
+    document.body.appendChild(lastUpdateObj);
+    setTimeout(checkForUpdates, 5 * 1000);
 }
 
 loadData();

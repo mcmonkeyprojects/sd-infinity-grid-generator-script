@@ -32,6 +32,7 @@ grid_runner_post_dry_hook: callable = None
 webdata_get_base_param_data: callable = None
 
 ######################### Utilities #########################
+
 def clean_file_path(fn: str):
     fn = fn.replace('\\', '/')
     while '//' in fn:
@@ -475,7 +476,12 @@ class GridRunner:
             set.apply_to(p, dry)
             if dry:
                 continue
-            last = grid_runner_post_dry_hook(self, p, set)
+            try:
+                last = grid_runner_post_dry_hook(self, p, set)
+            except FileNotFoundError as e:
+                if e.strerror == 'The filename or extension is too long' and hasattr(e, 'winerror') and e.winerror == 206:
+                    print(f"\n\n\nOS Error: {e.strerror} - see this article to fix that: https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-Windows-10-default-path-length-limitation-MAX-PATH-is-256-characters.html \n\n\n")
+                raise e
         return last
 
 ######################### Web Data Builders #########################

@@ -344,6 +344,17 @@ class Script(scripts.Script):
         manual_group = gr.Group(visible=True)
         manual_axes = list()
         sets = list()
+        def get_page_url_text(file):
+            if file is None:
+                return "(...)"
+            out_path = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
+            full_out_path = out_path + "/" + file
+            notice = ""
+            if os.path.exists(full_out_path):
+                notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
+            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
+        def update_page_url(file_path, selected_file):
+            return gr.update(value=get_page_url_text(file_path or (selected_file.replace(".yml", "") if selected_file is not None else None)))
         with manual_group:
             with gr.Row():
                     with gr.Column():
@@ -373,8 +384,9 @@ class Script(scripts.Script):
                                             mode = core.valid_modes.get(clean_mode(mode_name))
                                             button_update = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
                                             out_file_update = gr.Textbox.update() if out_file != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}")
-                                            return [button_update, out_file_update]
-                                        row_mode.change(fn=on_axis_change, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path])
+                                            notice = update_page_url(out_file, None)
+                                            return [button_update, out_file_update, notice]
+                                        row_mode.change(fn=on_axis_change, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path, page_will_be])
                                         manual_axes += list([row_mode, row_value])
                                         rows.append(row_mode)
                                 sets.append([group_obj, rows])
@@ -391,17 +403,6 @@ class Script(scripts.Script):
             inputs=[grid_file],
             outputs=[manual_group],
             show_progress = False)
-        def get_page_url_text(file):
-            if file is None:
-                return "(...)"
-            out_path = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
-            full_out_path = out_path + "/" + file
-            notice = ""
-            if os.path.exists(full_out_path):
-                notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
-            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
-        def update_page_url(file_path, selected_file):
-            return gr.update(value=get_page_url_text(file_path or (selected_file.replace(".yml", "") if selected_file is not None else None)))
         output_file_path.change(fn=update_page_url, inputs=[output_file_path, grid_file], outputs=[page_will_be])
         grid_file.change(fn=update_page_url, inputs=[output_file_path, grid_file], outputs=[page_will_be])
         with gr.Row():

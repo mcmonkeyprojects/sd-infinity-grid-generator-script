@@ -177,7 +177,7 @@ def try_init():
             registerMode("[DynamicThreshold] CFG Mode", GridSettingMode(dry=True, type="text", apply=apply_field("dynthres_cfg_mode"), valid_list=lambda: list(dynamic_thresholding.VALID_MODES)))
             registerMode("[DynamicThreshold] Mimic Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=apply_field("dynthres_mimic_scale_min")))
             registerMode("[DynamicThreshold] CFG Scale Minimum", GridSettingMode(dry=True, type="decimal", min=0.0, max=100.0, apply=apply_field("dynthres_cfg_scale_min")))
-            registerMode("[DynamicThreshold] Experiment Mode", GridSettingMode(dry=True, type="integer", min=0, max=100, apply=apply_field("dynthres_experiment_mode")))
+            registerMode("[DynamicThreshold] Experiment Mode", GridSettingMode(dry=True, type="decimal", min=0, max=100000, apply=apply_field("dynthres_experiment_mode")))
             registerMode("[DynamicThreshold] Power Value", GridSettingMode(dry=True, type="decimal", min=0, max=100, apply=apply_field("dynthres_power_val")))
         script_list = [x for x in scripts.scripts_data if x.script_class.__module__ == "controlnet.py"][:1]
         if len(script_list) == 1:

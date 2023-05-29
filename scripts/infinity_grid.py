@@ -68,7 +68,10 @@ def clean_vae(p, v):
     return choose_better_file_name(v, actual_vae)
 
 def apply_clip_skip(p, v):
-    opts.CLIP_stop_at_last_layers = int(v)
+    if opts.data["CLIP_stop_at_last_layers"] != int(v):
+        opts.CLIP_stop_at_last_layers = int(v)
+        p.cached_c = [None, None]
+        p.cached_uc = [None, None]
 
 def apply_codeformer_weight(p, v):
     opts.code_former_weight = float(v)

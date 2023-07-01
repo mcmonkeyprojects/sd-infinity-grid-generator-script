@@ -34,7 +34,7 @@ webdata_get_base_param_data: callable = None
 ######################### Utilities #########################
 
 def escape_html(text: str):
-    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+    return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
 
 def clean_file_path(fn: str):
     fn = fn.replace('\\', '/')
@@ -632,7 +632,7 @@ class WebDataBuilder():
             f.write("rawData = " + json)
         with open(path + "/config.yml", 'w') as f:
             yaml.dump(yaml_content, f, sort_keys=False, default_flow_style=False, width=1000)
-        for f in ["bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png"] + EXTRA_ASSETS:
+        for f in ["bootstrap.min.css", "jsgif.js", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
         html = WebDataBuilder.build_html(grid)
         with open(path + "/index.html", 'w') as f:

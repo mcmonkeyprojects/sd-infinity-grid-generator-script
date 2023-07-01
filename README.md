@@ -54,7 +54,7 @@ Here's a very small web demo you can try to test how the output looks and works:
 
 ### Status
 
-Current overall project status (as of Feb 2023): **Works well, actively maintained**. Has been generally well tested.
+Current overall project status (as of June 2023): **Works well, actively maintained**. Has been generally well tested. The core has been ported to other environments and stress-tested for multiple real projects that depend on large grids and rapid grid analysis.
 
 --------------
 
@@ -301,6 +301,7 @@ if importlib.util.find_spec("gridgencore") is not None:
     - You can also click on any image to view it fullscreen and see its metadata (if included in output). While in this mode, you can use arrow keys to quick navigate between images, or press Escape to close (This suggested by [itswhateverman in issue #5](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/5) and [issue #17](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues/17)).
     - You can also set the `X Super-axis` and `Y Super-axis` to unique axes to get a grid-of-grids!
         - ![img](github/super_axis_demo.png)
+    - You can also quicksave preview images of the grid, or even generate GIFs that autoscroll through an axis, all with a few easy buttons on the viewer page!
 
 --------------
 
@@ -319,8 +320,8 @@ If you want to add more content to a grid you already made, you can do that:
 
 ### Credits
 
-- This design was partially inspired by the "XYZ Plot" script by "xrypgame".
-- Sections of code are referenced from the WebUI itself, and its default "X/Y Plot" script.
+- This design was partially inspired by the "XYZ Plot" script by "xrypgame" (not to be confused with the "XYZ Plot" script in Auto WebUI which is actually just the "X/Y Plot" script but they added a "Z" lol)
+- Sections of code are referenced from the WebUI itself, and its default "X/Y Plot" script (since renamed to labeled "XYZ Plot").
 - Some sections of code were referenced from various other relevant sources, for example the Dreambooth extension by d8ahazard was referenced for a JavaScript code trick (titles override).
 - Some sections of code were referenced from, well, random StackOverflow answers and a variety of other googled up documentation and answer sites. I haven't kept track of them, but I'm glad to live in a world where so many developers are happy and eager to help each other learn and grow. So, thank you to all members of the FOSS community!
 - Thanks to the authors of all issues labeled as [Completed](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues?q=label%3ACompleted).

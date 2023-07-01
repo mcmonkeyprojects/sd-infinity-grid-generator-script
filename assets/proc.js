@@ -721,6 +721,16 @@ function checkForUpdates() {
     if (!window.lastUpdated) {
         if (updatesWithoutData++ > 2) {
             console.log('Update-checker has no more updates.');
+            for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
+                let target = img.dataset.errored_src;
+                delete img.dataset.errored_src;
+                img.removeAttribute('width');
+                img.removeAttribute('height');
+                img.addEventListener('error', function() {
+                    setImgPlaceholder(img);
+                });
+                img.src = target;
+            }
             return;
         }
     }
@@ -730,7 +740,7 @@ function checkForUpdates() {
             for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
                 if (img.dataset.errored_src.endsWith(url)) {
                     let target = img.dataset.errored_src;
-                    img.dataset.errored_src = null;
+                    delete img.dataset.errored_src;
                     img.removeAttribute('width');
                     img.removeAttribute('height');
                     img.src = target;

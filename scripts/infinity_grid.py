@@ -323,9 +323,11 @@ class Script(scripts.Script):
         try_init()
         gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\">the README</a> for usage instructions.<br><br>")
         with gr.Row():
-            grid_file = gr.Dropdown(value="Create in UI",label="Select grid definition file", choices=["Create in UI"] + core.get_name_list())
+            def make_choices(): 
+                return ["Create in UI"] + sorted(core.get_name_list())
+            grid_file = gr.Dropdown(value="Create in UI",label="Select grid definition file", choices=make_choices())
             def refresh():
-                new_choices = ["Create in UI"] + core.get_name_list()
+                new_choices = make_choices()
                 grid_file.choices = new_choices
                 return gr.update(choices=new_choices)
             refresh_button = ui_components.ToolButton(value=refresh_symbol, elem_id="infinity_grid_refresh_button")

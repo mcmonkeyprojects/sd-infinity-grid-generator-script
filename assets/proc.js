@@ -1,8 +1,8 @@
-/**
+/*
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
- */
+*/
 
-let supressUpdate = true;
+let suppressUpdate = true;
 
 function loadData() {
     let rawHash = window.location.hash;
@@ -38,13 +38,15 @@ function loadData() {
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
+    document.getElementById('score_display').addEventListener('click', fillTable);
+    document.getElementById('score_setting').style.display = typeof getScoreFor == 'undefined' ? 'none' : 'inline-block';
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }
     applyHash(rawHash);
-    supressUpdate = false;
+    suppressUpdate = false;
     fillTable();
     startAutoScroll();
     if (rawData.will_run) {
@@ -208,16 +210,27 @@ function canShowVal(axis, val) {
     return document.getElementById(`showval_${axis}__${val}`).checked;
 }
 
-function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
-    var imgPath = [];
-    var index = 0;
-    for (var subAxis of rawData.axes) {
+function percentToRedGreen(percent) {
+    return `color-mix(in srgb, red, green ${percent}%)`;
+}
+
+let scoreTrackCounter = 0;
+let scoreUpdates = [];
+let lastScoreBump = Date.now();
+let scoreBumpTracker = null;
+let scoreMin = 0, scoreMax = 1;
+
+function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
+    let scriptDump = document.getElementById('image_script_dump');
+    let imgPath = [];
+    let index = 0;
+    for (let subAxis of rawData.axes) {
         if (subAxis.id == x) {
             index = imgPath.length;
             imgPath.push(null);
         }
         else if (subAxis.id == y) {
-            imgPath.push(val.key);
+            imgPath.push(yval.key);
         }
         else if (x2Axis != null && subAxis.id == x2Axis.id) {
             imgPath.push(x2val.key);
@@ -229,14 +242,83 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
             imgPath.push(getSelectedValKey(subAxis));
         }
     }
-    var newContent = '';
-    for (var xVal of xAxis.values) {
+    let newContent = '';
+    let subInd = 0;
+    let scoreDisplay = document.getElementById('score_display').value;
+    for (let xVal of xAxis.values) {
+        subInd++;
         if (!canShowVal(xAxis.id, xVal.key)) {
             continue;
         }
         imgPath[index] = xVal.key;
-        var actualUrl = imgPath.join('/') + '.' + rawData.ext;
-        newContent += `<td><img class="table_img" data-img-path="${imgPath.join('/')}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        let slashed = imgPath.join('/');
+        let actualUrl = slashed + '.' + rawData.ext;
+        let id = scoreTrackCounter++;
+        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        let newScr = null;
+        if (typeof getMetadataScriptFor != 'undefined') {
+            let newScr = document.createElement('script');
+            newScr.src = getMetadataScriptFor(slashed);
+        }
+        if (scoreDisplay != 'None' && typeof getScoreFor != 'undefined') {
+            scoreUpdates.push(() => {
+                let score = getScoreFor(slashed);
+                if (score) {
+                    score = (score - scoreMin) / (scoreMax - scoreMin);
+                    let elem = document.getElementById(`td-img-${id}`);
+                    let color = percentToRedGreen(score * 100);
+                    let blockColor = '';
+                    if (scoreDisplay == 'Thin Outline')
+                    {
+                        let xborder = `border-top: 2px solid ${color}; border-bottom: 2px solid ${color};`;
+                        let yborder = `border-left: 2px solid ${color}; border-right: 2px solid ${color};`;
+                        elem.getElementsByTagName('img')[0].style = `${xborder} ${yborder}`;
+                    }
+                    else if (scoreDisplay == 'Thick Bars')
+                    {
+                        elem.getElementsByTagName('img')[0].style = `border-top: 10px solid ${color}; border-left: 10px solid ${color};`;
+                    }
+                    else if (scoreDisplay == 'Heatmap')
+                    {
+                        blockColor = `color-mix(in srgb, ${color} 50%, transparent)`;
+                    }
+                    elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: ${blockColor}"></div></div>`;
+                }
+            });
+            if (newScr && typeof getScoreFor != 'undefined') {
+                newScr.onload = () => {
+                    setTimeout(() => {
+                        lastScoreBump = Date.now();
+                    }, 1);
+                    if (scoreBumpTracker == null) {
+                        scoreBumpTracker = setInterval(() => {
+                            if (Date.now() - lastScoreBump > 300) {
+                                clearInterval(scoreBumpTracker);
+                                scoreBumpTracker = null;
+                                scoreMin = 1;
+                                scoreMax = 0;
+                                for (let image of document.getElementsByClassName('table_img')) {
+                                    let score = getScoreFor(image.dataset.imgPath);
+                                    if (score) {
+                                        scoreMin = Math.min(scoreMin, score);
+                                        scoreMax = Math.max(scoreMax, score);
+                                    }
+                                }
+                                let upds = scoreUpdates;
+                                scoreUpdates = [];
+                                for (let update of upds) {
+                                    update();
+                                }
+                                updateScaling();
+                            }
+                        }, 100);
+                    }
+                };
+            }
+        }
+        if (newScr) {
+            scriptDump.appendChild(newScr);
+        }
     }
     return newContent;
 }
@@ -257,7 +339,7 @@ function optDescribe(isFirst, val) {
 }
 
 function fillTable() {
-    if (supressUpdate) {
+    if (suppressUpdate) {
         return;
     }
     var x = getCurrentSelectedAxis('x');
@@ -272,6 +354,7 @@ function fillTable() {
     var table = document.getElementById('image_table');
     var newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
     var superFirst = true;
+    document.getElementById('image_script_dump').innerHTML = '';
     for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
         if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
             continue;
@@ -338,12 +421,21 @@ function getWantedScaling() {
 }
 
 function setImageScale(image, percent) {
+    let heatmapper = image.parentElement.getElementsByClassName('heatmapper')[0];
     if (percent == 0) {
         image.style.width = '';
         image.style.height = '';
+        if (heatmapper) {
+            heatmapper.style.width = `${image.clientWidth}px`;
+            heatmapper.style.height = `${image.clientWidth}px`;
+        }
     }
     else {
         image.style.width = percent + 'vw';
+        if (heatmapper) {
+            heatmapper.style.width = percent + 'vw';
+            heatmapper.style.height = percent * (parseFloat(image.clientWidth) / parseFloat(image.clientHeight)) + 'vw';
+        }
         let width = image.getAttribute('width');
         let height = image.getAttribute('height');
         if (width != null && height != null) { // Rescale placeholders cleanly

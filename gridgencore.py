@@ -430,7 +430,7 @@ class GridRunner:
         t_now = time.time()
         self.last_update = [x for x in self.last_update if t_now - x['t'] < 20]
         self.last_update.append({'f': new_file, 't': t_now})
-        with open(self.base_path + '/last.js', 'w') as f:
+        with open(self.base_path + '/last.js', 'w', encoding="utf-8") as f:
             update_str = '", "'.join([x['f'] for x in self.last_update])
             f.write(f'window.lastUpdated = ["{update_str}"]')
 
@@ -563,7 +563,7 @@ class WebDataBuilder():
         return f'<br><div class="btn-group" role="group" aria-label="Basic radio toggle button group">{label}:&nbsp;\n{content}</div>\n'
 
     def build_html(grid):
-        with open(ASSET_DIR + "/page.html", 'r') as reference_html:
+        with open(ASSET_DIR + "/page.html", 'r', encoding="utf-8") as reference_html:
             html = reference_html.read()
         x_select = ""
         y_select = ""
@@ -626,16 +626,16 @@ class WebDataBuilder():
         os.makedirs(path, exist_ok=True)
         json = WebDataBuilder.build_json(grid, publish_gen_metadata, p, dry_run)
         if not dry_run:
-            with open(path + '/last.js', 'w') as f:
+            with open(path + '/last.js', 'w', encoding="utf-8") as f:
                 f.write("window.lastUpdated = []")
-        with open(path + "/data.js", 'w') as f:
+        with open(path + "/data.js", 'w', encoding="utf-8") as f:
             f.write("rawData = " + json)
-        with open(path + "/config.yml", 'w') as f:
+        with open(path + "/config.yml", 'w', encoding="utf-8") as f:
             yaml.dump(yaml_content, f, sort_keys=False, default_flow_style=False, width=1000)
         for f in ["bootstrap.min.css", "jsgif.js", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png"] + EXTRA_ASSETS:
             shutil.copyfile(ASSET_DIR + "/" + f, path + "/" + f)
         html = WebDataBuilder.build_html(grid)
-        with open(path + "/index.html", 'w') as f:
+        with open(path + "/index.html", 'w', encoding="utf-8") as f:
             f.write(html)
         print(f"Web file is now at {path}/index.html")
         return json
@@ -651,7 +651,7 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
         if not os.path.exists(full_input_path):
             raise RuntimeError(f"Non-existent file '{input_file}'")
         # Parse and verify
-        with open(full_input_path, 'r') as yaml_content_text:
+        with open(full_input_path, 'r', encoding="utf-8") as yaml_content_text:
             try:
                 yaml_content = yaml.safe_load(yaml_content_text)
             except yaml.YAMLError as exc:
@@ -702,7 +702,7 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
         print("Infinite Grid dry run succeeded without error")
     else:
         json = json.replace('"will_run": true, ', '')
-        with open(folder + "/data.js", 'w') as f:
+        with open(folder + "/data.js", 'w', encoding="utf-8") as f:
             f.write("rawData = " + json)
         os.remove(folder + "/last.js")
     return result

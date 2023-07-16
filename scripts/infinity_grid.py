@@ -343,7 +343,7 @@ class Script(scripts.Script):
             notice = ""
             if os.path.exists(full_out_path):
                 notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
-            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
+            return f"""Page will be at <a style="border-bottom: 1px #00ffff dotted;" href="/file={full_out_path}/index.html" target="_blank" rel="noopener noreferrer">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"""
         def update_page_url(file_path, selected_file):
             return gr.update(value=get_page_url_text(file_path or (selected_file.replace(".yml", "") if selected_file is not None else None)))
         with manual_group:

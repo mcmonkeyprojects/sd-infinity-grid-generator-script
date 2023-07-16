@@ -76,7 +76,7 @@ def clear_caches():
 
 def get_name_list():
     file_list = glob.glob(ASSET_DIR + "/*.yml")
-    just_file_names = list(map(lambda f: os.path.relpath(f, ASSET_DIR), file_list))
+    just_file_names = sorted(list(map(lambda f: os.path.relpath(f, ASSET_DIR), file_list)))
     return just_file_names
 
 def fix_dict(d: dict):

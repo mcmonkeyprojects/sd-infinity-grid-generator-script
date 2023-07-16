@@ -348,6 +348,8 @@ function setImageScale(image, percent) {
         let height = image.getAttribute('height');
         if (width != null && height != null) { // Rescale placeholders cleanly
             image.style.height = (percent * (parseFloat(height) / parseFloat(width))) + 'vw';
+        } else {
+            image.style.height = '';
         }
     }
 }
@@ -825,6 +827,7 @@ function checkForUpdates() {
                 }
             }
         }
+        updateScaling();
         window.lastUpdated = null;
     }
     if (lastUpdateObj != null) {

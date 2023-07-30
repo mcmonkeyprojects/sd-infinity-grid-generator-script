@@ -222,6 +222,10 @@ Extension docs: <https://github.com/mcmonkeyprojects/sd-dynamic-thresholding>
 | `DynamicThreshold Mimic Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
 | `DynamicThreshold CFG Scale Minimum` | Decimal | `5`, `7.5`, `12`, ... | |
 | `DynamicThreshold Power Value` | Decimal | `2`, `4`, ... | For `Power Up` mode only. |
+| `DynamicThreshold Scaling Startpoint` | Named | `ZERO`, `MEAN` | |
+| `DynamicThreshold Variability Measure` | Named | `STD`, `AD` | |
+| `DynamicThreshold Interpolate Phi` | Decimal | `0`, `0.5`, ..., `1.0` | |
+| `DynamicThreshold Separate Feature Channels` | Boolean | `true`, `false` | |
 
 #### ControlNet
 

@@ -254,7 +254,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         let slashed = imgPath.join('/');
         let actualUrl = slashed + '.' + rawData.ext;
         let id = scoreTrackCounter++;
-        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img_path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         let newScr = null;
         if (typeof getMetadataScriptFor != 'undefined') {
             newScr = document.createElement('script');
@@ -626,7 +626,7 @@ function toggleTopSticky() {
     updateTitleSticky();
 }
 
-function makeImage() {
+function makeImage(minRow = 0, doClear = true) {
     // Preprocess data
     var imageTable = document.getElementById('image_table');
     var rows = Array.from(imageTable.getElementsByTagName('tr')).filter(e => e.getElementsByTagName('img').length > 0);
@@ -637,12 +637,21 @@ function makeImage() {
     var columns = 0;
     var rowData = [];
     var pad_x = 64, pad_y = 64;
+    let count = 0;
     for (var row of rows) {
+        count++;
+        if (count < minRow) {
+            continue;
+        }
         var images = Array.from(row.getElementsByTagName('img'));
         var real_images = images.filter(i => i.src != 'placeholder.png');
         widest_width = Math.max(widest_width, ...real_images.map(i => i.naturalWidth));
         var height = Math.max(...real_images.map(i => i.naturalHeight));
         var y = pad_y + total_height;
+        if (total_height + height > 30000) { // 32,767 is max canvas size
+            setTimeout(() => makeImage(count, false), 100);
+            break;
+        }
         total_height += height + 1;
         columns = Math.max(columns, images.length);
         var label = row.getElementsByClassName('axis_label_td')[0];
@@ -650,11 +659,13 @@ function makeImage() {
     }
     console.log(`Will create image at ${widest_width * columns} x ${total_height} pixels`);
     var holder = document.getElementById('save_image_helper');
-    for (var oldImage of holder.getElementsByTagName('img')) {
-        oldImage.remove();
-    }
-    for (var oldImage of holder.getElementsByTagName('canvas')) {
-        oldImage.remove();
+    if (doClear) {
+        for (var oldImage of holder.getElementsByTagName('img')) {
+            oldImage.remove();
+        }
+        for (var oldImage of holder.getElementsByTagName('canvas')) {
+            oldImage.remove();
+        }
     }
     document.getElementById('save_image_info').style.display = 'block';
     // Temporary canvas to measure what padding we need
@@ -900,19 +911,28 @@ let lastUpdateObj = null;
 let updateCheckCount = 0;
 let updatesWithoutData = 0;
 
+function tryReloadImg(img) {
+    let target = img.dataset.errored_src;
+    delete img.dataset.errored_src;
+    img.removeAttribute('width');
+    img.removeAttribute('height');
+    img.addEventListener('error', function() {
+        setImgPlaceholder(img);
+    });
+    img.src = target;
+    if (typeof getMetadataScriptFor != 'undefined') {
+        let newScr = document.createElement('script');
+        newScr.src = getMetadataScriptFor(img.dataset.img_path);
+        document.getElementById('image_script_dump').appendChild(newScr);
+    }
+}
+
 function checkForUpdates() {
     if (!window.lastUpdated) {
         if (updatesWithoutData++ > 2) {
             console.log('Update-checker has no more updates.');
             for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
-                let target = img.dataset.errored_src;
-                delete img.dataset.errored_src;
-                img.removeAttribute('width');
-                img.removeAttribute('height');
-                img.addEventListener('error', function() {
-                    setImgPlaceholder(img);
-                });
-                img.src = target;
+                tryReloadImg(img);
             }
             return;
         }
@@ -922,11 +942,7 @@ function checkForUpdates() {
         for (let url of window.lastUpdated) {
             for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
                 if (img.dataset.errored_src.endsWith(url)) {
-                    let target = img.dataset.errored_src;
-                    delete img.dataset.errored_src;
-                    img.removeAttribute('width');
-                    img.removeAttribute('height');
-                    img.src = target;
+                    tryReloadImg(img);
                 }
             }
         }

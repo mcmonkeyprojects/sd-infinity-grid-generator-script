@@ -405,9 +405,8 @@ function getCurrentSelectedAxis(axisPrefix) {
     return id.substring(index + 1);
 }
 
-function getShownItemsOfAxis(axis)
-{
-    return axis.values.filter(item => canShowVal(axis.id, item.key));
+function getShownItemsOfAxis(axis) {
+    return axis.values.filter(val => canShowVal(axis.id, val.key));
 }
 
 function getWantedScaling() {

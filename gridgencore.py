@@ -4,6 +4,7 @@ import os, glob, yaml, json, shutil, math, re, time
 from copy import copy
 from PIL import Image
 from git import Repo
+from yamlinclude import YamlIncludeConstructor
 
 ######################### Core Variables #########################
 
@@ -242,6 +243,10 @@ def validate_single_param(p: str, v):
     return v
 
 ######################### YAML Parsing and Processing #########################
+
+class GridYamlLoader(yaml.SafeLoader):
+    pass
+YamlIncludeConstructor.add_to_loader_class(loader_class=GridYamlLoader, base_dir=ASSET_DIR)
 
 class AxisValue:
     def __init__(self, axis, grid, key: str, val):
@@ -643,7 +648,7 @@ class WebDataBuilder():
 ######################### Main Runner Function #########################
 
 def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, output_folder_name: str = None, do_overwrite: bool = False,
-               fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None):
+               fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None, allow_includes: bool = True):
     grid = GridFileHelper()
     yaml_content = None
     if manual_pairs is None:
@@ -653,7 +658,10 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
         # Parse and verify
         with open(full_input_path, 'r', encoding="utf-8") as yaml_content_text:
             try:
-                yaml_content = yaml.safe_load(yaml_content_text)
+                if allow_includes:
+                    yaml_content = yaml.load(yaml_content_text, Loader=GridYamlLoader)
+                else:
+                    yaml_content = yaml.safe_load(yaml_content_text)
             except yaml.YAMLError as exc:
                 raise RuntimeError(f"Invalid YAML in file '{input_file}': {exc}")
         grid.parse_yaml(yaml_content, input_file)

@@ -587,7 +587,7 @@ function doPopupFor(img) {
         metaText = getMetadataForImage(img);
     }
     else {
-        let imgPath = img.dataset.imgPath.split('/');
+        let imgPath = img.dataset.img_path.split('/');
         let metaData = crunchMetadata(imgPath);
         metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
     }

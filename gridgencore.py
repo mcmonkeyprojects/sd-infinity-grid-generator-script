@@ -473,7 +473,15 @@ class GridRunner:
             else:
                 self.total_run += 1
                 step_count = set.params.get("steps")
-                self.total_steps += int(step_count) if step_count is not None else self.p.steps
+                step_count = int(step_count) if step_count is not None else self.p.steps
+                self.total_steps += step_count
+                enable_hr = set.params.get("enable highres fix")
+                if enable_hr is None:
+                    enable_hr = self.p.enable_hr
+                if enable_hr:
+                    highres_steps = set.params.get("highres steps")
+                    highres_steps = int(highres_steps) if highres_steps is not None else (self.p.hr_second_pass_steps or step_count)
+                    self.total_steps += highres_steps
         print(f"Skipped {self.total_skip} files, will run {self.total_run} files, for {self.total_steps} total steps")
 
     def run(self, dry: bool):

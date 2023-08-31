@@ -17,7 +17,7 @@ from copy import copy
 from datetime import datetime
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, ui_components
 from modules.processing import process_images, Processed
-from modules.shared import opts
+from modules.shared import opts, state
 from PIL import Image
 import gridgencore as core
 from gridgencore import clean_name, clean_mode, get_best_in_list, choose_better_file_name, GridSettingMode, fix_num, apply_field, registerMode
@@ -229,7 +229,10 @@ def a1111_grid_call_apply_hook(grid_call: core.SingleGridCall, param: str, dry: 
         apply_prompt_replace(param, replace)
     
 def a1111_grid_runner_pre_run_hook(grid_runner: core.GridRunner):
+    state.job_count = grid_runner.total_run
     shared.total_tqdm.updateTotal(grid_runner.total_steps)
+    # prevents the steps from from being recalculated by Auto1 using the current value of hires steps
+    state.processing_has_refined_job_count = True
 
 class TempHolder: pass
 

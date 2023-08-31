@@ -27,8 +27,10 @@ grid_call_apply_hook: callable = None
 grid_runner_pre_run_hook: callable = None
 # hook(GridRunner)
 grid_runner_pre_dry_hook: callable = None
-# hook(GridRunner, PassThroughObject, set: list(SingleGridCall)) -> ResultObject
+# hook(GridRunner, PassThroughObject, set: SingleGridCall) -> ResultObject
 grid_runner_post_dry_hook: callable = None
+# hook(GridRunner, SingleGridCall) -> int
+grid_runner_count_steps: callable = None
 # hook(PassThroughObject) -> dict
 webdata_get_base_param_data: callable = None
 
@@ -472,8 +474,7 @@ class GridRunner:
                 self.total_skip += 1
             else:
                 self.total_run += 1
-                step_count = set.params.get("steps")
-                self.total_steps += int(step_count) if step_count is not None else self.p.steps
+                self.total_steps += grid_runner_count_steps(self, set) if grid_runner_count_steps is not None else 1
         print(f"Skipped {self.total_skip} files, will run {self.total_run} files, for {self.total_steps} total steps")
 
     def run(self, dry: bool):

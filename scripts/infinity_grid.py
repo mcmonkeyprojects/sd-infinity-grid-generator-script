@@ -17,7 +17,7 @@ from copy import copy
 from datetime import datetime
 from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, ui_components
 from modules.processing import process_images, Processed
-from modules.shared import opts
+from modules.shared import opts, state
 from PIL import Image
 import gridgencore as core
 from gridgencore import clean_name, clean_mode, get_best_in_list, choose_better_file_name, GridSettingMode, fix_num, apply_field, registerMode
@@ -126,6 +126,7 @@ def try_init():
     core.grid_runner_pre_run_hook = a1111_grid_runner_pre_run_hook
     core.grid_runner_pre_dry_hook = a1111_grid_runner_pre_dry_hook
     core.grid_runner_post_dry_hook = a1111_grid_runner_post_dry_hook
+    core.grid_runner_count_steps = a1111_grid_runner_count_steps
     core.webdata_get_base_param_data = a1111_webdata_get_base_param_data
     registerMode("Model", GridSettingMode(dry=False, type="text", apply=apply_model, clean=clean_model, valid_list=lambda: list(map(lambda m: m.title, sd_models.checkpoints_list.values()))))
     registerMode("VAE", GridSettingMode(dry=False, type="text", apply=apply_vae, clean=clean_vae, valid_list=lambda: list(sd_vae.vae_dict.keys()) + ['none', 'auto', 'automatic']))
@@ -229,7 +230,10 @@ def a1111_grid_call_apply_hook(grid_call: core.SingleGridCall, param: str, dry: 
         apply_prompt_replace(param, replace)
     
 def a1111_grid_runner_pre_run_hook(grid_runner: core.GridRunner):
+    state.job_count = grid_runner.total_run
     shared.total_tqdm.updateTotal(grid_runner.total_steps)
+    # prevents the steps from from being recalculated by Auto1 using the current value of hires steps
+    state.processing_has_refined_job_count = True
 
 class TempHolder: pass
 
@@ -269,6 +273,19 @@ def a1111_grid_runner_post_dry_hook(grid_runner: core.GridRunner, p, set):
     opts.sd_model_checkpoint = grid_runner.temp.old_model
     grid_runner.temp = None
     return processed
+
+def a1111_grid_runner_count_steps(grid_runner: core.GridRunner, set):
+    step_count = set.params.get("steps")
+    step_count = int(step_count) if step_count is not None else grid_runner.p.steps
+    total_steps = step_count
+    enable_hr = set.params.get("enable highres fix")
+    if enable_hr is None:
+        enable_hr = grid_runner.p.enable_hr
+    if enable_hr:
+        highres_steps = set.params.get("highres steps")
+        highres_steps = int(highres_steps) if highres_steps is not None else (grid_runner.p.hr_second_pass_steps or step_count)
+        total_steps += highres_steps
+    return total_steps
 
 def a1111_webdata_get_base_param_data(p):
     return {

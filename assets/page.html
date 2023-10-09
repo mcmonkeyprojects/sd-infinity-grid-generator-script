@@ -9,7 +9,7 @@
     <script src="jquery.min.js"></script>
 </head>
 <body>
-    <center>
+    <div id="content_box">
         <h1>{TITLE}</h1>
         <h4>{DESCRIPTION}</h4>
         <noscript>This page requires JavaScript to work. Don't worry, it's all local to the current page, and open source on GitHub.</noscript>
@@ -49,17 +49,18 @@
                     </div>
                 </div>
             </div>
-            <div id="save_image_helper" class="save_image_area">
+            <div id="save_image_helper" class="save_image_area secondary">
                 <button onclick="makeImage()">Save Image Of Current View</button> <select title="Image Type" id="makeimage_type"><option>jpeg</option><option>png</option></select>
                 <button onclick="makeGif()">Create Axis GIF Animation</button> <select title="Axis" id="makegif_axis"></select> <select title="GIF Size" id="makegif_size"><option>1x</option><option>0.75x</option><option>0.5x</option><option>0.25x</option></select> <select title="GIF Speed" id="makegif_speed"><option>1/s</option><option>2/s</option><option>3/s</option><option>4/s</option><option>5/s</option><option>10/s</option></select>
                 <div id="save_image_info" style="display: none;">Here's your image! To share it, just use right click -> Copy image or Save Image As</div>
             </div>
         </div>
-        <div style="margin: auto; width: fit-content;">
+        <br/>
+        <div id="image_table_box">
             <table id="image_table"></table>
             <table id="image_script_dump"></table>
         </div>
-    </center>
+    </div>
     <div class="modal modal-fullscreen popup_modal_background" id="image_info_modal"></div>
     <br><div style="width:256px;height:512px;"></div> <!-- Spacer to reduce screen-jumping if images load while you're scrolled down -->
     <footer>

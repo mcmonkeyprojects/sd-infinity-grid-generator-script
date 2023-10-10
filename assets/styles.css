@@ -114,30 +114,24 @@ table tr td:first-child {
     border: 2px solid orange;
     border-radius: 0.5rem;
 }
-
 #content_box {
     display: inline-block;
 }
-
 #settings_accordion {
     margin: auto;
 }
-
 #save_image_helper {
     text-align: center;
 }
-
 #top_nav_bar {
     position: sticky;
     left: 2.5vw;
     width: 95vw;
 }
-
 #image_table_box {
     display: inline-block;
     min-width: 100%;
 }
-
 #image_table {
     margin: auto;
 }

@@ -529,6 +529,7 @@ class WebDataBuilder():
                 'show_descriptions': True if show_descrip is None else show_descrip,
                 'autoscale': grid.read_grid_direct('autoscale') or False,
                 'sticky': grid.read_grid_direct('sticky') or False,
+                'sticky_labels': grid.read_grid_direct('sticky labels') or False,
                 'x': get_axis('x axis'),
                 'y': get_axis('y axis'),
                 'x2': get_axis('x super axis'),

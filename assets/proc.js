@@ -656,6 +656,10 @@ function toggleLabelSticky() {
     }
 }
 
+function removeGeneratedImages() {
+    document.getElementById('save_image_output').innerHTML = "";
+}
+
 function makeImage(minRow = 0, doClear = true) {
     // Preprocess data
     var imageTable = document.getElementById('image_table');
@@ -688,16 +692,11 @@ function makeImage(minRow = 0, doClear = true) {
         rowData.push({ row, images, real_images, height, label, y });
     }
     console.log(`Will create image at ${widest_width * columns} x ${total_height} pixels`);
-    var holder = document.getElementById('save_image_helper');
+    var holder = document.getElementById('save_image_output');
     if (doClear) {
-        for (var oldImage of holder.getElementsByTagName('img')) {
-            oldImage.remove();
-        }
-        for (var oldImage of holder.getElementsByTagName('canvas')) {
-            oldImage.remove();
-        }
+        removeGeneratedImages();
     }
-    document.getElementById('save_image_info').style.display = 'block';
+    
     // Temporary canvas to measure what padding we need
     var canvas = new OffscreenCanvas(256, 256);
     var ctx = canvas.getContext('2d');
@@ -827,7 +826,8 @@ function makeImage(minRow = 0, doClear = true) {
     try {
         var data = canvas.toDataURL(`image/${imageType}`);
         canvas.remove();
-        var img = new Image(256, 256);
+        var img = new Image();
+        img.className = "generated";
         img.src = data;
         holder.appendChild(img);
     }
@@ -839,11 +839,8 @@ function makeImage(minRow = 0, doClear = true) {
 }
 
 function makeGif() {
-    let holder = document.getElementById('save_image_helper');
-    document.getElementById('save_image_info').style.display = 'block';
-    for (var oldImage of holder.getElementsByTagName('img')) {
-        oldImage.remove();
-    }
+    let holder = document.getElementById('save_image_output');
+    removeGeneratedImages();
     let axisId = document.getElementById('makegif_axis').value;
     if (axisId == 'x-axis') {
         axisId = getCurrentSelectedAxis('x');
@@ -893,6 +890,7 @@ function makeGif() {
                 let binary_gif = encoder.stream().getData();
                 let data_url = 'data:image/gif;base64,' + encode64(binary_gif);
                 let animatedImage = document.createElement('img');
+                animatedImage.className = "generated";
                 animatedImage.src = data_url;
                 image1.remove();
                 image2.remove();

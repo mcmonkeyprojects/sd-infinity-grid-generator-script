@@ -84,7 +84,12 @@ def prompt_replace_parse_list(in_list):
     if not any(('=' in x) for x in in_list):
         first_val = in_list[0]
         for x in range(0, len(in_list)):
-            in_list[x] = f"{first_val}={in_list[x]}"
+            in_list[x] = {
+                "title": in_list[x],
+                "params": {
+                    "promptreplace": f"{first_val}={in_list[x]}"
+                }
+            }
     return in_list
 
 def apply_prompt_replace(p, v):

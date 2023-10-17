@@ -309,6 +309,9 @@ class Axis:
             values_list = self.mode.parse_list(values_list)
         for val in values_list:
             try:
+                if isinstance(val, dict):
+                    self.values.append(AxisValue(self, grid, str(index), val))
+                    continue
                 val = str(val).strip()
                 index += 1
                 if is_split_by_double_pipe and val == "" and index == len(values_list):

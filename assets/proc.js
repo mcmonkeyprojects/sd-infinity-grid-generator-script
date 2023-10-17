@@ -872,7 +872,7 @@ function makeGif() {
         images.push(actualUrl);
     }
 
-    if (document.getElementById('makegif_direction').value == "backwards") {
+    if (document.getElementById('makegif_direction').value == 'Backwards') {
         images.reverse();
         imgPath.reverse();
     }

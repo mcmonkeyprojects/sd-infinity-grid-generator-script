@@ -200,6 +200,7 @@ def apply_field_as_image_data(name: str):
     return applier
 
 def validate_single_param(p: str, v):
+    orig_v = v
     p = clean_mode(p)
     mode = valid_modes.get(p)
     if mode is None:
@@ -208,24 +209,24 @@ def validate_single_param(p: str, v):
     if mode_type == "integer":
         v_int = int(v)
         if v_int is None:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be an integer number")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must be an integer number")
         min = mode.min
         max = mode.max
         if min is not None and v_int < min:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must be at least {min}")
         if max is not None and v_int > max:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must not exceed {max}")
         v = v_int
     elif mode_type == "decimal":
         v_float = float(v)
         if v_float is None:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be a decimal number")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must be a decimal number")
         min = mode.min
         max = mode.max
         if min is not None and v_float < min:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be at least {min}")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must be at least {min}")
         if max is not None and v_float > max:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must not exceed {max}")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must not exceed {max}")
         v = v_float
     elif mode_type == "boolean":
         v_clean = str(v).lower().strip()
@@ -234,12 +235,12 @@ def validate_single_param(p: str, v):
         elif v_clean == "false":
             v = False
         else:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': must be either 'true' or 'false'")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': must be either 'true' or 'false'")
     elif mode_type == "text" and mode.valid_list is not None:
         valid_list = mode.valid_list()
         v = get_best_in_list(clean_name(v), valid_list)
         if v is None:
-            raise RuntimeError(f"Invalid parameter '{p}' as '{v}': not matched to any entry in list {list(valid_list)}")
+            raise RuntimeError(f"Invalid parameter '{p}' as '{orig_v}': not matched to any entry in list {list(valid_list)}")
     if mode.clean is not None:
         return mode.clean(p, v)
     return v

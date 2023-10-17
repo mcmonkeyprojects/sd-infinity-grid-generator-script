@@ -374,7 +374,7 @@ class GridFileHelper:
             raise RuntimeError(f"Invalid file {grid_file}: missing basic 'grid' root key")
         self.title = self.read_str_from_grid("title")
         self.description = self.read_str_from_grid("description")
-        self.stylesheet = self.read_str_from_grid("stylesheet")
+        self.stylesheet = self.read_str_from_grid("stylesheet") or ''
         self.author = self.read_str_from_grid("author")
         self.format = self.read_str_from_grid("format")
         self.skip_invalid = self.read_grid_direct("skip_invalid") or getattr(self, 'skip_invalid', False)
@@ -665,6 +665,7 @@ class WebDataBuilder():
 def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, output_folder_name: str = None, do_overwrite: bool = False,
                fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None, allow_includes: bool = True, skip_invalid: bool = False):
     grid = GridFileHelper()
+    grid.stylesheet = ''
     grid.skip_invalid = skip_invalid
     yaml_content = None
     if manual_pairs is None:

@@ -278,7 +278,8 @@ class AxisValue:
             self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
-            validate_params(grid, self.params)
+            if not self.skip:
+                validate_params(grid, self.params)
     
     def __str__(self):
         return f"(title={self.title}, description={self.description}, params={self.params})"

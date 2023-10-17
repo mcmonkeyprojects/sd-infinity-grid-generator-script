@@ -18,6 +18,11 @@ grid:
                  This is to demonstrate the concept of how the infinite-axis grid system works.
                  This description here demonstrates multi-line YAML strings.
                  <br>It also shows that you can write <b>HTML</b> if you want to.
+    # You can even customize css stylings of the page if you really want to:
+    stylesheet: >
+                h1 {
+                    color: #0055ff;
+                }
     # Optionally specify base parameters. If not set, it will use whatever parameters you have in the WebUI.
     # These can be overridden by an axis.
     params:

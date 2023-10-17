@@ -871,12 +871,10 @@ function makeGif() {
         let actualUrl = imgPath.join('/') + '.' + rawData.ext;
         images.push(actualUrl);
     }
-
     if (document.getElementById('makegif_direction').value == 'Backwards') {
         images.reverse();
         imgPath.reverse();
     }
-
     let encoder = new GIFEncoder();
     encoder.setRepeat(0);
     encoder.setDelay(1000 / speed);

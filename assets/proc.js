@@ -657,7 +657,7 @@ function toggleLabelSticky() {
 }
 
 function removeGeneratedImages() {
-    document.getElementById('save_image_output').innerHTML = "";
+    document.getElementById('save_image_output').innerHTML = '';
 }
 
 function makeImage(minRow = 0, doClear = true) {
@@ -890,7 +890,7 @@ function makeGif() {
                 let binary_gif = encoder.stream().getData();
                 let data_url = 'data:image/gif;base64,' + encode64(binary_gif);
                 let animatedImage = document.createElement('img');
-                animatedImage.className = "generated";
+                animatedImage.className = 'save_image_output_img';
                 animatedImage.src = data_url;
                 image1.remove();
                 image2.remove();

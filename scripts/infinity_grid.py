@@ -371,7 +371,15 @@ class Script(scripts.Script):
                 notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
             return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
         def update_page_url(file_path, selected_file):
-            return gr.update(value=get_page_url_text(file_path or (selected_file.replace(".yml", "") if selected_file is not None else None)))
+            out_file_update = gr.Textbox.update()
+            if file_path == "" and selected_file == "Create in UI":
+                file_path = f"autonamed_inf_grid_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
+                out_file_update = gr.Textbox.update(value=file_path)
+            info_update = gr.update(value=get_page_url_text(file_path or (selected_file.replace(".yml", "") if selected_file is not None else None)))
+            return [out_file_update, info_update]
+        def update_page_url_single(file_path, selected_file):
+            (_, info_update) = update_page_url(file_path, selected_file)
+            return info_update
         with manual_group:
             with gr.Row():
                     with gr.Column():
@@ -400,9 +408,8 @@ class Script(scripts.Script):
                                         def on_axis_change(mode_name, out_file):
                                             mode = core.valid_modes.get(clean_mode(mode_name))
                                             button_update = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
-                                            out_file_update = gr.Textbox.update() if out_file != "" else gr.Textbox.update(value=f"autonamed_inf_grid_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}")
-                                            notice = update_page_url(out_file, None)
-                                            return [button_update, out_file_update, notice]
+                                            (out_file_update, info_update) = update_page_url(out_file, "Create in UI")
+                                            return [button_update, out_file_update, info_update]
                                         row_mode.change(fn=on_axis_change, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path, page_will_be])
                                         manual_axes += list([row_mode, row_value])
                                         rows.append(row_mode)
@@ -420,8 +427,8 @@ class Script(scripts.Script):
             inputs=[grid_file],
             outputs=[manual_group],
             show_progress = False)
-        output_file_path.change(fn=update_page_url, inputs=[output_file_path, grid_file], outputs=[page_will_be])
-        grid_file.change(fn=update_page_url, inputs=[output_file_path, grid_file], outputs=[page_will_be])
+        output_file_path.change(fn=update_page_url_single, inputs=[output_file_path, grid_file], outputs=[page_will_be])
+        grid_file.change(fn=update_page_url, inputs=[output_file_path, grid_file], outputs=[output_file_path, page_will_be])
         with gr.Row():
             do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
             dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")

@@ -279,7 +279,13 @@ class AxisValue:
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             if not self.skip:
-                validate_params(grid, self.params)
+                try:
+                    validate_params(grid, self.params)
+                except RuntimeError:
+                    if grid.skip_invalid:
+                        self.skip = True
+                    else:
+                        raise
     
     def __str__(self):
         return f"(title={self.title}, description={self.description}, params={self.params})"
@@ -371,6 +377,7 @@ class GridFileHelper:
         self.stylesheet = self.read_str_from_grid("stylesheet")
         self.author = self.read_str_from_grid("author")
         self.format = self.read_str_from_grid("format")
+        self.skip_invalid = self.read_grid_direct("skip_invalid") or getattr(self, 'skip_invalid', False)
         if self.title is None or self.description is None or self.author is None or self.format is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {self.grid_obj}")
         self.params = fix_dict(self.grid_obj.get("params"))
@@ -656,8 +663,9 @@ class WebDataBuilder():
 ######################### Main Runner Function #########################
 
 def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, output_folder_name: str = None, do_overwrite: bool = False,
-               fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None, allow_includes: bool = True):
+               fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None, allow_includes: bool = True, skip_invalid: bool = False):
     grid = GridFileHelper()
+    grid.skip_invalid = skip_invalid
     yaml_content = None
     if manual_pairs is None:
         full_input_path = ASSET_DIR + "/" + input_file

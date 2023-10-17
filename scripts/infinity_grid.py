@@ -421,13 +421,14 @@ class Script(scripts.Script):
             do_overwrite = gr.Checkbox(value=False, label="Overwrite existing images (for updating grids)")
             dry_run = gr.Checkbox(value=False, label="Do a dry run to validate your grid file")
             fast_skip = gr.Checkbox(value=False, label="Use more-performant skipping")
+            skip_invalid = gr.Checkbox(value=False, label="Skip invalid entries")
         with gr.Row():
             generate_page = gr.Checkbox(value=True, label="Generate infinite-grid webviewer page")
             validate_replace = gr.Checkbox(value=True, label="Validate PromptReplace input")
             publish_gen_metadata = gr.Checkbox(value=True, label="Publish full generation metadata for viewing on-page")
-        return [do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, output_file_path] + manual_axes
+        return [do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, output_file_path, skip_invalid] + manual_axes
 
-    def run(self, p, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, output_file_path, *manual_axes):
+    def run(self, p, do_overwrite, generate_page, dry_run, validate_replace, publish_gen_metadata, grid_file, fast_skip, output_file_path, skip_invalid, *manual_axes):
         core.clear_caches()
         try_init()
         # Clean up default params
@@ -451,7 +452,7 @@ class Script(scripts.Script):
         else:
             manual_axes = None
         with SettingsFixer():
-            result = core.run_grid_gen(p, grid_file, p.outpath_grids, output_file_path, do_overwrite, fast_skip, generate_page, publish_gen_metadata, dry_run, manual_axes)
+            result = core.run_grid_gen(p, grid_file, p.outpath_grids, output_file_path, do_overwrite, fast_skip, generate_page, publish_gen_metadata, dry_run, manual_axes, skip_invalid=skip_invalid)
         if result is None:
             return Processed(p, list())
         return result

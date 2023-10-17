@@ -37,6 +37,8 @@ grid:
     # jpg makes smaller file sizes, with slightly lower quality
     # png makes bigger file sizes, at better quality
     format: jpg
+    # You can add this key and set to 'true' to have invalid entries automatically skipped.
+    skip_invalid: false
     # Optionally, also specify default choices for the webpage.
     show descriptions: true
     autoscale: false

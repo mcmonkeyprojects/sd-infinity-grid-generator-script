@@ -1,5 +1,6 @@
 .vscode/
 assets/*.yml
+assets/styles-user.css
 __pycache__/
 assets/images/**/*.png
 assets/images/**/*.jpg

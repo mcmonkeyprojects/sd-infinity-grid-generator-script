@@ -1,3 +1,7 @@
+/*
+ If you want to customize your stylesheet, please edit 'styles-user.css' instead of this.
+*/
+
 .sel_table tr td {
     border: 1px solid black;
     padding-right: 16px;

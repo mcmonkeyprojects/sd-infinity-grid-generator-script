@@ -356,7 +356,7 @@ class Script(scripts.Script):
                 return gr.update(choices=new_choices)
             refresh_button = ui_components.ToolButton(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml's 'outpath' parameter, yaml name, or current date)")
+        output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml's 'outpath' parameter, file name, or current date)")
         page_will_be = gr.HTML(value="(...)<br><br>")
         manual_group = gr.Group(visible=True)
         manual_axes = list()
@@ -371,7 +371,7 @@ class Script(scripts.Script):
                 full_out_path = file
             notice = ""
             if os.path.exists(full_out_path):
-                notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This may overwrite prior data.</span>"
+                notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
             return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
         def update_page_url(file_path, selected_file):
             out_file_update = gr.Textbox.update()
@@ -471,3 +471,4 @@ class Script(scripts.Script):
         if result is None:
             return Processed(p, list())
         return result
+    

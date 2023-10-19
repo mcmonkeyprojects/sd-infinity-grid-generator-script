@@ -558,7 +558,7 @@ class WebDataBuilder():
         if publish_gen_metadata:
             result['metadata'] = None if webdata_get_base_param_data is None else webdata_get_base_param_data(p)
         axes = list()
-        exported_paths = set()
+        exported_paths = list()
         for axis in grid.axes:
             j_axis = {
                 'id': str(axis.id).lower(),
@@ -579,7 +579,7 @@ class WebDataBuilder():
 
                 if j_val['path'] not in exported_paths:
                     values.append(j_val)
-                    exported_paths.add(j_val['path'])
+                    exported_paths.append(j_val['path'])
             j_axis['values'] = values
             axes.append(j_axis)
         result['axes'] = axes
@@ -601,6 +601,7 @@ class WebDataBuilder():
         content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
         advanced_settings = ''
         primary = True
+        exported_paths = list()
         for axis in grid.axes:
             try:
                 axis_descrip = clean_for_web(axis.description or '')
@@ -614,6 +615,9 @@ class WebDataBuilder():
                 primary = not primary
                 is_first = axis.default is None
                 for val in axis.values:
+                    if val.path in exported_paths:
+                        continue
+                    exported_paths.append(val.path)
                     if axis.default is not None:
                         is_first = str(axis.default) == str(val.key)
                     selected = "true" if is_first else "false"

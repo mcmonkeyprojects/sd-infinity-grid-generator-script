@@ -558,6 +558,7 @@ class WebDataBuilder():
         if publish_gen_metadata:
             result['metadata'] = None if webdata_get_base_param_data is None else webdata_get_base_param_data(p)
         axes = list()
+        exported_paths = set()
         for axis in grid.axes:
             j_axis = {
                 'id': str(axis.id).lower(),
@@ -575,7 +576,10 @@ class WebDataBuilder():
                 }
                 if publish_gen_metadata:
                     j_val['params'] = val.params
-                values.append(j_val)
+
+                if j_val['path'] not in exported_paths:
+                    values.append(j_val)
+                    exported_paths.add(j_val['path'])
             j_axis['values'] = values
             axes.append(j_axis)
         result['axes'] = axes

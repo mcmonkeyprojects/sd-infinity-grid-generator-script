@@ -82,7 +82,7 @@ function getNextAxis(axes, startId) {
 function getSelectedValKey(axis) {
     for (var subVal of axis.values) {
         if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display != 'none') {
-            return subVal.key;
+            return subVal.path;
         }
     }
     return null;
@@ -238,13 +238,13 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
             imgPath.push(null);
         }
         else if (subAxis.id == y) {
-            imgPath.push(yval.key);
+            imgPath.push(yval.path);
         }
         else if (x2Axis != null && subAxis.id == x2Axis.id) {
-            imgPath.push(x2val.key);
+            imgPath.push(x2val.path);
         }
         else if (y2Axis != null && subAxis.id == y2Axis.id) {
-            imgPath.push(y2val.key);
+            imgPath.push(y2val.path);
         }
         else {
             imgPath.push(getSelectedValKey(subAxis));

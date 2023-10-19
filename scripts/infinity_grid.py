@@ -80,14 +80,17 @@ def apply_restore_faces(p, v):
     if restorer is not None:
         opts.face_restoration_model = restorer
 
-def prompt_replace_parse_list(in_list):
+def prompt_replace_parse_list(in_list, type):
+    if type == "pos":
+        pr = "promptreplace"
+    else: pr = "negativepromptreplace"
     if not any(('=' in x) for x in in_list):
         first_val = in_list[0]
         for x in range(0, len(in_list)):
             in_list[x] = {
                 "title": in_list[x],
                 "params": {
-                    "promptreplace": f"{first_val}={in_list[x]}"
+                    pr: f"{first_val}={in_list[x]}"
                 }
             }
     return in_list
@@ -100,30 +103,10 @@ def apply_prompt_replace(p, v):
     replace = val[1].strip()
     if Script.VALIDATE_REPLACE and match not in p.prompt and match not in p.negative_prompt:
         raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
-    p.prompt = p.prompt.replace(match, replace)
-
-#I didnt realize that the prompt replace function(s) had changed. my version still uses an older method of doing it. I will just copy yours and update to be negative for now. 
-def negative_prompt_replace_parse_list(in_list):
-    if not any(('=' in x) for x in in_list):
-        first_val = in_list[0]
-        for x in range(0, len(in_list)):
-            in_list[x] = {
-                "title": in_list[x],
-                "params": {
-                    "negativepromptreplace": f"{first_val}={in_list[x]}"
-                }
-            }
-    return in_list
-
-def apply_negative_prompt_replace(p, v):
-    val = v.split('=', maxsplit=1)
-    if len(val) != 2:
-        raise RuntimeError(f"Invalid prompt replace, missing '=' symbol, for '{v}'")
-    match = val[0].strip()
-    replace = val[1].strip()
-    if Script.VALIDATE_REPLACE and match not in p.prompt and match not in p.negative_prompt:
-        raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
-    p.prompt = p.negative_prompt.replace(match, replace)
+    if p.contains("negative"):
+        p.negative_prompt = p.negative_prompt.replace(match, replace)
+    else:
+        p.prompt = p.prompt.replace(match, replace)
 
 def apply_enable_hr(p, v):
     p.enable_hr = v
@@ -166,7 +149,7 @@ def try_init():
     registerMode("Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("prompt")))
     registerMode("Negative Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("negative_prompt")))
     registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
-    registerMode("Negative Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_negative_prompt_replace, parse_list=negative_prompt_replace_parse_list))
+    registerMode("Negative Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
     registerMode("Styles", GridSettingMode(dry=True, type="text", apply=apply_styles, valid_list=lambda: list(shared.prompt_styles.styles)))
     registerMode("Var Seed", GridSettingMode(dry=True, type="integer", apply=apply_field("subseed")))
     registerMode("Var Strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("subseed_strength")))

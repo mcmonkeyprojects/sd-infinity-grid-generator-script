@@ -306,7 +306,12 @@ class Axis:
             values_list = expand_numeric_list_ranges(values_list, float)
         index = 0
         if self.mode.parse_list is not None:
-            values_list = self.mode.parse_list(values_list)
+            if self.mode_name == "negativepromptreplace":
+                values_list = self.mode.parse_list(values_list, "neg")
+            elif self.mode_name == "promptreplace":
+                values_list = self.mode.parse_list(values_list, "pos")
+            else:
+                values_list = self.mode.parse_list(values_list)
         for val in values_list:
             try:
                 if isinstance(val, dict):

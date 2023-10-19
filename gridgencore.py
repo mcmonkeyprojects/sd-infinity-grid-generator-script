@@ -380,6 +380,7 @@ class GridFileHelper:
         self.stylesheet = self.read_str_from_grid("stylesheet") or ''
         self.author = self.read_str_from_grid("author")
         self.format = self.read_str_from_grid("format")
+        self.OutPath = self.grid_obj.get("outpath")
         self.skip_invalid = self.read_grid_direct("skip_invalid") or getattr(self, 'skip_invalid', False)
         if self.title is None or self.description is None or self.author is None or self.format is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {self.grid_obj}")
@@ -719,8 +720,14 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
                     raise RuntimeError(f"Invalid axis {(i + 1)} '{key}': errored: {e}")
     # Now start using it
     if output_folder_name.strip() == "":
-        output_folder_name = input_file.replace(".yml", "")
-    folder = output_folder_base + "/" + output_folder_name
+        if grid.OutPath is None:
+            output_folder_name = input_file.replace(".yml", "")
+        else:
+            output_folder_name = grid.OutPath.strip()
+    if os.path.isabs(output_folder_name):
+        folder = output_folder_name
+    else:
+        folder = os.path.join(output_folder_base, output_folder_name)
     runner = GridRunner(grid, do_overwrite, folder, pass_through_obj, fast_skip)
     runner.preprocess()
     if generate_page:

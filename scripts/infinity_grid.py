@@ -101,7 +101,29 @@ def apply_prompt_replace(p, v):
     if Script.VALIDATE_REPLACE and match not in p.prompt and match not in p.negative_prompt:
         raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
     p.prompt = p.prompt.replace(match, replace)
-    p.negative_prompt = p.negative_prompt.replace(match, replace)
+
+#I didnt realize that the prompt replace function(s) had changed. my version still uses an older method of doing it. I will just copy yours and update to be negative for now. 
+def negative_prompt_replace_parse_list(in_list):
+    if not any(('=' in x) for x in in_list):
+        first_val = in_list[0]
+        for x in range(0, len(in_list)):
+            in_list[x] = {
+                "title": in_list[x],
+                "params": {
+                    "negativepromptreplace": f"{first_val}={in_list[x]}"
+                }
+            }
+    return in_list
+
+def apply_negative_prompt_replace(p, v):
+    val = v.split('=', maxsplit=1)
+    if len(val) != 2:
+        raise RuntimeError(f"Invalid prompt replace, missing '=' symbol, for '{v}'")
+    match = val[0].strip()
+    replace = val[1].strip()
+    if Script.VALIDATE_REPLACE and match not in p.prompt and match not in p.negative_prompt:
+        raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
+    p.prompt = p.negative_prompt.replace(match, replace)
 
 def apply_enable_hr(p, v):
     p.enable_hr = v
@@ -144,6 +166,7 @@ def try_init():
     registerMode("Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("prompt")))
     registerMode("Negative Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("negative_prompt")))
     registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
+    registerMode("Negative Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_negative_prompt_replace, parse_list=negative_prompt_replace_parse_list))
     registerMode("Styles", GridSettingMode(dry=True, type="text", apply=apply_styles, valid_list=lambda: list(shared.prompt_styles.styles)))
     registerMode("Var Seed", GridSettingMode(dry=True, type="integer", apply=apply_field("subseed")))
     registerMode("Var Strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("subseed_strength")))
@@ -224,6 +247,8 @@ def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, v
     if cleaned == "promptreplace":
         grid_call.replacements.append(value)
         return True
+    elif cleaned == "negativepromptreplace":
+        grid_call.nreplacements.append(value)
     elif cleaned in ["width", "outwidth"]:
         grid_call.grid.min_width = min(grid_call.grid.min_width or 99999, int(value))
     elif cleaned in ["height", "outheight"]:
@@ -233,6 +258,8 @@ def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, v
 def a1111_grid_call_apply_hook(grid_call: core.SingleGridCall, param: str, dry: bool):
     for replace in grid_call.replacements:
         apply_prompt_replace(param, replace)
+    for replace in grid_call.nreplacements:
+        apply_negative_prompt_replace(param, replace)
     
 def a1111_grid_runner_pre_run_hook(grid_runner: core.GridRunner):
     state.job_count = grid_runner.total_run

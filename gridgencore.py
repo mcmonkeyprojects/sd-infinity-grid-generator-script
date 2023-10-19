@@ -483,7 +483,7 @@ class GridRunner:
         self.value_sets = self.build_value_set_list(list(reversed(self.grid.axes)))
         print(f'Have {len(self.value_sets)} unique value sets, will go into {self.base_path}')
         for set in self.value_sets:
-            set.filepath = os.path.join(self.basePath, *map(lambda v: v.path, set.values))
+            set.filepath =  self.base_path + '/' + '/'.join(list(map(lambda v: v.path, set.values)))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flatten_params(self.grid)
             set.do_skip = set.skip or (not self.do_overwrite and os.path.exists(set.filepath + "." + self.grid.format))

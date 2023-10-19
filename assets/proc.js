@@ -258,7 +258,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         if (!canShowVal(xAxis.id, xVal.key)) {
             continue;
         }
-        imgPath[index] = xVal.key;
+        imgPath[index] = xVal.path;
         let slashed = imgPath.join('/');
         let actualUrl = slashed + '.' + rawData.ext;
         let id = scoreTrackCounter++;
@@ -864,7 +864,7 @@ function makeGif() {
         if (!canShowVal(axis.id, val.key)) {
             continue;
         }
-        imgPath[index] = val.key;
+        imgPath[index] = val.path;
         let actualUrl = imgPath.join('/') + '.' + rawData.ext;
         images.push(actualUrl);
     }

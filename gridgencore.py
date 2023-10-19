@@ -567,7 +567,8 @@ class WebDataBuilder():
             values = list()
             for val in axis.values:
                 j_val = {
-                    'key': str(val.path).lower(),
+                    'key': str(val.key).lower(),
+                    'path': str(val.path),
                     'title': val.title,
                     'description': val.description or "",
                     'show': val.show
@@ -615,8 +616,8 @@ class WebDataBuilder():
                     active = " active" if is_first else ""
                     is_first = False
                     descrip = clean_for_web(val.description or '')
-                    content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.path}" id="clicktab_{axis.id}__{val.path}" aria-selected="{selected}" role="tab" title="{escape_html(val.title)}: {descrip}">{escape_html(val.title)}</a></li>\n'
-                    advanced_settings += f'&nbsp;<input class="form-check-input" type="checkbox" autocomplete="off" id="showval_{axis.id}__{val.path}" checked="true" onchange="javascript:toggleShowVal(\'{axis.id}\', \'{val.path}\')"> <label class="form-check-label" for="showval_{axis.id}__{val.path}" title="Uncheck this to hide \'{escape_html(val.title)}\' from the page.">{escape_html(val.title)}</label>'
+                    content += f'<li class="nav-item" role="presentation"><a class="nav-link{active}" data-bs-toggle="tab" href="#tab_{axis.id}__{val.key}" id="clicktab_{axis.id}__{val.key}" aria-selected="{selected}" role="tab" title="{escape_html(val.title)}: {descrip}">{escape_html(val.title)}</a></li>\n'
+                    advanced_settings += f'&nbsp;<input class="form-check-input" type="checkbox" autocomplete="off" id="showval_{axis.id}__{val.key}" checked="true" onchange="javascript:toggleShowVal(\'{axis.id}\', \'{val.key}\')"> <label class="form-check-label" for="showval_{axis.id}__{val.key}" title="Uncheck this to hide \'{escape_html(val.title)}\' from the page.">{escape_html(val.title)}</label>'
                 advanced_settings += f'&nbsp;&nbsp;<button class="submit" onclick="javascript:toggleShowAllAxis(\'{axis.id}\')">Toggle All</button>'
                 content += '</ul>\n<div class="tab-content">\n'
                 is_first = axis.default is None
@@ -628,7 +629,7 @@ class WebDataBuilder():
                     descrip = clean_for_web(val.description or '')
                     if len(descrip.strip()) == 0:
                         active += " emptytab"
-                    content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.path}" role="tabpanel"><div class="tabval_subdiv">{descrip}</div></div>\n'
+                    content += f'<div class="tab-pane{active}" id="tab_{axis.id}__{val.key}" role="tabpanel"><div class="tabval_subdiv">{descrip}</div></div>\n'
             except Exception as e:
                 raise RuntimeError(f"Failed to build HTML for axis '{axis.id}': {e}")
             content += '</div></td></tr>\n'

@@ -80,17 +80,14 @@ def apply_restore_faces(p, v):
     if restorer is not None:
         opts.face_restoration_model = restorer
 
-def prompt_replace_parse_list(in_list, type):
-    if type == "pos":
-        pr = "promptreplace"
-    else: pr = "negativepromptreplace"
+def prompt_replace_parse_list(in_list, prtype):
     if not any(('=' in x) for x in in_list):
         first_val = in_list[0]
         for x in range(0, len(in_list)):
             in_list[x] = {
                 "title": in_list[x],
                 "params": {
-                    pr: f"{first_val}={in_list[x]}"
+                    prtype: f"{first_val}={in_list[x]}"
                 }
             }
     return in_list
@@ -220,6 +217,7 @@ def try_init():
 
 def a1111_grid_call_init_hook(grid_call: core.SingleGridCall):
     grid_call.replacements = list()
+    grid_call.nreplacements = list()
 
 def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, value):
     if grid_call.grid.min_width is None:
@@ -241,8 +239,6 @@ def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, v
 def a1111_grid_call_apply_hook(grid_call: core.SingleGridCall, param: str, dry: bool):
     for replace in grid_call.replacements:
         apply_prompt_replace(param, replace)
-    for replace in grid_call.nreplacements:
-        apply_negative_prompt_replace(param, replace)
     
 def a1111_grid_runner_pre_run_hook(grid_runner: core.GridRunner):
     state.job_count = grid_runner.total_run

@@ -4,6 +4,7 @@ import os, glob, yaml, json, shutil, math, re, time
 from copy import copy
 from PIL import Image
 from git import Repo
+from modules.shared import opts
 from yamlinclude import YamlIncludeConstructor
 
 ######################### Core Variables #########################
@@ -79,6 +80,9 @@ def clear_caches():
 
 def get_name_list():
     file_list = glob.glob(ASSET_DIR + "/*.yml")
+    file_list.extend(glob.glob(opts.outdir_txt2img_grids + "/*.yml"))
+    file_list.extend(glob.glob(opts.outdir_grids + "/*.yml"))
+    file_list.extend(glob.glob(opts.outdir_img2img_grids + "/*.yml"))
     just_file_names = sorted(list(map(lambda f: os.path.relpath(f, ASSET_DIR), file_list)))
     return just_file_names
 

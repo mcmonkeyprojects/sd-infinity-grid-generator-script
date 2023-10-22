@@ -270,12 +270,14 @@ class AxisValue:
             self.description = None
             self.skip = False
             self.show = True
+            self.path = clean_name(self.key)
         else:
             self.title = grid.proc_variables(val.get("title"))
             self.description = grid.proc_variables(val.get("description"))
             self.skip = (str(grid.proc_variables(val.get("skip")))).lower() == "true"
             self.params = fix_dict(val.get("params"))
             self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"
+            self.path = str(val.get("path") or clean_name(self.key))
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             if not self.skip:
@@ -479,7 +481,7 @@ class GridRunner:
         self.value_sets = self.build_value_set_list(list(reversed(self.grid.axes)))
         print(f'Have {len(self.value_sets)} unique value sets, will go into {self.base_path}')
         for set in self.value_sets:
-            set.filepath = self.base_path + '/' + '/'.join(list(map(lambda v: clean_name(v.key), set.values)))
+            set.filepath = self.base_path + '/' + '/'.join(list(map(lambda v: v.path, set.values)))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flatten_params(self.grid)
             set.do_skip = set.skip or (not self.do_overwrite and os.path.exists(set.filepath + "." + self.grid.format))
@@ -560,10 +562,15 @@ class WebDataBuilder():
                 'title': axis.title,
                 'description': axis.description or ""
             }
+            exported_paths = {}
             values = list()
             for val in axis.values:
+                if val.path in exported_paths:
+                    continue
+                exported_paths[val.path] = val
                 j_val = {
                     'key': str(val.key).lower(),
+                    'path': str(val.path),
                     'title': val.title,
                     'description': val.description or "",
                     'show': val.show
@@ -604,7 +611,11 @@ class WebDataBuilder():
                 content += f'<div class="{axis_class}">{axis_descrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
                 is_first = axis.default is None
+                exported_paths = {}
                 for val in axis.values:
+                    if val.path in exported_paths:
+                        continue
+                    exported_paths[val.path] = val
                     if axis.default is not None:
                         is_first = str(axis.default) == str(val.key)
                     selected = "true" if is_first else "false"

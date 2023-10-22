@@ -4,7 +4,6 @@ import os, glob, yaml, json, shutil, math, re, time
 from copy import copy
 from PIL import Image
 from git import Repo
-from modules.shared import opts
 from yamlinclude import YamlIncludeConstructor
 
 ######################### Core Variables #########################
@@ -80,9 +79,6 @@ def clear_caches():
 
 def get_name_list():
     file_list = glob.glob(ASSET_DIR + "/*.yml")
-    file_list.extend(glob.glob(opts.outdir_txt2img_grids + "/*.yml"))
-    file_list.extend(glob.glob(opts.outdir_grids + "/*.yml"))
-    file_list.extend(glob.glob(opts.outdir_img2img_grids + "/*.yml"))
     just_file_names = sorted(list(map(lambda f: os.path.relpath(f, ASSET_DIR), file_list)))
     return just_file_names
 
@@ -731,7 +727,7 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
     if os.path.isabs(output_folder_name):
         folder = output_folder_name
     else:
-        folder = output_folder_base + "/" + output_folder_name #os.path.join(output_folder_base, output_folder_name)
+        folder = output_folder_base + "/" + output_folder_name
     runner = GridRunner(grid, do_overwrite, folder, pass_through_obj, fast_skip)
     runner.preprocess()
     if generate_page:

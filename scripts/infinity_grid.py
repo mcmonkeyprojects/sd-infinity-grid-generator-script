@@ -356,7 +356,7 @@ class Script(scripts.Script):
                 return gr.update(choices=new_choices)
             refresh_button = ui_components.ToolButton(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml's 'outpath' parameter, file name, or current date)")
+        output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml's 'outpath' parameter, filename, or current date)")
         page_will_be = gr.HTML(value="(...)<br><br>")
         manual_group = gr.Group(visible=True)
         manual_axes = list()
@@ -471,4 +471,3 @@ class Script(scripts.Script):
         if result is None:
             return Processed(p, list())
         return result
-    

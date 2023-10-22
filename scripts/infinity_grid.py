@@ -388,38 +388,38 @@ class Script(scripts.Script):
             return info_update
         with manual_group:
             with gr.Row():
-                    with gr.Column():
-                        axis_count = 0
-                        for group in range(0, 4):
-                            group_obj = gr.Group(visible=group == 0)
-                            with group_obj:
-                                rows = list()
-                                for i in range(0, 4):
-                                    with gr.Row():
-                                        axis_count += 1
-                                        row_mode = gr.Dropdown(value="", label=f"Axis {axis_count} Mode", choices=[" "] + [x.name for x in core.valid_modes.values()])
-                                        row_value = gr.Textbox(label=f"Axis {axis_count} Value", lines=1)
-                                        fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
-                                        def fill_axis(mode_name):
-                                            core.clear_caches()
-                                            mode = core.valid_modes.get(clean_mode(mode_name))
-                                            if mode is None:
-                                                return gr.update()
-                                            elif mode.type == "boolean":
-                                                return "true, false"
-                                            elif mode.valid_list is not None:
-                                                return ", ".join(list(mode.valid_list()))
-                                            raise RuntimeError(f"Can't fill axis for {mode_name}")
-                                        fill_row_button.click(fn=fill_axis, inputs=[row_mode], outputs=[row_value])
-                                        def on_axis_change(mode_name, out_file):
-                                            mode = core.valid_modes.get(clean_mode(mode_name))
-                                            button_update = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
-                                            (out_file_update, info_update) = update_page_url(out_file, "Create in UI")
-                                            return [button_update, out_file_update, info_update]
-                                        row_mode.change(fn=on_axis_change, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path, page_will_be])
-                                        manual_axes += list([row_mode, row_value])
-                                        rows.append(row_mode)
-                                sets.append([group_obj, rows])
+                with gr.Column():
+                    axis_count = 0
+                    for group in range(0, 4):
+                        group_obj = gr.Group(visible=group == 0)
+                        with group_obj:
+                            rows = list()
+                            for i in range(0, 4):
+                                with gr.Row():
+                                    axis_count += 1
+                                    row_mode = gr.Dropdown(value="", label=f"Axis {axis_count} Mode", choices=[" "] + [x.name for x in core.valid_modes.values()])
+                                    row_value = gr.Textbox(label=f"Axis {axis_count} Value", lines=1)
+                                    fill_row_button = ui_components.ToolButton(value=fill_values_symbol, visible=False)
+                                    def fill_axis(mode_name):
+                                        core.clear_caches()
+                                        mode = core.valid_modes.get(clean_mode(mode_name))
+                                        if mode is None:
+                                            return gr.update()
+                                        elif mode.type == "boolean":
+                                            return "true, false"
+                                        elif mode.valid_list is not None:
+                                            return ", ".join(list(mode.valid_list()))
+                                        raise RuntimeError(f"Can't fill axis for {mode_name}")
+                                    fill_row_button.click(fn=fill_axis, inputs=[row_mode], outputs=[row_value])
+                                    def on_axis_change(mode_name, out_file):
+                                        mode = core.valid_modes.get(clean_mode(mode_name))
+                                        button_update = gr.Button.update(visible=mode is not None and (mode.valid_list is not None or mode.type == "boolean"))
+                                        (out_file_update, info_update) = update_page_url(out_file, "Create in UI")
+                                        return [button_update, out_file_update, info_update]
+                                    row_mode.change(fn=on_axis_change, inputs=[row_mode, output_file_path], outputs=[fill_row_button, output_file_path, page_will_be])
+                                    manual_axes += list([row_mode, row_value])
+                                    rows.append(row_mode)
+                            sets.append([group_obj, rows])
         for group in range(0, 3):
             row_mode = sets[group][1][3]
             group_obj = sets[group + 1][0]

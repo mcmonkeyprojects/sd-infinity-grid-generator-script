@@ -356,7 +356,7 @@ class Script(scripts.Script):
                 return gr.update(choices=new_choices)
             refresh_button = ui_components.ToolButton(value=refresh_symbol, elem_id="infinity_grid_refresh_button")
             refresh_button.click(fn=refresh, inputs=[], outputs=[grid_file])
-        output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml filename or current date)")
+        output_file_path = gr.Textbox(value="", label="Output folder name (if blank uses yaml's 'outpath' parameter, filename, or current date)")
         page_will_be = gr.HTML(value="(...)<br><br>")
         manual_group = gr.Group(visible=True)
         manual_axes = list()
@@ -364,12 +364,18 @@ class Script(scripts.Script):
         def get_page_url_text(file):
             if file is None:
                 return "(...)"
-            out_path = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
-            full_out_path = out_path + "/" + file
             notice = ""
+            if not os.path.isabs(file):
+                out_path = opts.outdir_grids or (opts.outdir_img2img_grids if is_img2img else opts.outdir_txt2img_grids)
+                full_out_path = out_path + "/" + file
+                url = "/file=" + full_out_path
+            else:
+                full_out_path = file
+                url = "file://" + ("" if file.startswith("/") else "/") + file
+                notice = "<br><span style=\"color: red;\">This is a raw file path, not within the WebUI output directory. You may need to open the output file manually.</span>"
             if os.path.exists(full_out_path):
-                notice = "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
-            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"/file={full_out_path}/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
+                notice += "<br><span style=\"color: red;\">NOTICE: There is already something saved there! This will overwrite prior data.</span>"
+            return f"Page will be at <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{url}/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">(Click me) <code>{full_out_path}</code></a>{notice}<br><br>"
         def update_page_url(file_path, selected_file):
             out_file_update = gr.Textbox.update()
             if file_path == "" and selected_file == "Create in UI":

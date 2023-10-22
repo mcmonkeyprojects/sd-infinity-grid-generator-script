@@ -565,6 +565,9 @@ class WebDataBuilder():
             exported_paths = {}
             values = list()
             for val in axis.values:
+                if val.path in exported_paths:
+                    continue
+                exported_paths[val.path] = val
                 j_val = {
                     'key': str(val.key).lower(),
                     'path': str(val.path),
@@ -574,10 +577,7 @@ class WebDataBuilder():
                 }
                 if publish_gen_metadata:
                     j_val['params'] = val.params
-
-                if val.path not in exported_paths:
-                    values.append(j_val)
-                    exported_paths[val.path] = val
+                values.append(j_val)
             j_axis['values'] = values
             axes.append(j_axis)
         result['axes'] = axes

@@ -270,16 +270,14 @@ class AxisValue:
             self.description = None
             self.skip = False
             self.show = True
+            self.path = clean_name(self.key)
         else:
             self.title = grid.proc_variables(val.get("title"))
             self.description = grid.proc_variables(val.get("description"))
             self.skip = (str(grid.proc_variables(val.get("skip")))).lower() == "true"
             self.params = fix_dict(val.get("params"))
             self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"
-            if val.get("path") is not None:
-                self.path = str(val.get("path"))
-            else:
-                self.path = clean_name(self.key)
+            self.path = str(val.get("path") or clean_name(self.key))
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             if not self.skip:
@@ -483,7 +481,7 @@ class GridRunner:
         self.value_sets = self.build_value_set_list(list(reversed(self.grid.axes)))
         print(f'Have {len(self.value_sets)} unique value sets, will go into {self.base_path}')
         for set in self.value_sets:
-            set.filepath =  self.base_path + '/' + '/'.join(list(map(lambda v: v.path, set.values)))
+            set.filepath = self.base_path + '/' + '/'.join(list(map(lambda v: v.path, set.values)))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flatten_params(self.grid)
             set.do_skip = set.skip or (not self.do_overwrite and os.path.exists(set.filepath + "." + self.grid.format))
@@ -558,13 +556,13 @@ class WebDataBuilder():
         if publish_gen_metadata:
             result['metadata'] = None if webdata_get_base_param_data is None else webdata_get_base_param_data(p)
         axes = list()
-        exported_paths = list()
         for axis in grid.axes:
             j_axis = {
                 'id': str(axis.id).lower(),
                 'title': axis.title,
                 'description': axis.description or ""
             }
+            exported_paths = {}
             values = list()
             for val in axis.values:
                 j_val = {
@@ -577,9 +575,9 @@ class WebDataBuilder():
                 if publish_gen_metadata:
                     j_val['params'] = val.params
 
-                if j_val['path'] not in exported_paths:
+                if val.path not in exported_paths:
                     values.append(j_val)
-                    exported_paths.append(j_val['path'])
+                    exported_paths[val.path] = val
             j_axis['values'] = values
             axes.append(j_axis)
         result['axes'] = axes
@@ -601,7 +599,6 @@ class WebDataBuilder():
         content = '<div style="margin: auto; width: fit-content;"><table class="sel_table">\n'
         advanced_settings = ''
         primary = True
-        exported_paths = list()
         for axis in grid.axes:
             try:
                 axis_descrip = clean_for_web(axis.description or '')
@@ -614,10 +611,11 @@ class WebDataBuilder():
                 content += f'<div class="{axis_class}">{axis_descrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
                 is_first = axis.default is None
+                exported_paths = {}
                 for val in axis.values:
                     if val.path in exported_paths:
                         continue
-                    exported_paths.append(val.path)
+                    exported_paths[val.path] = val
                     if axis.default is not None:
                         is_first = str(axis.default) == str(val.key)
                     selected = "true" if is_first else "false"

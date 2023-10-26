@@ -3,6 +3,7 @@
 */
 
 let suppressUpdate = true;
+let file_extensions_alt = {};
 
 function loadData() {
     let rawHash = window.location.hash;
@@ -57,6 +58,40 @@ function loadData() {
     }
 }
 
+function getExtension(filePath) {
+    if (filePath in file_extensions_alt) {
+        return file_extensions_alt[filePath];
+    }
+    return rawData.ext;
+}
+
+/** External callable. */
+function fix_video(path) {
+    let ext = getExtension(path);
+    if (ext != 'webm' && ext != 'mp4') {
+        return;
+    }
+    let matches = document.querySelectorAll(`img[data-img_path="${path}"]`);
+    for (let match of matches) {
+        if (match.tagName == 'VIDEO') {
+            continue;
+        }
+        let video = document.createElement('video');
+        video.loop = true;
+        video.muted = true;
+        video.autoplay = true;
+        video.classList = match.classList;
+        video.dataset.img_path = match.dataset.img_path;
+        video.onclick = "doPopupFor(this)";
+        video.onerror = "setImgPlaceholder(this)";
+        let source = document.createElement('source');
+        source.src = `${path}.${ext}`;
+        source.type = `video/${ext}`;
+        video.appendChild(source);
+        match.parentElement.replaceChild(video, match);
+    }
+}
+
 function updateStylesToMatchInputs() {
     toggleTopSticky();
     toggleLabelSticky();
@@ -82,7 +117,7 @@ function getNextAxis(axes, startId) {
 function getSelectedValKey(axis) {
     for (var subVal of axis.values) {
         if (window.getComputedStyle(document.getElementById('tab_' + axis.id + '__' + subVal.key)).display != 'none') {
-            return subVal.key;
+            return subVal.path;
         }
     }
     return null;
@@ -238,13 +273,13 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
             imgPath.push(null);
         }
         else if (subAxis.id == y) {
-            imgPath.push(yval.key);
+            imgPath.push(yval.path);
         }
         else if (x2Axis != null && subAxis.id == x2Axis.id) {
-            imgPath.push(x2val.key);
+            imgPath.push(x2val.path);
         }
         else if (y2Axis != null && subAxis.id == y2Axis.id) {
-            imgPath.push(y2val.key);
+            imgPath.push(y2val.path);
         }
         else {
             imgPath.push(getSelectedValKey(subAxis));
@@ -258,11 +293,19 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         if (!canShowVal(xAxis.id, xVal.key)) {
             continue;
         }
-        imgPath[index] = xVal.key;
+        imgPath[index] = xVal.path;
         let slashed = imgPath.join('/');
-        let actualUrl = slashed + '.' + rawData.ext;
+        let ext = getExtension(slashed);
+        let actualUrl = slashed + '.' + ext;
         let id = scoreTrackCounter++;
-        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img_path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        newContent += `<td id="td-img-${id}"><span></span>`;
+        if (ext == 'mp4' || ext == 'webm') {
+            newContent += `<video loop autoplay muted class="table_img" data-img_path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" alt="${actualUrl}"><source src="${actualUrl}" type="video/${ext}"></source></video>`;
+        }
+        else {
+            newContent += `<img class="table_img" data-img_path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" />`;
+        }
+        newContent += '</td>';
         let newScr = null;
         if (typeof getMetadataScriptFor != 'undefined') {
             newScr = document.createElement('script');
@@ -332,6 +375,9 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
 }
 
 function setImgPlaceholder(img) {
+    if (!img.parentElement) {
+        return;
+    }
     img.onerror = undefined;
     img.dataset.errored_src = img.src;
     img.src = 'placeholder.png';
@@ -864,8 +910,9 @@ function makeGif() {
         if (!canShowVal(axis.id, val.key)) {
             continue;
         }
-        imgPath[index] = val.key;
-        let actualUrl = imgPath.join('/') + '.' + rawData.ext;
+        imgPath[index] = val.path;
+        let slashed = imgPath.join('/');
+        let actualUrl = slashed + '.' + getExtension(slashed);
         images.push(actualUrl);
     }
     if (document.getElementById('makegif_direction').value == 'Backwards') {

@@ -54,7 +54,7 @@ Here's a very small web demo you can try to test how the output looks and works:
 
 ### Status
 
-Current overall project status (as of June 2023): **Works well, actively maintained**. Has been generally well tested. The core has been ported to other environments and stress-tested for multiple real projects that depend on large grids and rapid grid analysis.
+Current overall project status (as of October 2023): **Works well, actively maintained**. Has been generally well tested. The core has been ported to other environments and stress-tested for multiple real projects that depend on large grids and rapid grid analysis.
 
 --------------
 
@@ -328,6 +328,7 @@ If you want to add more content to a grid you already made, you can do that:
 - Sections of code are referenced from the WebUI itself, and its default "X/Y Plot" script (since renamed to labeled "XYZ Plot").
 - Some sections of code were referenced from various other relevant sources, for example the Dreambooth extension by d8ahazard was referenced for a JavaScript code trick (titles override).
 - Some sections of code were referenced from, well, random StackOverflow answers and a variety of other googled up documentation and answer sites. I haven't kept track of them, but I'm glad to live in a world where so many developers are happy and eager to help each other learn and grow. So, thank you to all members of the FOSS community!
+- Thanks to the authors of all [merged PRs](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/pulls?q=is%3Apr+is%3Aclosed+is%3Amerged).
 - Thanks to the authors of all issues labeled as [Completed](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script/issues?q=label%3ACompleted).
 - Thanks to StabilityAI, RunwayML, CompVis for Stable Diffusion, and the researchers whose work was incorporated.
 - Thanks to AUTOMATIC1111 and the long list of contributors for the WebUI.

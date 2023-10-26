@@ -277,12 +277,14 @@ class AxisValue:
             self.description = None
             self.skip = False
             self.show = True
+            self.path = clean_name(self.key)
         else:
             self.title = grid.proc_variables(val.get("title"))
             self.description = grid.proc_variables(val.get("description"))
             self.skip = (str(grid.proc_variables(val.get("skip")))).lower() == "true"
             self.params = fix_dict(val.get("params"))
             self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"
+            self.path = str(val.get("path") or clean_name(self.key))
             if self.title is None or self.params is None:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': missing title or params")
             if not self.skip:
@@ -387,6 +389,7 @@ class GridFileHelper:
         self.stylesheet = self.read_str_from_grid("stylesheet") or ''
         self.author = self.read_str_from_grid("author")
         self.format = self.read_str_from_grid("format")
+        self.out_path = self.grid_obj.get("outpath")
         self.skip_invalid = self.read_grid_direct("skip_invalid") or getattr(self, 'skip_invalid', False)
         if self.title is None or self.description is None or self.author is None or self.format is None:
             raise RuntimeError(f"Invalid file {grid_file}: missing grid title, author, format, or description in grid obj {self.grid_obj}")
@@ -488,7 +491,7 @@ class GridRunner:
         self.value_sets = self.build_value_set_list(list(reversed(self.grid.axes)))
         print(f'Have {len(self.value_sets)} unique value sets, will go into {self.base_path}')
         for set in self.value_sets:
-            set.filepath = self.base_path + '/' + '/'.join(list(map(lambda v: clean_name(v.key), set.values)))
+            set.filepath = self.base_path + '/' + '/'.join(list(map(lambda v: v.path, set.values)))
             set.data = ', '.join(list(map(lambda v: f"{v.axis.title}={v.title}", set.values)))
             set.flatten_params(self.grid)
             set.do_skip = set.skip or (not self.do_overwrite and os.path.exists(set.filepath + "." + self.grid.format))
@@ -676,10 +679,15 @@ class WebDataBuilder():
                 'title': axis.title,
                 'description': axis.description or ""
             }
+            exported_paths = {}
             values = list()
             for val in axis.values:
+                if val.path in exported_paths:
+                    continue
+                exported_paths[val.path] = val
                 j_val = {
                     'key': str(val.key).lower(),
+                    'path': str(val.path),
                     'title': val.title,
                     'description': val.description or "",
                     'show': val.show
@@ -720,7 +728,11 @@ class WebDataBuilder():
                 content += f'<div class="{axis_class}">{axis_descrip}</div></td>\n<td><ul class="nav nav-tabs" role="tablist" id="tablist_{axis.id}">\n'
                 primary = not primary
                 is_first = axis.default is None
+                exported_paths = {}
                 for val in axis.values:
+                    if val.path in exported_paths:
+                        continue
+                    exported_paths[val.path] = val
                     if axis.default is not None:
                         is_first = str(axis.default) == str(val.key)
                     selected = "true" if is_first else "false"
@@ -837,8 +849,14 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
     gridformat = grid.format
     # Now start using it
     if output_folder_name.strip() == "":
-        output_folder_name = input_file.replace(".yml", "")
-    folder = output_folder_base + "/" + output_folder_name
+        if grid.out_path is None:
+            output_folder_name = input_file.replace(".yml", "")
+        else:
+            output_folder_name = grid.out_path.strip()
+    if os.path.isabs(output_folder_name):
+        folder = output_folder_name
+    else:
+        folder = output_folder_base + "/" + output_folder_name
     runner = GridRunner(grid, do_overwrite, folder, pass_through_obj, fast_skip)
     runner.preprocess()
     if generate_page:

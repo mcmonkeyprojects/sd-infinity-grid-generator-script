@@ -262,13 +262,19 @@ class AxisValue:
             halves = val.split('=', maxsplit=1)
             if len(halves) != 2:
                 raise RuntimeError(f"Invalid value '{key}': '{val}': not expected format")
+            self.skip = False
             halves[0] = grid.proc_variables(halves[0])
             halves[1] = grid.proc_variables(halves[1])
-            halves[1] = validate_single_param(halves[0], halves[1])
+            try:
+                halves[1] = validate_single_param(halves[0], halves[1])
+            except RuntimeError:
+                if grid.skip_invalid:
+                    self.skip = True
+                else:
+                    raise
             self.title = halves[1]
             self.params = { clean_mode(halves[0]): halves[1] }
             self.description = None
-            self.skip = False
             self.show = True
             self.path = clean_name(self.key)
         else:

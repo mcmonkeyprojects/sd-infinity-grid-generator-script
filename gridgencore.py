@@ -1,8 +1,10 @@
 # This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
 
-import os, glob, yaml, json, shutil, math, re, time
-from copy import copy
+import os, glob, yaml, json, shutil, math, re, time, types, threading
+from copy import copy, deepcopy
 from PIL import Image
+from modules.processing import StableDiffusionProcessing, Processed
+from modules import images, processing
 from git import Repo
 from yamlinclude import YamlIncludeConstructor
 
@@ -14,6 +16,8 @@ EXTRA_ASSETS = []
 VERSION = None
 valid_modes = {}
 IMAGES_CACHE = None
+modelChange = {}
+gridformat: str
 
 ######################### Hooks #########################
 
@@ -33,6 +37,9 @@ grid_runner_post_dry_hook: callable = None
 grid_runner_count_steps: callable = None
 # hook(PassThroughObject) -> dict
 webdata_get_base_param_data: callable = None
+
+# Hook for applyModel so it can be done bettwer with batching
+lateApplyModel: callable = None
 
 ######################### Utilities #########################
 
@@ -441,9 +448,11 @@ class GridRunner:
         self.base_path = base_path
         self.fast_skip = fast_skip
         self.p = p
+        self.appliedSets = {}
         grid.min_width = None
         grid.min_height = None
         grid.initial_p = p
+        appliedSets = {}
         self.last_update = []
 
     def update_live_file(self, new_file: str):
@@ -495,6 +504,7 @@ class GridRunner:
             grid_runner_pre_run_hook(self)
         iteration = 0
         last = None
+        prompt_batch_list = []
         for set in self.value_sets:
             if set.do_skip:
                 continue
@@ -507,15 +517,121 @@ class GridRunner:
             set.apply_to(p, dry)
             if dry:
                 continue
+            prompt_batch_list.append(p)
+            self.appliedSets[id(p)] = self.appliedSets.get(id(p), []) + [set]
+        batched_prompt_list = self.batchPrompts(prompt_batch_list, self.p)
+        for iter, p2 in enumerate(batched_prompt_list):
+            applied_sets = self.applied
+            if id(p2) in modelChange.keys():
+                lateApplyModel(p2, modelChange[id(p2)])
             try:
                 last = grid_runner_post_dry_hook(self, p, set)
-            except FileNotFoundError as e:
-                if e.strerror == 'The filename or extension is too long' and hasattr(e, 'winerror') and e.winerror == 206:
-                    print(f"\n\n\nOS Error: {e.strerror} - see this article to fix that: https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-Windows-10-default-path-length-limitation-MAX-PATH-is-256-characters.html \n\n\n")
-                raise e
+            except Exception as e:
+                print(f"[MainRun] exception: {e}, Failed to generate image. try again later")
+                continue
+            def saveOffThread():
+                #deepcopy to prevent this changing.
+                #probably need to deepcopy last as well, but it doesnt change immediately like applied_sets does. 
+                #this would only need to be done if on such a slow drive that saving takes longer than generating the next set, but if it doesnt require it, then it will just cause minor slowdowns.
+                #leave this note and fix the issue if anyone ever reports it.
+                #last2 = deepcopy(last)
+                aset = deepcopy(applied_sets)
+
+                
+                for iter, img in enumerate(last.images):
+                    set = list(aset)[iter]
+                    #grid.format: I can either make grid a global and later make a pr that removes any passing of grid, make format a global, or just keep passing.
+                    #this will be removed after acknowledgement by mcmonkey. mostly here in case I forget when I make the pr. for now, I will make format a global.
+                    try:
+                        images.save_image(image=img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), 
+                                      save_to_dirs=False, extension=gridformat, p=p2, prompt=p2.prompt[iter], seed=last.seed, 
+                                      info=processing.create_infotext(p2, [p2.prompt], [p2.seed], [p2.subseed], []))
+                    except FileNotFoundError as e:
+                        if e.strerror == 'The filename or extension is too long' and hasattr(e, 'winerror') and e.winerror == 206:
+                            print(f"\n\n\nOS Error: {e.strerror} - see this article to fix that: https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-Windows-10-default-path-length-limitation-MAX-PATH-is-256-characters.html \n\n\n")
+                        raise e
+            threading.Thread(target=saveOffThread).start()
             self.update_live_file(set.filepath + "." + self.grid.format)
         return last
-
+    
+    def batchPromptsGrouping(self, prompt_list: list, processor: StableDiffusionProcessing) -> list:
+        prompt_groups = {}
+        prompt_group = []
+        for i in range(len(prompt_list)):
+            prompt = prompt_list[i]
+            if i > 0:
+                prompt2 = prompt_list[i - 1]
+            else:
+                prompt2 = prompt
+            if id(prompt) != id(prompt2) and modelChange[id(prompt)] != modelChange[id(prompt2)]:
+                prompt_groups.append(prompt_group)
+                prompt_group = []
+            elif i % prompt.batch_size == 0:
+                if prompt_group:
+                    prompt_groups.append(prompt_group)
+                    prompt_group = [prompt_group]
+                prompt_group.append(prompt)
+            else:
+                prompt_group.append(prompt)
+        if prompt_group:
+            prompt_groups.append(prompt_group)
+        return prompt_groups
+    
+    def batchPromptValidator(self, promptGroups: list, processor: StableDiffusionProcessing):
+        mergedPrompts = []
+        print(f"There are {len(promptGroups)} groups after grouping. validating will probably change this number")
+        for iter, processorGroup in enumerate(promptGroups):
+            if isinstance(processorGroup, StableDiffusionProcessing):
+                processorGroup.batch_size = 1
+                mergedPrompts.append(processorGroup)
+            elif isinstance(processorGroup, int):
+                print("somehow and int got in here. this was added to find why that was happening, and probably can be removed by now, but it is left in in case of issues.")
+                continue
+            else:
+                fail = False
+                base = processorGroup[0]
+                for it, tempPrompt in enumerate(processorGroup):
+                    if not all(hasattr(tempprompt2, attr) for tempprompt2 in processorGroup for attr in dir(tempPrompt)):
+                        fail = True
+                        print("prompt is unmergeable")
+                    for attr in dir(tempPrompt):
+                        if attr.startswith("__") or callable(getattr(tempPrompt, attr)) or isinstance(getattr(tempPrompt, attr, None), types.BuiltinFunctionType) or attr in ['prompt', 'all_prompts', 'all_negative_prompts', 'negative_prompt', 'seed', 'subseed']:
+                            continue
+                        try:
+                            if getattr(tempPrompt, attr) == getattr(base, attr):
+                                continue
+                            else:
+                                break
+                        except AttributeError:
+                            print(tempPrompt)
+                            print(base)
+                            raise
+            if not fail:
+                mergedPrompt = base
+                mergedPrompt.prompt = [p.prompt for p in processorGroup]
+                mergedPrompt.negative_prompt = [p.negative_prompt for p in processorGroup]
+                mergedPrompt.seed = [p.seed for p in processorGroup]
+                mergedPrompt.subseed = [p.subseed for p in processorGroup]
+                mergedPrompts.append(mergedPrompt)
+                self.total_steps -= (mergedPrompt.batch_size - 1) * mergedPrompt.steps
+                if mergedPrompt.hr_second_pass_steps:
+                    self.total_steps -= (mergedPrompt.batch_size - 1) * mergedPrompt.hr_second_pass_steps
+                for prompt in processorGroup:
+                    setup2 = self.appliedSets.get(id(prompt), [])
+                    mergedFilePaths = [setup.filepath for setup in self.appliedSets[id(mergedPrompt)]]
+                    if any(setall.filepath in mergedFilePaths for setall in setup2) or self.appliedSets.get(id(prompt), []) in self.appliedSets[id(mergedPrompt)]:
+                        continue
+                    self.appliedSets[id(mergedPrompt)] += self.appliedSets.get(id(prompt), [])
+            else:
+                for prompt in processorGroup:
+                    prompt.batch_size = 1
+                mergedPrompts.extend(processorGroup)
+        print(f"there are {len(mergedPrompts)} generations to complete after merging")
+        return mergedPrompts
+    
+    def batchPrompts(self, promptList: list, processor:StableDiffusionProcessing) -> list:
+        return self.batchPromptValidator(self.batchPromptsGrouping(promptList, processor), processor)
+    
 ######################### Web Data Builders #########################
 
 class WebDataBuilder():
@@ -667,6 +783,7 @@ class WebDataBuilder():
 
 def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, output_folder_name: str = None, do_overwrite: bool = False,
                fast_skip: bool = False, generate_page: bool = True, publish_gen_metadata: bool = True, dry_run: bool = False, manual_pairs: list = None, allow_includes: bool = True, skip_invalid: bool = False):
+    global gridformat
     grid = GridFileHelper()
     grid.stylesheet = ''
     grid.skip_invalid = skip_invalid
@@ -717,6 +834,7 @@ def run_grid_gen(pass_through_obj, input_file: str, output_folder_base: str, out
                     yaml_content['axes'][yaml_key] = val
                 except Exception as e:
                     raise RuntimeError(f"Invalid axis {(i + 1)} '{key}': errored: {e}")
+    gridformat = grid.format
     # Now start using it
     if output_folder_name.strip() == "":
         output_folder_name = input_file.replace(".yml", "")

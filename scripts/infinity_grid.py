@@ -80,14 +80,14 @@ def apply_restore_faces(p, v):
     if restorer is not None:
         opts.face_restoration_model = restorer
 
-def prompt_replace_parse_list(in_list):
+def prompt_replace_parse_list(in_list, prtype):
     if not any(('=' in x) for x in in_list):
         first_val = in_list[0]
         for x in range(0, len(in_list)):
             in_list[x] = {
                 "title": in_list[x],
                 "params": {
-                    "promptreplace": f"{first_val}={in_list[x]}"
+                    prtype: f"{first_val}={in_list[x]}"
                 }
             }
     return in_list
@@ -100,8 +100,10 @@ def apply_prompt_replace(p, v):
     replace = val[1].strip()
     if Script.VALIDATE_REPLACE and match not in p.prompt and match not in p.negative_prompt:
         raise RuntimeError(f"Invalid prompt replace, '{match}' is not in prompt '{p.prompt}' nor negative prompt '{p.negative_prompt}'")
-    p.prompt = p.prompt.replace(match, replace)
-    p.negative_prompt = p.negative_prompt.replace(match, replace)
+    if p.contains("negative"):
+        p.negative_prompt = p.negative_prompt.replace(match, replace)
+    else:
+        p.prompt = p.prompt.replace(match, replace)
 
 def apply_enable_hr(p, v):
     p.enable_hr = v
@@ -144,6 +146,7 @@ def try_init():
     registerMode("Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("prompt")))
     registerMode("Negative Prompt", GridSettingMode(dry=True, type="text", apply=apply_field("negative_prompt")))
     registerMode("Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
+    registerMode("Negative Prompt Replace", GridSettingMode(dry=True, type="text", apply=apply_prompt_replace, parse_list=prompt_replace_parse_list))
     registerMode("Styles", GridSettingMode(dry=True, type="text", apply=apply_styles, valid_list=lambda: list(shared.prompt_styles.styles)))
     registerMode("Var Seed", GridSettingMode(dry=True, type="integer", apply=apply_field("subseed")))
     registerMode("Var Strength", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("subseed_strength")))
@@ -214,6 +217,7 @@ def try_init():
 
 def a1111_grid_call_init_hook(grid_call: core.SingleGridCall):
     grid_call.replacements = list()
+    grid_call.nreplacements = list()
 
 def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, value):
     if grid_call.grid.min_width is None:
@@ -224,6 +228,8 @@ def a1111_grid_call_param_add_hook(grid_call: core.SingleGridCall, param: str, v
     if cleaned == "promptreplace":
         grid_call.replacements.append(value)
         return True
+    elif cleaned == "negativepromptreplace":
+        grid_call.nreplacements.append(value)
     elif cleaned in ["width", "outwidth"]:
         grid_call.grid.min_width = min(grid_call.grid.min_width or 99999, int(value))
     elif cleaned in ["height", "outheight"]:

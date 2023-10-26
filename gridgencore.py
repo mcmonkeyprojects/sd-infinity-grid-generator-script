@@ -274,7 +274,13 @@ class AxisValue:
         else:
             self.title = grid.proc_variables(val.get("title"))
             self.description = grid.proc_variables(val.get("description"))
-            self.skip = (str(grid.proc_variables(val.get("skip")))).lower() == "true"
+            self.skip = False
+            self.skipList: bool | dict = val.get("skip")
+            if isinstance(self.skipList, bool):
+                self.skip = self.skipList
+            elif self.skipList is not None and isinstance(self.skipList, dict):
+                self.skip = self.skipList.get("always")
+            
             self.params = fix_dict(val.get("params"))
             self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"
             self.path = str(val.get("path") or clean_name(self.key))
@@ -412,9 +418,24 @@ class SingleGridCall:
     def __init__(self, values: list):
         self.values = values
         self.skip = False
+        skipDict = {'title': [], 'params': []}
         for val in values:
             if val.skip:
                 self.skip = True
+            if hasattr(val, 'skipList') and isinstance(val.skipList, dict):
+                if 'title' in val.skipList.keys():
+                    skipDict['title'] = skipDict['title'] + val.skip['title']
+                if 'params' in val.skipList.keys():
+                    skipDict['params'] = skipDict['params'] + val.skip['params']
+
+                for item in skipDict['title']:
+                    if item in map(str.lower, skipDict['title']):
+                        self.skip = True
+                for item in skipDict['params']:
+                    if item in skipDict['params']:
+                        if any(item in string for string in str(skipDict['params']).lower()):
+                            self.skip = True
+
         if grid_call_init_hook is not None:
             grid_call_init_hook(self)
 

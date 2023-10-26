@@ -110,7 +110,10 @@ def apply_enable_hr(p, v):
             p.denoising_strength = 0.75
 
 def apply_styles(p, v: str):
-    p.styles = list(v.split(','))
+    if p.styles:
+        p.styles = p.styles.append(list(v.split(',')))
+    else:
+        p.styles = list(v.split(','))
 
 def apply_setting_override(name: str):
     def applier(p, v):

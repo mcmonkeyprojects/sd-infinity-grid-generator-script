@@ -3,11 +3,12 @@
 import os, glob, yaml, json, shutil, math, re, time, types, threading
 from copy import copy, deepcopy
 from PIL import Image
-from modules.processing import StableDiffusionProcessing, Processed
+from modules.processing import StableDiffusionProcessing, Processed, StableDiffusionProcessingImg2Img, StableDiffusionProcessingTxt2Img
 from modules import images, processing
 from git import Repo
 from yamlinclude import YamlIncludeConstructor
 
+from icecream import ic
 ######################### Core Variables #########################
 
 ASSET_DIR = os.path.dirname(__file__) + "/assets"
@@ -16,7 +17,7 @@ EXTRA_ASSETS = []
 VERSION = None
 valid_modes = {}
 IMAGES_CACHE = None
-modelChange = {}
+model_change = {}
 gridformat: str
 
 ######################### Hooks #########################
@@ -436,6 +437,8 @@ class SingleGridCall:
     def apply_to(self, p, dry: bool):
         for name, val in self.params.items():
             mode = valid_modes[clean_mode(name)]
+            if mode in ["model", "Model"]:
+                model_change[id(p)] = val
             if not dry or mode.dry:
                 mode.apply(p, val)
         if grid_call_apply_hook is not None:
@@ -455,7 +458,7 @@ class GridRunner:
         grid.min_width = None
         grid.min_height = None
         grid.initial_p = p
-        appliedSets = {}
+        self.paths = {}
         self.last_update = []
 
     def update_live_file(self, new_file: str):
@@ -506,134 +509,152 @@ class GridRunner:
         if grid_runner_pre_run_hook is not None:
             grid_runner_pre_run_hook(self)
         iteration = 0
-        last = None
-        prompt_batch_list = []
+        batched_prompt_list = []
         for set in self.value_sets:
             if set.do_skip:
                 continue
             iteration += 1
             if not dry:
                 print(f'On {iteration}/{self.total_run} ... Set: {set.data}, file {set.filepath}')
-            p = copy(self.p)
+            p2 = copy(self.p)
+            set.apply_to(p2, dry)
             if grid_runner_pre_dry_hook is not None:
                 grid_runner_pre_dry_hook(self)
-            set.apply_to(p, dry)
             if dry:
                 continue
-            prompt_batch_list.append(p)
-            self.appliedSets[id(p)] = self.appliedSets.get(id(p), []) + [set]
-        batched_prompt_list = self.batchPrompts(prompt_batch_list, self.p)
-        for iter, p2 in enumerate(batched_prompt_list):
-            applied_sets = self.applied
-            if id(p2) in modelChange.keys():
-                lateApplyModel(p2, modelChange[id(p2)])
-            try:
-                last = grid_runner_post_dry_hook(self, p, set)
-            except Exception as e:
-                print(f"[MainRun] exception: {e}, Failed to generate image. try again later")
-                continue
-            def saveOffThread():
-                #deepcopy to prevent this changing.
-                #probably need to deepcopy last as well, but it doesnt change immediately like applied_sets does. 
-                #this would only need to be done if on such a slow drive that saving takes longer than generating the next set, but if it doesnt require it, then it will just cause minor slowdowns.
-                #leave this note and fix the issue if anyone ever reports it.
-                #last2 = deepcopy(last)
-                aset = deepcopy(applied_sets)
+            batched_prompt_list.append(p2)
+            self.appliedSets[id(p2)] = self.appliedSets.get(id(p2), []) + [set]
+        if not dry:
+            batched_prompt_list = self.batchPrompts(batched_prompt_list, self.p)
+            for i, p2 in enumerate(batched_prompt_list):
+                appliedsets = self.appliedSets[id(p2)]
+                #print(f'On {i+1}/{len(promptbatchlist)} ... Prompts: {p2.prompt[0]}')
+                #p2 = StableDiffusionProcessing(p2)
+                if id(p2) in model_change.keys():
+                    lateApplyModel(p2,model_change[id(p2)])
+                if grid_runner_pre_dry_hook is not None:
+                    grid_runner_pre_dry_hook(self)
+                try:
+                    last = grid_runner_post_dry_hook(self, p2, appliedsets)
+                    #self.updateLiveFile(set.filepath + "." + self.grid.format)
+                except Exception as e: 
+                    print(f"[mainRun] exception: {e}")
+                    continue
+                def saveOffThread():
+                    aset = copy(appliedsets)
+                    for iterator, img in enumerate(last.images):
+                        set = list(aset)[iterator]
+                        print(f"saving to {set.filepath}")
+                        images.save_image(img, path=os.path.dirname(set.filepath), basename="",
+                            forced_filename=os.path.basename(set.filepath), save_to_dirs=False,
+                            extension=gridformat, p=p2, prompt=p2.prompt[iterator],seed=last.seed)
+                threading.Thread(target=saveOffThread).start()
+            return last
 
-                
-                for iter, img in enumerate(last.images):
-                    set = list(aset)[iter]
-                    #grid.format: I can either make grid a global and later make a pr that removes any passing of grid, make format a global, or just keep passing.
-                    #this will be removed after acknowledgement by mcmonkey. mostly here in case I forget when I make the pr. for now, I will make format a global.
-                    try:
-                        images.save_image(image=img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), 
-                                      save_to_dirs=False, extension=gridformat, p=p2, prompt=p2.prompt[iter], seed=last.seed, 
-                                      info=processing.create_infotext(p2, [p2.prompt], [p2.seed], [p2.subseed], []))
-                    except FileNotFoundError as e:
-                        if e.strerror == 'The filename or extension is too long' and hasattr(e, 'winerror') and e.winerror == 206:
-                            print(f"\n\n\nOS Error: {e.strerror} - see this article to fix that: https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-Windows-10-default-path-length-limitation-MAX-PATH-is-256-characters.html \n\n\n")
-                        raise e
-            threading.Thread(target=saveOffThread).start()
-            self.update_live_file(set.filepath + "." + self.grid.format)
-        return last
-    
-    def batchPromptsGrouping(self, prompt_list: list, processor: StableDiffusionProcessing) -> list:
+    def batchPromptsGrouping(self, promptList: list, promptKey: StableDiffusionProcessing) -> list:
+        # Group prompts by batch size
         prompt_groups = {}
         prompt_group = []
-        for i in range(len(prompt_list)):
-            prompt = prompt_list[i]
+        batchsize = promptKey.batch_size
+        starto = 0
+        prompt_groups = {}
+        prompt_group = []
+        starto = 0
+        for i in range(len(promptList)):
+            prompt = promptList[i]
             if i > 0:
-                prompt2 = prompt_list[i - 1]
+                prompt2 = promptList[i - 1]
             else:
                 prompt2 = prompt
-            if id(prompt) != id(prompt2) and modelChange[id(prompt)] != modelChange[id(prompt2)]:
-                prompt_groups.append(prompt_group)
+            if id(prompt) in model_change and prompt != prompt2 and id(prompt2) in model_change and model_change[id(prompt)] != model_change[id(prompt2)]:
+                if len(prompt_group) > 0:
+                    prompt_groups[starto] = prompt_group
+                    starto += 1
+                prompt_groups[starto] = prompt
+                starto += 1
                 prompt_group = []
             elif i % prompt.batch_size == 0:
                 if prompt_group:
-                    prompt_groups.append(prompt_group)
-                    prompt_group = [prompt_group]
+                    prompt_groups[starto] = prompt_group
+                    starto += 1
+                    prompt_group = []
                 prompt_group.append(prompt)
             else:
                 prompt_group.append(prompt)
         if prompt_group:
-            prompt_groups.append(prompt_group)
+            prompt_groups[starto] = prompt_group
+        print("added all to groups")
         return prompt_groups
-    
-    def batchPromptValidator(self, promptGroups: list, processor: StableDiffusionProcessing):
-        mergedPrompts = []
-        print(f"There are {len(promptGroups)} groups after grouping. validating will probably change this number")
-        for iter, processorGroup in enumerate(promptGroups):
-            if isinstance(processorGroup, StableDiffusionProcessing):
-                processorGroup.batch_size = 1
-                mergedPrompts.append(processorGroup)
-            elif isinstance(processorGroup, int):
-                print("somehow and int got in here. this was added to find why that was happening, and probably can be removed by now, but it is left in in case of issues.")
-                continue
+
+    def batchPromptsValidating(self, promptGroups: list, promptKey: StableDiffusionProcessing):
+        merged_prompts = []
+        print(f"there are {len(promptGroups)} groups after grouping. merging now")
+        for iterator, promgroup in enumerate(promptGroups):
+            promgroup = promptGroups[iterator]
+            if isinstance(promgroup, StableDiffusionProcessing) or isinstance(promgroup, int):
+                fail = True
             else:
                 fail = False
-                base = processorGroup[0]
-                for it, tempPrompt in enumerate(processorGroup):
-                    if not all(hasattr(tempprompt2, attr) for tempprompt2 in processorGroup for attr in dir(tempPrompt)):
+                prompt_attr = promgroup[0]
+                batchsize = prompt_attr.batch_size
+                print(f"merging prompts {iterator*batchsize} - {iterator*batchsize+batchsize} of {len(promptGroups.items())*batchsize}")
+
+                for it, tempprompt in enumerate(promgroup):
+                    
+                    if not all(hasattr(tempprompt2, attr) for tempprompt2 in promgroup for attr in dir(tempprompt)):
                         fail = True
-                        print("prompt is unmergeable")
-                    for attr in dir(tempPrompt):
-                        if attr.startswith("__") or callable(getattr(tempPrompt, attr)) or isinstance(getattr(tempPrompt, attr, None), types.BuiltinFunctionType) or attr in ['prompt', 'all_prompts', 'all_negative_prompts', 'negative_prompt', 'seed', 'subseed']:
-                            continue
+                        break
+                    for attr in dir(tempprompt):
+                        if attr.startswith("__"): continue
+                        if callable(getattr(tempprompt, attr)): continue
+                        if isinstance(getattr(tempprompt, attr, None), types.BuiltinFunctionType) or isinstance(getattr(tempprompt, attr, None), types.BuiltinMethodType): continue
+                        if attr in ['prompt', 'all_prompts', 'all_negative_prompts', 'negative_prompt', 'seed', 'subseed']: continue
                         try:
-                            if getattr(tempPrompt, attr) == getattr(base, attr):
-                                continue
-                            else:
+                            if getattr(tempprompt, attr) == getattr(prompt_attr, attr): continue
+                            else: 
+                                fail = True
+                                if it == 1: 
+                                    print(f"Prompt contains incorrect {str(attr)} merge unavailable. values are: {str(getattr(tempprompt, attr))}")
+                                print(f"prompt contains incorrect {str(attr)} merge unavailable. values are: {str(getattr(prompt_attr, attr))}")
                                 break
                         except AttributeError:
-                            print(tempPrompt)
-                            print(base)
+                            print(tempprompt)
                             raise
             if not fail:
-                mergedPrompt = base
-                mergedPrompt.prompt = [p.prompt for p in processorGroup]
-                mergedPrompt.negative_prompt = [p.negative_prompt for p in processorGroup]
-                mergedPrompt.seed = [p.seed for p in processorGroup]
-                mergedPrompt.subseed = [p.subseed for p in processorGroup]
-                mergedPrompts.append(mergedPrompt)
-                self.total_steps -= (mergedPrompt.batch_size - 1) * mergedPrompt.steps
-                if mergedPrompt.hr_second_pass_steps:
-                    self.total_steps -= (mergedPrompt.batch_size - 1) * mergedPrompt.hr_second_pass_steps
-                for prompt in processorGroup:
+                merged_prompt:StableDiffusionProcessing = prompt_attr
+                merged_prompt.prompt = [p.prompt for p in promgroup]
+                merged_prompt.negative_prompt = [p.negative_prompt for p in promgroup]
+                merged_prompt.seed = [p.seed for p in promgroup]
+                merged_prompt.subseed = [p.subseed for p in promgroup]
+                merged_prompts.append(merged_prompt)
+                self.total_steps -= (merged_prompt.batch_size - 1) * merged_prompt.steps
+                if merged_prompt.hr_second_pass_steps:
+                    self.total_steps -= (merged_prompt.batch_size - 1) * merged_prompt.hr_second_pass_steps
+                # Add applied sets
+                for prompt in promgroup:
                     setup2 = self.appliedSets.get(id(prompt), [])
-                    mergedFilePaths = [setup.filepath for setup in self.appliedSets[id(mergedPrompt)]]
-                    if any(setall.filepath in mergedFilePaths for setall in setup2) or self.appliedSets.get(id(prompt), []) in self.appliedSets[id(mergedPrompt)]:
-                        continue
-                    self.appliedSets[id(mergedPrompt)] += self.appliedSets.get(id(prompt), [])
-            else:
-                for prompt in processorGroup:
+                    #print(setup2)
+                    merged_filepaths = [setup.filepath for setup in self.appliedSets[id(merged_prompt)]]
+                    if any(setall.filepath in merged_filepaths for setall in setup2): continue
+                    if self.appliedSets.get(id(prompt), []) in self.appliedSets[id(merged_prompt)]: continue
+                    self.appliedSets[id(merged_prompt)] += self.appliedSets.get(id(prompt), [])
+                #print("merged")
+                merged_prompt.batch_size = len(promgroup)
+
+            if fail and (isinstance(promgroup, StableDiffusionProcessingTxt2Img) or isinstance(promgroup, StableDiffusionProcessing) or isinstance(promgroup, StableDiffusionProcessingImg2Img)):
+                promgroup.batch_size = 1
+                merged_prompts.append(promgroup)
+            elif fail and (isinstance(promgroup, int)):
+                continue
+            elif fail:
+                for prompt in promgroup:
                     prompt.batch_size = 1
-                mergedPrompts.extend(processorGroup)
-        print(f"there are {len(mergedPrompts)} generations to complete after merging")
-        return mergedPrompts
-    
-    def batchPrompts(self, promptList: list, processor:StableDiffusionProcessing) -> list:
-        return self.batchPromptValidator(self.batchPromptsGrouping(promptList, processor), processor)
+                merged_prompts.extend(promgroup)
+        print(f"there are {len(merged_prompts)} generations after merging")
+        return merged_prompts
+
+    def batchPrompts(self, promptList: list, promptKey: StableDiffusionProcessing) -> list:
+        return self.batchPromptsValidating(self.batchPromptsGrouping(promptList, promptKey),promptKey)
     
 ######################### Web Data Builders #########################
 

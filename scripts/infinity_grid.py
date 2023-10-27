@@ -252,30 +252,22 @@ def a1111_grid_runner_pre_dry_hook(grid_runner: core.GridRunner):
     grid_runner.temp.old_model = opts.sd_model_checkpoint
 
 def a1111_grid_runner_post_dry_hook(grid_runner: core.GridRunner, p, set):
-    p.seed = processing.get_fixed_seed(p.seed)
-    p.subseed = processing.get_fixed_seed(p.subseed)
     processed = process_images(p)
     if len(processed.images) < 1:
         raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
-    os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
-    result_index = getattr(p, 'inf_grid_use_result_index', 0)
-    if result_index >= len(processed.images):
-        result_index = len(processed.images) - 1
-    img = processed.images[result_index]
-    if type(img) == numpy.ndarray:
-        img = Image.fromarray(img)
-    if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
-        img = img.resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
-    processed.images[result_index] = img
-    #This has been moved to the main run function instead. it can still be used here if rewritten, but for now is disabled. 
-	#I cant remember why I moved it, but it works where there.
-    #info = processing.create_infotext(p, [p.prompt], [p.seed], [p.subseed], [])
-    #ext = grid_runner.grid.format
-    #prompt = p.prompt
-    #seed = processed.seed
-    #def save_offthread():
-    #    images.save_image(img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=ext, p=p, prompt=prompt, seed=seed)
-    #threading.Thread(target=save_offthread).start()
+    for iterator, img in enumerate(processed.images):
+        if iterator > len(list(set)) - 1:
+            print("image not in sets")
+            continue
+        aset = list(set)[iterator]
+        if len(p.prompt) - 1 < iterator:
+            print("image not in prompt list")
+            continue
+        if type(img) == numpy.ndarray:
+            img = Image.fromarray(img)
+        if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
+            img = img.resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
+        processed.images[iterator] = img
     opts.code_former_weight = grid_runner.temp.old_codeformer_weight
     opts.face_restoration_model = grid_runner.temp.old_face_restorer
     opts.sd_vae = grid_runner.temp.old_vae

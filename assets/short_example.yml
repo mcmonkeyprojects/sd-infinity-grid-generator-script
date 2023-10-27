@@ -68,16 +68,19 @@ axes:
                 params:
                     # View the readme for accepted parameter types and formats.
                     Sampler: euler a
+                    batch size: 12
             euler:
                 title: Euler
                 description: Good ol k_euler.
                 params:
                     Sampler: Euler
+                    batch size: 11
             ddim:
                 title: DDIM
                 description: The original.
                 params:
                     Sampler: ddim
+                    batch size: 10
     steps:
         title: Steps
         description: How many times to run the sampler.
@@ -101,6 +104,12 @@ axes:
             # You can be lazy too. This will set param 'steps' to '15' and set title to '15'.
             15: steps=15
             20: steps=20
+            20:
+                title: 20 HR
+                description: 20 High Res
+                params:
+                    steps: 20
+                    highres steps: 20
     cfgscale:
         title: CFG Scale
         default: 7

@@ -555,10 +555,6 @@ class GridRunner:
         # Group prompts by batch size
         prompt_groups = {}
         prompt_group = []
-        batchsize = promptKey.batch_size
-        starto = 0
-        prompt_groups = {}
-        prompt_group = []
         starto = 0
         for i in range(len(promptList)):
             prompt = promptList[i]

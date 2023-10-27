@@ -87,6 +87,10 @@ axes:
             10:
                 title: 10
                 description: Ten times.
+                skip:
+                    title:
+                        - ddim
+                        - Cat
                 params:
                     Steps: 10
             secret_option:

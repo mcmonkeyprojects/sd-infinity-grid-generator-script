@@ -430,9 +430,9 @@ class SingleGridCall:
                 self.skip = True
             if hasattr(val, 'skipList') and isinstance(val.skipList, dict):
                 if 'title' in val.skipList.keys():
-                    skipDict['title'] = skipDict['title'] + val.skip['title']
+                    skipDict['title'] = skipDict['title'] + val.skipList['title']
                 if 'params' in val.skipList.keys():
-                    skipDict['params'] = skipDict['params'] + val.skip['params']
+                    skipDict['params'] = skipDict['params'] + val.skipList['params']
 
                 for item in skipDict['title']:
                     if item in map(str.lower, skipDict['title']):

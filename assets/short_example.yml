@@ -68,11 +68,13 @@ axes:
                 params:
                     # View the readme for accepted parameter types and formats.
                     Sampler: euler a
+                    batch size: 12
             euler:
                 title: Euler
                 description: Good ol k_euler.
                 params:
                     Sampler: Euler
+                    batch size: 11
             ddim:
                 title: DDIM
                 description: The original.

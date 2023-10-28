@@ -133,6 +133,7 @@ def try_init():
     core.grid_runner_post_dry_hook = a1111_grid_runner_post_dry_hook
     core.grid_runner_count_steps = a1111_grid_runner_count_steps
     core.webdata_get_base_param_data = a1111_webdata_get_base_param_data
+    core.late_apply_model = apply_model
     registerMode("Model", GridSettingMode(dry=False, type="text", apply=apply_model, clean=clean_model, valid_list=lambda: list(map(lambda m: m.title, sd_models.checkpoints_list.values()))))
     registerMode("VAE", GridSettingMode(dry=False, type="text", apply=apply_vae, clean=clean_vae, valid_list=lambda: list(sd_vae.vae_dict.keys()) + ['none', 'auto', 'automatic']))
     registerMode("Sampler", GridSettingMode(dry=True, type="text", apply=apply_field("sampler_name"), valid_list=lambda: list(sd_samplers.all_samplers_map.keys())))
@@ -171,6 +172,7 @@ def try_init():
     registerMode("HighRes Upscaler", GridSettingMode(dry=True, type="text", apply=apply_field("hr_upscaler"), valid_list=lambda: list(map(lambda u: u.name, shared.sd_upscalers)) + list(shared.latent_upscale_modes.keys())))
     registerMode("Image CFG Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=apply_field("image_cfg_scale")))
     registerMode("Use Result Index", GridSettingMode(dry=True, type="integer", min=0, max=500, apply=apply_field("inf_grid_use_result_index")))
+    registerMode("batch size", GridSettingMode(dry=True,type="integer", apply=apply_field("batch_size")))
     try:
         script_list = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
         if len(script_list) == 1:
@@ -250,28 +252,22 @@ def a1111_grid_runner_pre_dry_hook(grid_runner: core.GridRunner):
     grid_runner.temp.old_model = opts.sd_model_checkpoint
 
 def a1111_grid_runner_post_dry_hook(grid_runner: core.GridRunner, p, set):
-    p.seed = processing.get_fixed_seed(p.seed)
-    p.subseed = processing.get_fixed_seed(p.subseed)
     processed = process_images(p)
     if len(processed.images) < 1:
         raise RuntimeError(f"Something went wrong! Image gen '{set.data}' produced {len(processed.images)} images, which is wrong")
-    os.makedirs(os.path.dirname(set.filepath), exist_ok=True)
-    result_index = getattr(p, 'inf_grid_use_result_index', 0)
-    if result_index >= len(processed.images):
-        result_index = len(processed.images) - 1
-    img = processed.images[result_index]
-    if type(img) == numpy.ndarray:
-        img = Image.fromarray(img)
-    if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
-        img = img.resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
-    processed.images[result_index] = img
-    info = processing.create_infotext(p, [p.prompt], [p.seed], [p.subseed], [])
-    ext = grid_runner.grid.format
-    prompt = p.prompt
-    seed = processed.seed
-    def save_offthread():
-        images.save_image(img, path=os.path.dirname(set.filepath), basename="", forced_filename=os.path.basename(set.filepath), save_to_dirs=False, info=info, extension=ext, p=p, prompt=prompt, seed=seed)
-    threading.Thread(target=save_offthread).start()
+    for iterator, img in enumerate(processed.images):
+        if iterator > len(list(set)) - 1:
+            print("image not in sets")
+            continue
+        aset = list(set)[iterator]
+        if len(p.prompt) - 1 < iterator:
+            print("image not in prompt list")
+            continue
+        if type(img) == numpy.ndarray:
+            img = Image.fromarray(img)
+        if hasattr(p, 'inf_grid_out_width') and hasattr(p, 'inf_grid_out_height'):
+            img = img.resize((p.inf_grid_out_width, p.inf_grid_out_height), resample=images.LANCZOS)
+        processed.images[iterator] = img
     opts.code_former_weight = grid_runner.temp.old_codeformer_weight
     opts.face_restoration_model = grid_runner.temp.old_face_restorer
     opts.sd_vae = grid_runner.temp.old_vae

@@ -539,15 +539,21 @@ class GridRunner:
                 except Exception as e: 
                     print(f"[mainRun] exception: {e}")
                     continue
+
                 def saveOffThread():
                     aset = copy(appliedsets)
                     last2 = copy(last)
+                    p3 = copy(p2)
                     for iterator, img in enumerate(last2.images):
+                        prompt = p3.prompt
+                        seed = p3.seed
+                        info = processing.create_infotext(p3, [prompt], [seed], [p3.subseed], [])
+
                         set = list(aset)[iterator]
                         print(f"saving to {set.filepath}")
                         images.save_image(img, path=os.path.dirname(set.filepath), basename="",
                             forced_filename=os.path.basename(set.filepath), save_to_dirs=False,
-                            extension=gridformat, p=p2, prompt=p2.prompt[iterator],seed=last.seed)
+                            extension=gridformat, p=p3, prompt=prompt,seed=seed, info=info)
                 threading.Thread(target=saveOffThread).start()
             return last
 
@@ -572,7 +578,7 @@ class GridRunner:
                 try:
                     currentPrompt = promptList[i + 1]
                 except: pass
-            elif prompt.cfg_scale != currentPrompt.cfg_scale:
+            elif prompt.cfg_scale != currentPrompt.cfg_scale or prompt.steps != currentPrompt.steps:
                 if len(prompt_group) > 0:
                     prompt_groups[starto] = prompt_group
                     starto += 1

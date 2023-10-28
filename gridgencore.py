@@ -3,7 +3,7 @@
 import os, glob, yaml, json, shutil, math, re, time, types, threading
 from copy import copy, deepcopy
 from PIL import Image
-from modules.processing import StableDiffusionProcessing, Processed, StableDiffusionProcessingImg2Img, StableDiffusionProcessingTxt2Img
+from modules.processing import StableDiffusionProcessing, StableDiffusionProcessingImg2Img, StableDiffusionProcessingTxt2Img
 from modules import images, processing
 from git import Repo
 from yamlinclude import YamlIncludeConstructor
@@ -39,7 +39,8 @@ grid_runner_count_steps: callable = None
 webdata_get_base_param_data: callable = None
 
 # Hook for applyModel so it can be done bettwer with batching
-lateApplyModel: callable = None
+# hook(param, model) -> None
+late_apply_model: callable = None
 
 ######################### Utilities #########################
 
@@ -436,7 +437,7 @@ class SingleGridCall:
     def apply_to(self, p, dry: bool):
         for name, val in self.params.items():
             mode = valid_modes[clean_mode(name)]
-            if mode in ["model", "Model"]:
+            if name in ["model", "Model"]:
                 model_change[id(p)] = val
             if not dry or mode.dry:
                 mode.apply(p, val)
@@ -453,7 +454,7 @@ class GridRunner:
         self.base_path = base_path
         self.fast_skip = fast_skip
         self.p = p
-        self.appliedSets = {}
+        self.applied_sets = {}
         grid.min_width = None
         grid.min_height = None
         grid.initial_p = p
@@ -522,15 +523,15 @@ class GridRunner:
             if dry:
                 continue
             batched_prompt_list.append(p2)
-            self.appliedSets[id(p2)] = self.appliedSets.get(id(p2), []) + [set]
+            self.applied_sets[id(p2)] = self.applied_sets.get(id(p2), []) + [set]
         if not dry:
             batched_prompt_list = self.batchPrompts(batched_prompt_list, self.p)
             for i, p2 in enumerate(batched_prompt_list):
-                appliedsets = self.appliedSets[id(p2)]
+                appliedsets = self.applied_sets[id(p2)]
                 #print(f'On {i+1}/{len(promptbatchlist)} ... Prompts: {p2.prompt[0]}')
                 #p2 = StableDiffusionProcessing(p2)
                 if id(p2) in model_change.keys():
-                    lateApplyModel(p2,model_change[id(p2)])
+                    late_apply_model(p2,model_change[id(p2)])
                 if grid_runner_pre_dry_hook is not None:
                     grid_runner_pre_dry_hook(self)
                 try:
@@ -544,6 +545,19 @@ class GridRunner:
                     aset = copy(appliedsets)
                     last2 = copy(last)
                     p3 = copy(p2)
+                    if getattr(p3, 'inf_grid_use_result_index', -1) != -1:
+                        iterator = getattr(p3, 'inf_grid_use_result_index', 0)
+                        img = last2.images[iterator]
+                        prompt = p3.prompt
+                        seed = p3.seed
+                        info = processing.create_infotext(p3, [prompt], [seed], [p3.subseed], [])
+
+                        set = list(aset)[iterator]
+                        print(f"saving to {set.filepath}")
+                        images.save_image(img, path=os.path.dirname(set.filepath), basename="",
+                            forced_filename=os.path.basename(set.filepath), save_to_dirs=False,
+                            extension=gridformat, p=p3, prompt=prompt,seed=seed, info=info)
+
                     for iterator, img in enumerate(last2.images):
                         prompt = p3.prompt
                         seed = p3.seed
@@ -650,12 +664,12 @@ class GridRunner:
                     self.total_steps -= (merged_prompt.batch_size - 1) * merged_prompt.hr_second_pass_steps
                 # Add applied sets
                 for prompt in promgroup:
-                    setup2 = self.appliedSets.get(id(prompt), [])
+                    setup2 = self.applied_sets.get(id(prompt), [])
                     #print(setup2)
-                    merged_filepaths = [setup.filepath for setup in self.appliedSets[id(merged_prompt)]]
+                    merged_filepaths = [setup.filepath for setup in self.applied_sets[id(merged_prompt)]]
                     if any(setall.filepath in merged_filepaths for setall in setup2): continue
-                    if self.appliedSets.get(id(prompt), []) in self.appliedSets[id(merged_prompt)]: continue
-                    self.appliedSets[id(merged_prompt)] += self.appliedSets.get(id(prompt), [])
+                    if self.applied_sets.get(id(prompt), []) in self.applied_sets[id(merged_prompt)]: continue
+                    self.applied_sets[id(merged_prompt)] += self.applied_sets.get(id(prompt), [])
                 #print("merged")
                 merged_prompt.batch_size = len(promgroup)
 

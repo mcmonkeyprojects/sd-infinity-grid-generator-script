@@ -133,7 +133,7 @@ def try_init():
     core.grid_runner_post_dry_hook = a1111_grid_runner_post_dry_hook
     core.grid_runner_count_steps = a1111_grid_runner_count_steps
     core.webdata_get_base_param_data = a1111_webdata_get_base_param_data
-    core.lateApplyModel = apply_model
+    core.late_apply_model = apply_model
     registerMode("Model", GridSettingMode(dry=False, type="text", apply=apply_model, clean=clean_model, valid_list=lambda: list(map(lambda m: m.title, sd_models.checkpoints_list.values()))))
     registerMode("VAE", GridSettingMode(dry=False, type="text", apply=apply_vae, clean=clean_vae, valid_list=lambda: list(sd_vae.vae_dict.keys()) + ['none', 'auto', 'automatic']))
     registerMode("Sampler", GridSettingMode(dry=True, type="text", apply=apply_field("sampler_name"), valid_list=lambda: list(sd_samplers.all_samplers_map.keys())))

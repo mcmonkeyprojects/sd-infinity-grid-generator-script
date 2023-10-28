@@ -8,7 +8,6 @@ from modules import images, processing
 from git import Repo
 from yamlinclude import YamlIncludeConstructor
 
-from icecream import ic
 ######################### Core Variables #########################
 
 ASSET_DIR = os.path.dirname(__file__) + "/assets"
@@ -573,7 +572,7 @@ class GridRunner:
                 try:
                     currentPrompt = promptList[i + 1]
                 except: pass
-            elif ic(prompt.cfg_scale) != ic(currentPrompt.cfg_scale):
+            elif prompt.cfg_scale != currentPrompt.cfg_scale:
                 if len(prompt_group) > 0:
                     prompt_groups[starto] = prompt_group
                     starto += 1

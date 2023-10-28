@@ -104,7 +104,7 @@ axes:
             # You can be lazy too. This will set param 'steps' to '15' and set title to '15'.
             15: steps=15
             20: steps=20
-            20:
+            20hr:
                 title: 20 HR
                 description: 20 High Res
                 params:

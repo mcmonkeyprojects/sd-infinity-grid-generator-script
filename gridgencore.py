@@ -542,7 +542,8 @@ class GridRunner:
                     continue
                 def saveOffThread():
                     aset = copy(appliedsets)
-                    for iterator, img in enumerate(last.images):
+                    last2 = copy(last)
+                    for iterator, img in enumerate(last2.images):
                         set = list(aset)[iterator]
                         print(f"saving to {set.filepath}")
                         images.save_image(img, path=os.path.dirname(set.filepath), basename="",
@@ -556,8 +557,8 @@ class GridRunner:
         prompt_groups = {}
         prompt_group = []
         starto = 0
-        for i in range(len(promptList)):
-            prompt = promptList[i]
+        currentPrompt = promptList[0]
+        for i, prompt in enumerate(promptList):
             if i > 0:
                 prompt2 = promptList[i - 1]
             else:
@@ -569,12 +570,28 @@ class GridRunner:
                 prompt_groups[starto] = prompt
                 starto += 1
                 prompt_group = []
+                try:
+                    currentPrompt = promptList[i + 1]
+                except: pass
+            elif ic(prompt.cfg_scale) != ic(currentPrompt.cfg_scale):
+                if len(prompt_group) > 0:
+                    prompt_groups[starto] = prompt_group
+                    starto += 1
+                prompt_groups[starto] = prompt
+                starto += 1
+                prompt_group = []
+                try:
+                    currentPrompt = promptList[i + 1]
+                except: pass
             elif i % prompt.batch_size == 0:
                 if prompt_group:
                     prompt_groups[starto] = prompt_group
                     starto += 1
                     prompt_group = []
                 prompt_group.append(prompt)
+                try:
+                    currentPrompt = promptList[i + 1]
+                except: pass
             else:
                 prompt_group.append(prompt)
         if prompt_group:
@@ -610,8 +627,8 @@ class GridRunner:
                             else: 
                                 fail = True
                                 if it == 1: 
-                                    print(f"Prompt contains incorrect {str(attr)} merge unavailable. values are: {str(getattr(tempprompt, attr))}")
-                                print(f"prompt contains incorrect {str(attr)} merge unavailable. values are: {str(getattr(prompt_attr, attr))}")
+                                    print(f"Prompt contains incorrect {str(attr)} merge unavailable. values are: {str(getattr(promgroup[it-1], attr))}")
+                                print(f"prompt contains incorrect {str(attr)} merge unavailable. values are: {str(getattr(tempprompt, attr))}")
                                 break
                         except AttributeError:
                             print(tempprompt)

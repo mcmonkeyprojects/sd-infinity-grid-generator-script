@@ -80,7 +80,6 @@ axes:
                 description: The original.
                 params:
                     Sampler: ddim
-                    batch size: 10
     steps:
         title: Steps
         description: How many times to run the sampler.
@@ -104,12 +103,6 @@ axes:
             # You can be lazy too. This will set param 'steps' to '15' and set title to '15'.
             15: steps=15
             20: steps=20
-            20hr:
-                title: 20 HR
-                description: 20 High Res
-                params:
-                    steps: 20
-                    highres steps: 20
     cfgscale:
         title: CFG Scale
         default: 7

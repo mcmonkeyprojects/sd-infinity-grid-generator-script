@@ -281,11 +281,11 @@ class AxisValue:
             self.title = grid.proc_variables(val.get("title"))
             self.description = grid.proc_variables(val.get("description"))
             self.skip = False
-            self.skipList: bool | dict = val.get("skip")
-            if isinstance(self.skipList, bool):
-                self.skip = self.skipList
-            elif self.skipList is not None and isinstance(self.skipList, dict):
-                self.skip = self.skipList.get("always")
+            self.skip_list: bool | dict = val.get("skip") or False
+            if isinstance(self.skip_list, bool):
+                self.skip = self.skip_list
+            elif self.skip_list is not None and isinstance(self.skip_list, dict):
+                self.skip = self.skip_list.get("always")
             
             self.params = fix_dict(val.get("params"))
             self.show = (str(grid.proc_variables(val.get("show")))).lower() != "false"

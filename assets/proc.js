@@ -15,11 +15,10 @@ function loadData() {
         // axis.id/title/description
         for (var val of axis.values) {
             // val.key/title/description/show
-            var clicktab = document.getElementById('clicktab_' + axis.id + '__' + val.key);
+            let clicktab = getNavValTab(axis.id, val.key);
             clicktab.addEventListener('click', fillTable);
             if (!val.show) {
-                document.getElementById('showval_' + axis.id + '__' + val.key).checked = false;
-                clicktab.classList.add('tab_hidden');
+                setShowVal(axis.id, val.key, false);
             }
         }
         for (var prefix of ['x_', 'y_', 'x2_', 'y2_']) {
@@ -48,7 +47,8 @@ function loadData() {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }
-    applyHash(rawHash);
+
+    applyParamsFromHash(rawHash);
     suppressUpdate = false;
     fillTable();
     startAutoScroll();
@@ -183,7 +183,7 @@ window.addEventListener('keydown', function(kbevent) {
         var next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
-            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
+            var swapToTab = getNavValTab(next.id, selectedKey);
             swapToTab.focus({ preventScroll: true });
         }
     }
@@ -191,7 +191,7 @@ window.addEventListener('keydown', function(kbevent) {
         var next = getNextAxis(rawData.axes, axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
-            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
+            var swapToTab = getNavValTab(next.id, selectedKey);
             swapToTab.focus({ preventScroll: true });
         }
     }
@@ -216,6 +216,15 @@ function unescapeHtml(text) {
 
 function canShowVal(axis, val) {
     return document.getElementById(`showval_${axis}__${val}`).checked;
+}
+
+function setShowVal(axis, val, show) {
+    document.getElementById(`showval_${axis}__${val}`).checked = show;
+    getNavValTab(axis, val).classList.toggle('tab_hidden', !show);
+}
+
+function getNavValTab(axis, val) {
+    return document.getElementById('clicktab_' + axis + '__' + val);
 }
 
 function percentToRedGreen(percent) {
@@ -483,16 +492,14 @@ function toggleShowAllAxis(axisId) {
         return canShowVal(axisId, val.key);
     });
     for (var val of axis.values) {
-        document.getElementById('showval_' + axisId + '__' + val.key).checked = !hide;
-        var element = document.getElementById('clicktab_' + axisId + '__' + val.key);
-        element.classList.toggle('tab_hidden', hide);
+        setShowVal(axisId, val.key, !hide);
     }
     fillTable();
 }
 
 function toggleShowVal(axis, val) {
     var show = canShowVal(axis, val);
-    var element = document.getElementById('clicktab_' + axis + '__' + val);
+    let element = getNavValTab(axis, val);
     element.classList.toggle('tab_hidden', !show);
     if (!show && element.classList.contains('active')) {
         var next = [...element.parentElement.parentElement.getElementsByClassName('nav-link')].filter(e => !e.classList.contains('tab_hidden'));
@@ -912,7 +919,14 @@ function makeGif() {
 }
 
 function updateHash() {
-    var hash = `#auto-loc`;
+    let params = new URLSearchParams();
+    params.set('view', makeViewHash());
+    addHiddenValuesToSearchParams(params);
+    history.pushState(null, null, '#' + params.toString());
+}
+
+function makeViewHash() {
+    var hash = `auto-loc`;
     for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels']) {
         hash += `,${document.getElementById(elem).checked}`;
     }
@@ -922,14 +936,31 @@ function updateHash() {
     for (let subAxis of rawData.axes) {
         hash += `,${encodeURIComponent(getSelectedValKey(subAxis))}`;
     }
-    history.pushState(null, null, hash);
+    return hash;
 }
 
-function applyHash(hash) {
+// adds 'hide=axis,value' for each hidden value
+function addHiddenValuesToSearchParams(params) {
+    for (let axis of rawData.axes) {
+        for (let value of axis.values) {
+            if (!canShowVal(axis.id, value.key)) {
+                params.append('hide', axis.id + ',' + value.key);
+            }
+        }
+    }
+}
+
+function applyParamsFromHash(rawHash) {
+    let params = new URLSearchParams(rawHash.substring(1));
+    applyViewParams(params.get("view"));
+    applyHiddenAxisValueParams(params.getAll("hide"));
+}
+
+function applyViewParams(hash) {
     if (!hash) {
         return;
     }
-    let hashInputs = hash.substring(1).split(',');
+    let hashInputs = hash.split(',');
     let expectedLen = 1 + 4 + 4 + rawData.axes.length;
     if (hashInputs.length != expectedLen) {
         console.log(`Hash length mismatch: ${hashInputs.length} != ${expectedLen}, skipping value reload.`);
@@ -953,8 +984,8 @@ function applyHash(hash) {
         target.click();
     }
     for (let subAxis of rawData.axes) {
-        let id = 'clicktab_' + subAxis.id + '__' + decodeURIComponent(hashInputs[index++]);
-        let target = document.getElementById(id);
+        let val = decodeURIComponent(hashInputs[index++]);
+        let target = getNavValTab(subAxis.id, val);
         if (!target) {
             console.log(`Axis-value element not found: ${id}, skipping value reload.`);
             return;
@@ -962,6 +993,41 @@ function applyHash(hash) {
         target.click();
     }
     updateStylesToMatchInputs();
+}
+
+function applyHiddenAxisValueParams(hiddenAxisValues) {
+    if (!hiddenAxisValues) return;
+
+    let hiddenByAxis = makeMapOfHiddenValuesByAxis(hiddenAxisValues);
+
+    for (let axis of rawData.axes) {
+        let hiddenValues = hiddenByAxis.get(axis.id);
+        if (!hiddenValues) continue;
+
+        for (let value of axis.values) {
+            setShowVal(axis.id, value.key, !hiddenValues.has(value.key));
+        }
+    }
+}
+
+// Returns a Map where the keys are the axis ids, and the values are Sets with the hidden values on the axis
+function makeMapOfHiddenValuesByAxis(hiddenAxisValues) {
+    let hiddenByAxis = new Map();
+
+    for (let hiddenVal of hiddenAxisValues) {
+        let components = hiddenVal.split(",");
+        if (components.length != 2) continue;
+
+        let [axis, value] = components;
+        let hiddenValues = hiddenByAxis.get(axis);
+        if (!hiddenValues) {
+            hiddenByAxis.set(axis, new Set([value]));
+        } else {
+            hiddenValues.add(value);
+        }
+    }
+
+    return hiddenByAxis;
 }
 
 let lastUpdateObj = null;

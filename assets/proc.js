@@ -918,10 +918,7 @@ function makeGif() {
 }
 
 function updateHash() {
-    let params = new URLSearchParams();
-    params.set('view', makeViewHash());
-    addHiddenValuesToSearchParams(params);
-    history.pushState(null, null, '#' + params.toString());
+    history.pushState(null, null, `#view=${makeViewHash()}${addHiddenValuesToSearchParams()}`);
 }
 
 function makeViewHash() {
@@ -938,15 +935,17 @@ function makeViewHash() {
     return hash;
 }
 
-// adds 'hide=axis,value' for each hidden value
-function addHiddenValuesToSearchParams(params) {
+/** adds 'hide=axis,value' for each hidden value. */
+function addHiddenValuesToSearchParams() {
+    let result = '';
     for (let axis of rawData.axes) {
         for (let value of axis.values) {
             if (!canShowVal(axis.id, value.key)) {
-                params.append('hide', axis.id + ',' + value.key);
+                result += `&hide=${encodeURIComponent(axis.id)},${encodeURIComponent(value.key)}`;
             }
         }
     }
+    return result;
 }
 
 function applyParamsFromHash(rawHash) {

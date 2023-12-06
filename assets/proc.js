@@ -938,9 +938,11 @@ function updateHash() {
     history.pushState(null, null, hash);
 }
 
-function applyHash(rawHash) {
-    let params = rawHash.substring(1).split('&');
-    applyViewParams(params[0]);
+function applyHash(hash) {
+    if (!hash) {
+        return;
+    }
+    let params = hash.substring(1).split('&');
     for (let hidden of params.slice(1)) {
         let [action, value] = hidden.split('=');
         if (action == 'hide') {
@@ -948,13 +950,7 @@ function applyHash(rawHash) {
             setShowVal(axis, val, false);
         }
     }
-}
-
-function applyViewParams(hash) {
-    if (!hash) {
-        return;
-    }
-    let hashInputs = hash.split(',');
+    let hashInputs = params[0].split(',');
     let expectedLen = 1 + 4 + 4 + rawData.axes.length;
     if (hashInputs.length != expectedLen) {
         console.log(`Hash length mismatch: ${hashInputs.length} != ${expectedLen}, skipping value reload.`);

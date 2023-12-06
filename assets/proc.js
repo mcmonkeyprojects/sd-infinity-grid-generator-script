@@ -47,7 +47,7 @@ function loadData() {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }
-    applyParamsFromHash(rawHash);
+    applyHash(rawHash);
     suppressUpdate = false;
     fillTable();
     startAutoScroll();
@@ -223,7 +223,7 @@ function setShowVal(axis, val, show) {
 }
 
 function getNavValTab(axis, val) {
-    return document.getElementById('clicktab_' + axis + '__' + val);
+    return document.getElementById(`clicktab_${axis}__${val}`);
 }
 
 function percentToRedGreen(percent) {
@@ -918,11 +918,7 @@ function makeGif() {
 }
 
 function updateHash() {
-    history.pushState(null, null, `#${makeViewHash()}${addHiddenValuesToSearchParams()}`);
-}
-
-function makeViewHash() {
-    var hash = `auto-loc`;
+    var hash = `#auto-loc`;
     for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels']) {
         hash += `,${document.getElementById(elem).checked}`;
     }
@@ -932,23 +928,17 @@ function makeViewHash() {
     for (let subAxis of rawData.axes) {
         hash += `,${encodeURIComponent(getSelectedValKey(subAxis))}`;
     }
-    return hash;
-}
-
-/** adds 'hide=axis,value' for each hidden value. */
-function addHiddenValuesToSearchParams() {
-    let result = '';
     for (let axis of rawData.axes) {
         for (let value of axis.values) {
             if (!canShowVal(axis.id, value.key)) {
-                result += `&hide=${encodeURIComponent(axis.id)},${encodeURIComponent(value.key)}`;
+                hash += `&hide=${encodeURIComponent(axis.id)},${encodeURIComponent(value.key)}`;
             }
         }
     }
-    return result;
+    history.pushState(null, null, hash);
 }
 
-function applyParamsFromHash(rawHash) {
+function applyHash(rawHash) {
     let params = rawHash.substring(1).split('&');
     applyViewParams(params[0]);
     for (let hidden of params.slice(1)) {

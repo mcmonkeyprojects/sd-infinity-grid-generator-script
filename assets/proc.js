@@ -47,7 +47,6 @@ function loadData() {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }
-
     applyParamsFromHash(rawHash);
     suppressUpdate = false;
     fillTable();
@@ -996,28 +995,29 @@ function applyViewParams(hash) {
 }
 
 function applyHiddenAxisValueParams(hiddenAxisValues) {
-    if (!hiddenAxisValues) return;
-
+    if (!hiddenAxisValues) {
+        return;
+    }
     let hiddenByAxis = makeMapOfHiddenValuesByAxis(hiddenAxisValues);
-
     for (let axis of rawData.axes) {
         let hiddenValues = hiddenByAxis.get(axis.id);
-        if (!hiddenValues) continue;
-
+        if (!hiddenValues) {
+            continue;
+        }
         for (let value of axis.values) {
             setShowVal(axis.id, value.key, !hiddenValues.has(value.key));
         }
     }
 }
 
-// Returns a Map where the keys are the axis ids, and the values are Sets with the hidden values on the axis
+/** Returns a Map where the keys are the axis ids, and the values are Sets with the hidden values on the axis. */
 function makeMapOfHiddenValuesByAxis(hiddenAxisValues) {
     let hiddenByAxis = new Map();
-
     for (let hiddenVal of hiddenAxisValues) {
         let components = hiddenVal.split(",");
-        if (components.length != 2) continue;
-
+        if (components.length != 2) {
+            continue;
+        }
         let [axis, value] = components;
         let hiddenValues = hiddenByAxis.get(axis);
         if (!hiddenValues) {
@@ -1026,7 +1026,6 @@ function makeMapOfHiddenValuesByAxis(hiddenAxisValues) {
             hiddenValues.add(value);
         }
     }
-
     return hiddenByAxis;
 }
 

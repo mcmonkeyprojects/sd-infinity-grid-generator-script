@@ -918,7 +918,7 @@ function makeGif() {
 }
 
 function updateHash() {
-    history.pushState(null, null, `#view=${makeViewHash()}${addHiddenValuesToSearchParams()}`);
+    history.pushState(null, null, `#${makeViewHash()}${addHiddenValuesToSearchParams()}`);
 }
 
 function makeViewHash() {
@@ -949,9 +949,15 @@ function addHiddenValuesToSearchParams() {
 }
 
 function applyParamsFromHash(rawHash) {
-    let params = new URLSearchParams(rawHash.substring(1));
-    applyViewParams(params.get("view"));
-    applyHiddenAxisValueParams(params.getAll("hide"));
+    let params = rawHash.substring(1).split('&');
+    applyViewParams(params[0]);
+    for (let hidden of params.slice(1)) {
+        let [action, value] = hidden.split('=');
+        if (action == 'hide') {
+            let [axis, val] = value.split(',');
+            setShowVal(axis, val, false);
+        }
+    }
 }
 
 function applyViewParams(hash) {
@@ -991,41 +997,6 @@ function applyViewParams(hash) {
         target.click();
     }
     updateStylesToMatchInputs();
-}
-
-function applyHiddenAxisValueParams(hiddenAxisValues) {
-    if (!hiddenAxisValues) {
-        return;
-    }
-    let hiddenByAxis = makeMapOfHiddenValuesByAxis(hiddenAxisValues);
-    for (let axis of rawData.axes) {
-        let hiddenValues = hiddenByAxis.get(axis.id);
-        if (!hiddenValues) {
-            continue;
-        }
-        for (let value of axis.values) {
-            setShowVal(axis.id, value.key, !hiddenValues.has(value.key));
-        }
-    }
-}
-
-/** Returns a Map where the keys are the axis ids, and the values are Sets with the hidden values on the axis. */
-function makeMapOfHiddenValuesByAxis(hiddenAxisValues) {
-    let hiddenByAxis = new Map();
-    for (let hiddenVal of hiddenAxisValues) {
-        let components = hiddenVal.split(",");
-        if (components.length != 2) {
-            continue;
-        }
-        let [axis, value] = components;
-        let hiddenValues = hiddenByAxis.get(axis);
-        if (!hiddenValues) {
-            hiddenByAxis.set(axis, new Set([value]));
-        } else {
-            hiddenValues.add(value);
-        }
-    }
-    return hiddenByAxis;
 }
 
 let lastUpdateObj = null;

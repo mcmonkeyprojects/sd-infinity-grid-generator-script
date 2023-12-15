@@ -56,6 +56,8 @@ Here's a very small web demo you can try to test how the output looks and works:
 
 Current overall project status (as of October 2023): **Works well, actively maintained**. Has been generally well tested. The core has been ported to other environments and stress-tested for multiple real projects that depend on large grids and rapid grid analysis.
 
+A version of this project is also available for [StableSwarmUI, here](https://github.com/Stability-AI/StableSwarmUI/blob/master/src/BuiltinExtensions/GridGenerator/README.md) which also lets you use it with Comfy and other backends
+
 --------------
 
 ### Installation

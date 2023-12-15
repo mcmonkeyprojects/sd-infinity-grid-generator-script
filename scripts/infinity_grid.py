@@ -287,7 +287,7 @@ def a1111_grid_runner_count_steps(grid_runner: core.GridRunner, set):
     total_steps = step_count
     enable_hr = set.params.get("enable highres fix")
     if enable_hr is None:
-        enable_hr = grid_runner.p.enable_hr
+        enable_hr = grid_runner.p.enable_hr if hasattr(grid_runner.p, 'enable_hr') else False
     if enable_hr:
         highres_steps = set.params.get("highres steps")
         highres_steps = int(highres_steps) if highres_steps is not None else (grid_runner.p.hr_second_pass_steps or step_count)

@@ -201,7 +201,7 @@ def try_init():
                 return v
             registerMode("[ControlNet] Enable", GridSettingMode(dry=True, type="boolean", apply=apply_field("control_net_enabled"), clean=validate_param))
             registerMode("[ControlNet] Preprocessor", GridSettingMode(dry=True, type="text", apply=apply_field("control_net_module"), clean=validate_param, valid_list=lambda: list(preprocessors_list)))
-            registerMode("[ControlNet] Model", GridSettingMode(dry=True, type="text", apply=apply_field("control_net_model"), clean=validate_param, valid_list=lambda: list(list(module.cn_models.keys()))))
+            registerMode("[ControlNet] Model", GridSettingMode(dry=True, type="text", apply=apply_field("control_net_model"), clean=validate_param, valid_list=lambda: list(list(module.global_state.cn_models.keys()))))
             registerMode("[ControlNet] Weight", GridSettingMode(dry=True, type="decimal", min=0.0, max=2.0, apply=apply_field("control_net_weight"), clean=validate_param))
             registerMode("[ControlNet] Guidance Strength", GridSettingMode(dry=True, type="decimal", min=0.0, max=1.0, apply=apply_field("control_net_guidance_strength"), clean=validate_param))
             registerMode("[ControlNet] Annotator Resolution", GridSettingMode(dry=True, type="integer", min=0, max=2048, apply=apply_field("control_net_pres"), clean=validate_param))

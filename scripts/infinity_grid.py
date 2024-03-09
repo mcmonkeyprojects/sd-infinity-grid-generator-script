@@ -193,14 +193,14 @@ def try_init():
         script_list = [x for x in scripts.scripts_data if x.script_class.__module__ == "controlnet.py"][:1]
         if len(script_list) == 1:
             # Hacky but works
-            preprocessors_list = script_list[0].script_class().preprocessor.keys()
+            #preprocessors_list = script_list[0].script_class().preprocessor.keys()
             module = script_list[0].module
             def validate_param(p, v):
                 if not shared.opts.data.get("control_net_allow_script_control", False):
                     raise RuntimeError("ControlNet options cannot currently work, you must enable 'Allow other script to control this extension' in Settings -> ControlNet first")
                 return v
             registerMode("[ControlNet] Enable", GridSettingMode(dry=True, type="boolean", apply=apply_field("control_net_enabled"), clean=validate_param))
-            registerMode("[ControlNet] Preprocessor", GridSettingMode(dry=True, type="text", apply=apply_field("control_net_module"), clean=validate_param, valid_list=lambda: list(preprocessors_list)))
+            #registerMode("[ControlNet] Preprocessor", GridSettingMode(dry=True, type="text", apply=apply_field("control_net_module"), clean=validate_param, valid_list=lambda: list(preprocessors_list)))
             registerMode("[ControlNet] Model", GridSettingMode(dry=True, type="text", apply=apply_field("control_net_model"), clean=validate_param, valid_list=lambda: list(list(module.global_state.cn_models.keys()))))
             registerMode("[ControlNet] Weight", GridSettingMode(dry=True, type="decimal", min=0.0, max=2.0, apply=apply_field("control_net_weight"), clean=validate_param))
             registerMode("[ControlNet] Guidance Strength", GridSettingMode(dry=True, type="decimal", min=0.0, max=1.0, apply=apply_field("control_net_guidance_strength"), clean=validate_param))

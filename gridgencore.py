@@ -4,7 +4,11 @@ import os, glob, yaml, json, shutil, math, re, time
 from copy import copy
 from PIL import Image
 from git import Repo
-from yamlinclude import YamlIncludeConstructor
+
+try:
+    from yamlinclude import YamlIncludeConstructor
+except:
+    from yaml_include import Constructor as YamlIncludeConstructor
 
 ######################### Core Variables #########################
 

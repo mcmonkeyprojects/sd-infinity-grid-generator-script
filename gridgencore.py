@@ -5,16 +5,6 @@ from copy import copy
 from PIL import Image
 from git import Repo
 
-class GridYamlLoader(yaml.SafeLoader):
-    pass
-
-try:
-    from yamlinclude import YamlIncludeConstructor
-    YamlIncludeConstructor.add_to_loader_class(loader_class=GridYamlLoader, base_dir=ASSET_DIR)
-except:
-    from yaml_include import Constructor as YamlIncludeConstructor
-    yaml.add_constructor("!include", Constructor(base_dir=ASSET_DIR), GridYamlLoader)
-
 ######################### Core Variables #########################
 
 ASSET_DIR = os.path.dirname(__file__) + "/assets"
@@ -255,6 +245,16 @@ def validate_single_param(p: str, v):
     return v
 
 ######################### YAML Parsing and Processing #########################
+
+class GridYamlLoader(yaml.SafeLoader):
+    pass
+
+try:
+    from yamlinclude import YamlIncludeConstructor
+    YamlIncludeConstructor.add_to_loader_class(loader_class=GridYamlLoader, base_dir=ASSET_DIR)
+except:
+    from yaml_include import Constructor
+    yaml.add_constructor("!include", Constructor(base_dir=ASSET_DIR), GridYamlLoader)
 
 class AxisValue:
     def __init__(self, axis, grid, key: str, val):

@@ -193,8 +193,8 @@ def try_init():
         script_list = [x for x in scripts.scripts_data if x.script_class.__module__ == "controlnet.py"][:1]
         if len(script_list) == 1:
             # Hacky but works
-            preprocessors_list = script_list[0].script_class().preprocessor.keys()
             module = script_list[0].module
+            preprocessors_list = list(p.name for p in module.Preprocessor.get_sorted_preprocessors())
             def validate_param(p, v):
                 if not shared.opts.data.get("control_net_allow_script_control", False):
                     raise RuntimeError("ControlNet options cannot currently work, you must enable 'Allow other script to control this extension' in Settings -> ControlNet first")

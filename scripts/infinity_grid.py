@@ -208,7 +208,7 @@ def try_init():
             registerMode("[ControlNet] Threshold A", GridSettingMode(dry=True, type="integer", min=0, max=256, apply=apply_field("control_net_pthr_a"), clean=validate_param))
             registerMode("[ControlNet] Threshold B", GridSettingMode(dry=True, type="integer", min=0, max=256, apply=apply_field("control_net_pthr_b"), clean=validate_param))
             registerMode("[ControlNet] Image", GridSettingMode(dry=True, type="text", apply=core.apply_field_as_image_data("control_net_input_image"), clean=validate_param, valid_list=lambda: core.list_image_files()))
-    except ModuleNotFoundError as e:
+    except Exception as e:
         print(f"Infinity Grid Generator failed to import a dependency module: {e}")
         pass
 

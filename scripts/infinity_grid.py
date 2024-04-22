@@ -174,7 +174,7 @@ def try_init():
     registerMode("Image CFG Scale", GridSettingMode(dry=True, type="decimal", min=0, max=500, apply=apply_field("image_cfg_scale")))
     registerMode("Use Result Index", GridSettingMode(dry=True, type="integer", min=0, max=500, apply=apply_field("inf_grid_use_result_index")))
     try:
-        script_list = [x for x in scripts.scripts_data if x.script_class.__module__ == "dynamic_thresholding.py"][:1]
+        script_list = [x for x in scripts.scripts_data if x.script_class.__module__ in ("scripts.dynamic_thresholding", "dynamic_thresholding.py")][:1]
         if len(script_list) == 1:
             dynamic_thresholding = script_list[0].module
             registerMode("[DynamicThreshold] Enable", GridSettingMode(dry=True, type="boolean", apply=apply_field("dynthres_enabled")))
@@ -190,7 +190,7 @@ def try_init():
             registerMode("[DynamicThreshold] Variability Measure", GridSettingMode(dry=True, type="text", apply=apply_field("dynthres_variability_measure"), valid_list=lambda: list(['STD', 'AD'])))
             registerMode("[DynamicThreshold] Interpolate Phi", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("dynthres_interpolate_phi")))
             registerMode("[DynamicThreshold] Separate Feature Channels", GridSettingMode(dry=True, type="boolean", apply=apply_field("dynthres_separate_feature_channels")))
-        script_list = [x for x in scripts.scripts_data if x.script_class.__module__ == "controlnet.py"][:1]
+        script_list = [x for x in scripts.scripts_data if x.script_class.__module__ in ("scripts.controlnet", "controlnet.py")][:1]
         if len(script_list) == 1:
             # Hacky but works
             module = script_list[0].module

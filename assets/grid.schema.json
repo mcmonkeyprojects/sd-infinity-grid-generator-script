@@ -123,7 +123,7 @@
                 },
                 "format": {
                     "type": "string",
-                    "enum": ["png", "jpg"]
+                    "enum": ["png", "jpg", "webp"]
                 }
             },
             "required": [

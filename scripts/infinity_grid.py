@@ -15,7 +15,7 @@ import gradio as gr
 import os, numpy, threading
 from copy import copy
 from datetime import datetime
-from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, ui_components
+from modules import images, shared, sd_models, sd_vae, sd_samplers, scripts, processing, ui_components, sd_schedulers
 from modules.processing import process_images, Processed
 from modules.shared import opts, state
 from PIL import Image
@@ -154,6 +154,7 @@ def try_init():
     registerMode("Sigma TMin", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("s_tmin")))
     registerMode("Sigma TMax", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("s_tmax")))
     registerMode("Sigma Noise", GridSettingMode(dry=True, type="decimal", min=0, max=1, apply=apply_field("s_noise")))
+    registerMode("Schedule Type", GridSettingMode(dry=True, type="text", apply=apply_field("scheduler"), valid_list=lambda: [x.label for x in sd_schedulers.schedulers]))
     registerMode("Out Width", GridSettingMode(dry=True, type="integer", min=0, apply=apply_field("inf_grid_out_width")))
     registerMode("Out Height", GridSettingMode(dry=True, type="integer", min=0, apply=apply_field("inf_grid_out_height")))
     registerMode("Restore Faces", GridSettingMode(dry=True, type="text", apply=apply_restore_faces, valid_list=lambda: list(map(lambda m: m.name(), shared.face_restorers)) + ["true", "false"]))
@@ -347,11 +348,11 @@ class Script(scripts.Script):
         return True
 
     def ui(self, is_img2img):
+        try_init()  # Moved to the beginning to ensure modes are registered before UI is built
         core.list_image_files()
-        try_init()
         gr.HTML(value=f"<br>Confused/new? View <a style=\"border-bottom: 1px #00ffff dotted;\" href=\"{INF_GRID_README}\" target=\"_blank\" rel=\"noopener noreferrer\">the README</a> for usage instructions.<br><br>")
         with gr.Row():
-            grid_file = gr.Dropdown(value="Create in UI",label="Select grid definition file", choices=["Create in UI"] + core.get_name_list())
+            grid_file = gr.Dropdown(value="Create in UI", label="Select grid definition file", choices=["Create in UI"] + core.get_name_list())
             def refresh():
                 new_choices = ["Create in UI"] + core.get_name_list()
                 grid_file.choices = new_choices
@@ -427,7 +428,7 @@ class Script(scripts.Script):
             group_obj = sets[group + 1][0]
             next_rows = sets[group + 1][1]
             def make_vis(prior, r1, r2, r3, r4):
-                return gr.Group.update(visible=(prior+r1+r2+r3+r4).strip() != "")
+                return gr.update(visible=(prior+r1+r2+r3+r4).strip() != "")
             row_mode.change(fn=make_vis, inputs=[row_mode] + next_rows, outputs=[group_obj])
         gr.HTML('<span style="opacity:0.5;">(More input rows will be automatically added after you select modes above.)</span>')
         grid_file.change(
